@@ -1,7 +1,7 @@
 /*PRIORITY*/
 /*
 change this module name to a more appropriate one
-for example "packet identifier" or something similare
+for example "packet identifier" or something similar
 */
 /*
 it orders packet generation request by priority
@@ -24,7 +24,7 @@ module trdb_priority (
     input logic tc_qualified_i,
     input logic tc_is_branch_i,
     input logic tc_exception_i,
-    input logic tc_reported_i, // what's the meaning ?
+    input logic tc_reported_i, // what's the meaning? refer to page 51 of spec
     input logic tc_first_qualified_i,
     input logic tc_privchange_i,
     input logic tc_context_change_i, // determinable using a comparator with lc_context and tc_context
@@ -45,11 +45,9 @@ module trdb_priority (
     input logic nc_qualified_i,
 
     // to do: outputs
-    output logic                  valid_o,
-    output trdb_format_e          packet_format_o,
-    output trdb_subformat_e       packet_subformat_o);
-
-
+    output logic            valid_o,
+    output trdb_format_e    packet_format_o,
+    output trdb_subformat_e packet_subformat_o);
 
 
 
