@@ -32,7 +32,6 @@ module trdb_filter
     output logic trace_range_match_o,
     output logic trace_priv_match_o,
     output logic trace_qualified_o
-
 );
 
 
