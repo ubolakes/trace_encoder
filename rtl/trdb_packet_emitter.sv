@@ -7,12 +7,28 @@ import trdb_pkg::*;
 
 module trdb_packet_emitter
 (
+    // TO DO: add signals width
+
     input logic clk_i,
     input logic rst_ni,
 
     // necessary info to assemble packet
     input trdb_format_e packet_format_i,
     input trdb_subformat_e packet_subformat_i,
+
+    // lc (last cycle) signals
+    input logic lc_cause_i,
+    input logic lc_tval,
+
+
+    // tc (this cycle) signals
+    input logic tc_cause_i,
+    input logic tc_tval_i
+
+    // nc (next cycle) signals
+
+
+
 
     // format 3 subformat 0 specific signals
     input logic is_branch_i,
