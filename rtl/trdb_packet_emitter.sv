@@ -20,15 +20,11 @@ module trdb_packet_emitter
     input logic lc_cause_i,
     input logic lc_tval,
 
-
     // tc (this cycle) signals
     input logic tc_cause_i,
     input logic tc_tval_i
 
     // nc (next cycle) signals
-
-
-
 
     // format 3 subformat 0 specific signals
     input logic is_branch_i,
@@ -80,7 +76,13 @@ module trdb_packet_emitter
     output logic [PLEN:0] packet_length_o, // in bytes
     output logic [PAYLOADLEN:0] packet_payload_o
 
+    /* TO DO:
+    outputs to perform reset resync counter
+    and update/reset branch map
 
+    Question:   it should be done in this module or in
+                the one choosing the packet format
+    */
 );
     
 endmodule
