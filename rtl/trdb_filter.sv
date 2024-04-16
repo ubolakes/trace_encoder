@@ -9,10 +9,13 @@ module trdb_filter
 (
     // setting input values are taken from registers
     
+    // uncommented signals are the ones required to simply turn on and of the encoder
+
     // enable/disable tracing
     input logic trace_activated_i,
     output logic trace_req_deactivate_o, // writes to register
 
+    /*
     // consider/ignore filters
     input logic apply_filters_i,
 
@@ -31,6 +34,7 @@ module trdb_filter
     // signals to determine matches
     output logic trace_range_match_o,
     output logic trace_priv_match_o,
+    */
     output logic trace_qualified_o
 );
 
