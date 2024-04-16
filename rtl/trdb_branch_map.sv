@@ -12,8 +12,8 @@ module trdb_branch_map
     input logic branch_taken_i,
     input logic flush_i,
 
-    output logic [:0] map_o, // to be understood
-    output logic [:0] branches_o, // to be understood
+    output logic [:0] map_o, // array of branch taken and not 
+    output logic [:0] branches_o, // number of branches stored
     output logic is_full_o,
     output logic is_empty_o
 );
