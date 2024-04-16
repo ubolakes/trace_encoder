@@ -71,14 +71,15 @@ module trdb_priority (
     //input logic tc_er_n_i, // no need for a specific input signal
     /*er_n: exception and retirement in the same cycle*/
 
-    input logic tc_branch_map_full_i,
     /* rpt_br:  report branches due to full branch_map
-                or misprediction
-    */
+                or misprediction    */
+    input logic tc_branch_map_full_i,
     input logic tc_branch_misprediction_i, // signal to determine misprediction
     // determine which module generates this signal (branch_map?)
 
-    input logic tc_imprecise_context_change_i, // understand
+    // cci: imprecise context change
+    input logic tc_imprecise_context_change_i,
+    
     // understand the meaning of branches and pbc in graph at page 53
     /*
     ppccd:  priv has changed OR context has changed
@@ -95,11 +96,11 @@ module trdb_priority (
 
     // nc (next cycle) signals
     input logic nc_exception_i,
-    input logic nc_privchange_i, //
-    input logic nc_precise_context_change_i, //
-    input logic nc_context_change_w_discontinuity_i, //
-    input logic nc_branch_map_empty_i, //
-    input logic nc_qualified_i, //
+    input logic nc_privchange_i,
+    input logic nc_precise_context_change_i,
+    input logic nc_context_change_w_discontinuity_i,
+    input logic nc_branch_map_empty_i,
+    input logic nc_qualified_i,
 
     input logic nc_retired_i, // used w/nc_exception for signal nc_exc_only
 
@@ -119,8 +120,10 @@ module trdb_priority (
                     Unreported branches must be reported first.
 
         Imprecise:  required the new context value
-    
     */
+
+
+
     output logic            valid_o,
     output trdb_format_e    packet_format_o,
     output trdb_subformat_e packet_subformat_o,
