@@ -75,10 +75,10 @@ module trdb_priority (
                 or misprediction    */
     input logic tc_branch_map_full_i,
     input logic tc_branch_misprediction_i, // signal to determine misprediction
-    // determine which module generates this signal (branch_map?)
+    // branch prediction not supported by snitch
 
     // cci: imprecise context change
-    input logic tc_imprecise_context_change_i,
+    input logic tc_imprecise_context_change_i, // optional
     
     // understand the meaning of branches and pbc in graph at page 53
     /*
@@ -122,7 +122,13 @@ module trdb_priority (
         Imprecise:  required the new context value
     */
 
+    // trigger input
+    input logic [3:0] trigger_i,
+    /* if it's value is 4, it's used to request a format 2 packet */
 
+    output logic notify_o,
+    // communicates the packet emitter that format 2 packet was requested by trigger unit
+    
 
     output logic            valid_o,
     output trdb_format_e    packet_format_o,
