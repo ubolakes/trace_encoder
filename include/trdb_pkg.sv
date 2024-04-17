@@ -17,15 +17,15 @@ package trdb_pkg;
 
 // packet types
 typedef enum logic[1:0] { 
-    F_EXT = 2'h0,
-    F_BRANCH = 2'h1,
-    F_INST_ADDR = 2'h2,
-    F_THREE = 2'h3
+    F_OPT_EXT       = 2'h0,
+    F_DIFF_DELTA    = 2'h1,
+    F_ADDR_ONLY     = 2'h2,
+    F_SYNC          = 2'h3
 } trdb_format_e;
 
 // subformats available for type 3 packets
 typedef enum logic[1:0] { 
-    SF_SYNC     = 2'h0,
+    SF_START    = 2'h0,
     SF_TRAP     = 2'h1,
     SF_CONTEXT  = 2'h2,
     SF_SUPPORT  = 2'h3
