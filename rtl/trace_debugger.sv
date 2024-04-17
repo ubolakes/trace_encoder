@@ -21,13 +21,15 @@ module trace_debugger import trdb_pkg::*;
     input logic exception_i, // exception
     input logic interrupt_i, // cause_irq_q - used with the previous one to discriminate interrupt from exception
     input logic [CAUSELEN:0] cause_i, // cause_q
-    input logic [TVECLEN:0] tvec_i, // tvec_q
+    input logic [TVECLEN:0] tvec_i, // tvec_q, contains trap handler address
     input logic [TVALLEN:0] tval_i, // not implemented in snitch, mandatory according to the spec
     input logic [PRIVLEN:0] priv_lvl_i, // priv_lvl_q
     input logic [INSTLEN:0] inst_data_i, // inst_data
     //input logic compressed, // to discriminate compressed instructions from the others - in case the CPU supports C extension
     input logic [PCLEN:0] pc_i, //pc_q - instruction address
-    
+    input logic [:0] epc_i, // epc_q, required for format 3 subformat 1
+    input logic [3:0] trigger_i,
+
     // outputs
     // info needed for the encapsulator
     output logic [PTYPELEN:0]packet_type_o,
