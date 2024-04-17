@@ -65,7 +65,7 @@ module trdb_priority (
     input logic tc_precise_context_change_i,
     input logic tc_context_change_i, // determinable using a comparator with lc_context and tc_context
     input logic tc_context_change_w_discontinuity_i, // understand the meaning
-    input logic tc_exception_sync_i, // resync timer expired
+    input logic tc_max_resync_i, // resync timer expired
     input logic tc_branch_map_empty_i,
     
     //input logic tc_er_n_i, // no need for a specific input signal
