@@ -12,17 +12,19 @@ module trdb_packet_emitter
     input logic clk_i,
     input logic rst_ni,
 
+    input logic valid_i,
+
     // necessary info to assemble packet
     input trdb_format_e packet_format_i,
     input trdb_subformat_e packet_subformat_i,
 
     // lc (last cycle) signals
     input logic lc_cause_i,
-    input logic lc_tval,
+    input logic lc_tval_i,
 
     // tc (this cycle) signals
     input logic tc_cause_i,
-    input logic tc_tval_i
+    input logic tc_tval_i,
 
     // nc (next cycle) signals
 
@@ -34,6 +36,7 @@ module trdb_packet_emitter
     input logic [:0] time_i,    // optional
     input logic [:0] context_i, // optional
     input logic [XLEN-1:0] iaddr_i,
+    input logic resync_timeout_i, // requested resync by the timer
 
     // format 3 subformat 1 specific signals
     //input logic is_branch_i,
@@ -43,7 +46,7 @@ module trdb_packet_emitter
     //input logic [:0] context_i, // optional
     input logic [CAUSELEN:0] ecause_i,
     input logic interrupt_i,
-    input logic [XLEN-1:0] trap_handler_address_i, // is it the same as tvec?
+    input logic [XLEN-1:0] tvec_i, // trap handler address
     input logic [XLEN-1:0] epc_i,
     //input logic [XLEN-1:0]iaddr_i,
     input logic [TVALLEN:0] tval_i,
@@ -65,6 +68,7 @@ module trdb_packet_emitter
     //input logic [:0] ioptions_i, // implementation specific
     // doesn't require an input, it must be created from other inputs
     /*  Run-time configuration bits for INSTRUCTION trace.
+        These modes are optional, only the delta address is mandatory
         Examples:
             - sequentially inferred jump: don't report the targets of sequentially inferable jumps
             - implicit return: don't report the targets of sequentially inferrable jumps
@@ -76,16 +80,16 @@ module trdb_packet_emitter
         it requires info from the CSRs storing the values
     */
     //input logic seq_inferred_jump_i, // to implement
-    input logic trace_implicit_ret_i,
+    //input logic trace_implicit_ret_i, // implemented in Robert tracer
     //input logic trace_implicit_exc_i, // to implement
     //input logic trace_branch_prediction_i, // not supported by snitch, hardwired to 0 (?)
     //input logic jump_target_cache_i, // not supported by snitch, hardwired to 0 (?)
-    input logic trace_full_addr_i, // always output full address
+    //input logic trace_full_addr_i, // implemented in Robert tracer
 
     input logic denable_i, // DATA trace enabled, if supported
     // about DATA trace, in stand-by at the moment
     input logic dloss_i, // one or more DATA trace packets lost, if supported
-    input logic [:0] doptions_i, // it's like ioptions, but for DATA trace
+    //input logic [:0] doptions_i, // it's like ioptions, but for DATA trace
 
 
     // format 2 specific signals
