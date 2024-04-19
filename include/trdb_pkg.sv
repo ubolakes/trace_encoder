@@ -31,7 +31,8 @@ typedef enum logic[1:0] {
     SF_SUPPORT  = 2'h3
 } trdb_f_sync_subformat_e;
 
-//subformats available for type 0 packets (F_OPT_EXT)
+// subformats available for type 0 packets (F_OPT_EXT)
+// used a struct for future extensions
 typedef enum logic[0:0] {
     SF_PBC = 1'h0, // correctly predicted branches
     SF_JTC = 1'h1 // jump target cache in spec
