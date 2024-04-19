@@ -1,4 +1,4 @@
-package trdb_pkg;
+package trdb_pkg; // cercare in snitch
     localparam CAUSELEN = ;
     localparam TVECLEN = 
     localparam PRIVLEN = 
@@ -23,15 +23,19 @@ typedef enum logic[1:0] {
     F_SYNC          = 2'h3
 } trdb_format_e;
 
-// subformats available for type 3 packets
+// subformats available for type 3 packets (F_SYNC)
 typedef enum logic[1:0] { 
     SF_START    = 2'h0,
     SF_TRAP     = 2'h1,
     SF_CONTEXT  = 2'h2,
     SF_SUPPORT  = 2'h3
-} trdb_subformat_e;
+} trdb_f_sync_subformat_e;
 
-
+//subformats available for type 0 packets (F_OPT_EXT)
+typedef enum logic[0:0] {
+    SF_PBC = 1'h0, // correctly predicted branches
+    SF_JTC = 1'h1 // jump target cache in spec
+} trdb_f_opt_ext_subformat_e;
 
 
 endpackage
