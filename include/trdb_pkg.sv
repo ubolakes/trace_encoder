@@ -12,7 +12,10 @@ package trdb_pkg; // cercare in snitch
 `else // 32bit arch
     localparam XLEN = 32;
 `endif // common parameters
-
+    
+    // parameters for resync counter
+    localparam CYCLE_MODE = 0;
+    localparam PACKET_MODE = 1;
 
 
 // packet types
