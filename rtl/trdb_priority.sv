@@ -12,17 +12,22 @@ import trdb_pkg::*;
 module trdb_priority (
     input logic valid_i,
 
+    /*  signals for the jump target cache
+        not supported by snitch */
+    input logic jtc_enabled_i, // must be supported and enabled by the CPU
+    input logic address_in_cache_i, // communicates if the address is present in cache
+
     // refer to page 53 of the specs for clarification
 
     /*TO DO: determine width of signals, not all are logic*/
 
     // lc (last cycle) signals
-    input logic lc_exception_i, //
+    input logic lc_exception_i,
     input logic lc_updiscon_i, // updsicon == uninferable PC discontinuity
 
     // tc (this cycle) signals
-    input logic tc_qualified_i, //
-    input logic tc_is_branch_i, //
+    input logic tc_qualified_i,
+    input logic tc_is_branch_i,
     input logic tc_exception_i,
 
     //input logic tc_exc_only_i, // not necessary a special input signal
@@ -51,8 +56,6 @@ module trdb_priority (
         I need a signal like: "lc_thaddr" (last cycle thaddr),
         the value of this signal is the same as the parameter
         in the packet.    
-    
-        // ask Simone if the reasoning is correct
     */
     
     //input logic lc_thaddr_i,
@@ -62,9 +65,9 @@ module trdb_priority (
 
     input logic tc_first_qualified_i,
     input logic tc_privchange_i,
-    input logic tc_precise_context_change_i,
+    input logic tc_precise_context_report_i,
     input logic tc_context_change_i, // determinable using a comparator with lc_context and tc_context
-    input logic tc_context_change_w_discontinuity_i, // understand the meaning
+    input logic tc_context_report_as_disc_i, // understand the meaning
     input logic tc_max_resync_i, // resync timer expired
     input logic tc_branch_map_empty_i,
     
@@ -78,7 +81,7 @@ module trdb_priority (
     // branch prediction not supported by snitch
 
     // cci: imprecise context change
-    input logic tc_imprecise_context_change_i, // optional
+    input logic tc_imprecise_context_report_i, // optional
     
     // understand the meaning of branches and pbc in graph at page 53
     /*
@@ -86,6 +89,8 @@ module trdb_priority (
             and it needs to be reported precisely or
             treated as an updiscon
     */
+
+    input logic tc_pbc_i, // correctly predicted branch count, not supported by snitch
 
     // format 3 subformat 3 - NOT shown in graph
     input logic tc_enc_enabled_i,
@@ -97,8 +102,9 @@ module trdb_priority (
     // nc (next cycle) signals
     input logic nc_exception_i,
     input logic nc_privchange_i,
-    input logic nc_precise_context_change_i,
-    input logic nc_context_change_w_discontinuity_i,
+    input logic nc_context_change_i,
+    input logic nc_precise_context_report_i,
+    input logic nc_context_report_as_disc_i,
     input logic nc_branch_map_empty_i,
     input logic nc_qualified_i,
 
@@ -125,101 +131,163 @@ module trdb_priority (
     // trigger input
     input logic [3:0] trigger_i,
     /* if it's value is 4, it's used to request a format 2 packet */
+    // add signal to generate a type 2 packet
 
     output logic notify_o,
     // communicates the packet emitter that format 2 packet was requested by trigger unit
     
 
-    output logic            valid_o,
-    output trdb_format_e    packet_format_o,
-    output trdb_subformat_e packet_subformat_o,
+    output logic                        valid_o,
+    output trdb_format_e                packet_format_o,
+    output trdb_f_sync_subformat_e      packet_f_sync_subformat_o,
+    output trdb_f_opt_ext_subformat_e   packet_f_opt_ext_subformat_o // this signal is useless for snitch, since it doesn't support jtc and branch prediction
     );
 
-    // refer to question at line 83 of packet_emitter
+    /* signals required for packet determination */
+    // last cycle
+    logic   lc_thaddr_d;
+    logic   lc_thaddr_q; // 1 cycle delayed
+    
+    /*  Dubbio: se lo imposto ad un valore non rischio di causare 
+        generazioni di pacchetti sbagliate.
+        Se invece lo lascio non definito non è meglio?
+        Visto che il valore che causa una scelta */
+    
+    // this cycle
+    logic   tc_exc_only; // for a precise definition: page 51 of the spec
+    logic   tc_reported; // ibidem
+    logic   tc_ppccd; // ibidem
+    logic   tc_resync_br; // ibidem
+    logic   tc_er_n; // ibidem
+    logic   tc_rpt_br; // ibidem
+    logic   tc_cci; // ibidem
+
+    // next cycle
+    logic   nc_exc_only;
+    logic   nc_ppccd_br;
+
+    /*TODO:   combinatorial network that determines the signals above
+            depending on the value of tc_ctype and nc_ctype
+    */
+    
+    // value assignment
+    assign  tc_exc_only = tc_exception_i && ~tc_retired_i;
+    assign  tc_reported = lc_exception_i && ~lc_thaddr_q;
+    assign  tc_ppccd = tc_priv_change_i || (tc_context_change_i && (tc_precise_context_report_i ||
+                        tc_context_report_as_disc_i));
+    assign  tc_resync_br = tc_max_resync_i && ~tc_branch_map_empty_i;
+    assign  tc_er_n = tc_exception_i && tc_retired_i;
+    assign  tc_rpt_br = tc_branch_map_full_i || tc_branch_misprediction_i;
+    assign  tc_cci = tc_context_change_i && tc_imprecise_context_report_i;
+    assign  nc_exc_only = nc_exception_i && ~nc_retired_i;
+    assign  nc_ppccd_br = (nc_privchange_i || (nc_context_change_i && (nc_precise_context_report_i ||
+                            nc_context_report_as_disc_i))) && ~nc_branch_map_empty_i;
 
 
-
-
-
-
-
-
-
-
-    // combinatorial network to determine packet format
+    /* combinatorial network to determine packet format */
+    // refer to flowchart at page 53 of the spec
     always_comb begin : select_packet_format
         // init values
         valid_o = '0;
         packet_format_o = '0;
-        packet_subformat_o = '0;
+        packet_f_sync_subformat_o = '0;
+        packet_f_opt_ext_subformat_o = '0;
     
         if(valid_i) begin
             if(tc_qualified_i) begin
-                if(tc_is_branch_i) begin
-                    // update branch map
-                end // else: do nothing
+                /*  update branch map?
+                    here or in packet emitter?
+                    TBD */
                 if(lc_exception_i) begin
-                    if(/*exception only*/) begin
-                        /*
-                        format 3 subformat 1
-                        thaddr = 0; resync_cnt = 0
-                        cause = lc_cause_i; tval = lc_tval
-                        */
+                    if(tc_exc_only) begin
+                        packet_format_o = F_SYNC;
+                        packet_f_sync_subformat_o = SF_TRAP;
+                        /* thaddr_d = 0; resync_cnt = 0
+                        cause = lc_cause_i; tval = lc_tval*/
+                    end else if(tc_reported) begin
+                        packet_format_o = F_SYNC;
+                        packet_f_sync_subformat_o = SF_START;
+                        // resync_cnt = 0
+                    end else begin // not reported
+                        packet_format_o = F_SYNC;
+                        packet_f_sync_subformat_o = SF_TRAP;
+                        /*thaddr_d = 1; resync_cnt = 0
+                        cause = lc_cause_i; tval = lc_tval */ 
+                        end
+                end else if(tc_first_qualified_i || tc_ppccd || tc_max_resync_i) begin
+                    packet_format_o = F_SYNC;
+                    packet_f_sync_subformat_o = SF_START;
+                    //resync_cnt = 0
+                end else if(lc_updiscon_i) begin
+                    if(tc_exc_only) begin
+                        packet_format_o = F_SYNC;
+                        packet_f_sync_subformat_o = SF_TRAP;
+                        /* thaddr = 0; resync_cnt = 0
+                        cause = tc_cause_i; tval = tc_tval  */
                     end else begin
-                        if (/*reported*/) begin
-                            /*
-                            format 3 subformat 0
-                            resync count = 0
-                            */
-                        end else begin // not reported
-                            /*
-                            format 3 subformat 1
-                            thaddr = 1 ; resync_cnt = 0
-                            */
+                        /* choosing between format 0/1/2 */
+                        if(tc_pbc_i >= 31) begin
+                        packet_format_o = F_OPT_EXT;
+                        packet_f_opt_ext_subformat_o = SF_JTC;
+                        /* format 0 subformat 0
+                        value for payload TBD */
+                        
+                        end else if(jtc_enabled_i && address_in_cache_i) begin
+                            packet_format_o = F_OPT_EXT;
+                            packet_f_opt_ext_subformat_o = SF_JTC;
+                            /* value for payload TBD */
+                        end else if(!tc_branch_map_empty) begin
+                            packet_format_o = F_DIFF_DELTA;
+                            /* value for payload TBD */
+                        end else begin // branch count == 0
+                            packet_format_o = F_ADDR_ONLY;
+                            /* value for payload TBD */
                         end
                     end
-                end else begin
-                    if(tc_first_qualified_i || (tc_privchange_i && tc_precise_context_change_i && tc_context_change_w_discontinuity_i) || tc_exception_sync_i) begin
-                        /*
-                        format 3 subformat 0
-                        resync cnt = 0
-                        */
-                    end else if(lc_updiscon_i) begin
-                        if(tc_exception_i) begin
-                            /*
-                            format 3 subformat 1
-                            thaddr = 0 ; resync_cnt = 0
-                            tc_cause ; tc_tval
-                            */
-                        end else begin
-                            /*
-                            possible formats: 0/1/2
-                            to discriminate refer to page 54 of the spec
-                            */
-                        end
-                    end else if(tc_exception_sync_i || /*tc_er_n*/) begin // not lc_updiscon
-                        /*
-                        possible formats: 0/1/2
-                        to discriminate refer to page 54 of the spec
-                        */
-                    end else if(/*nc except only*/ || (nc_privchange_i && nc_precise_context_change_i && nc_context_change_w_discontinuity_i && ~nc_branch_map_empty_i)) begin
-                        /*
-                        possible formats: 0/1/2
-                        to discriminate refer to page 54 of the spec
-                        */
-                    end else if(/*rpt_br*/) begin
-                        if(/*pbc >= 31*/) begin
-                            //format 0 ; no address  
-                        end else begin
-                            // format 1 ; no address
-                        end
-                    end else if(tc_imprecise_context_change_i) begin
-                        // format 3 subformat 2
-                    end /* else begin
-                        // no packet
+                end else if(tc_resync_br || tc_er_n) begin
+                    /* choosing between format 0/1/2 */
+                    if(tc_pbc_i >= 31) begin
+                        packet_format_o = F_OPT_EXT;
+                        packet_f_opt_ext_subformat_o = SF_JTC;
+                        /* value for payload TBD */
+                    end else if(jtc_enabled_i && address_in_cache_i) begin
+                        packet_format_o = F_OPT_EXT;
+                        packet_f_opt_ext_subformat_o = SF_JTC;
+                        /* value for payload TBD */
+                    end else if(!tc_branch_map_empty) begin
+                        packet_format_o = F_DIFF_DELTA;
+                        /* value for payload TBD */
+                    end else begin // branch count == 0
+                        packet_format_o = F_ADDR_ONLY;
+                        /* value for payload TBD */
                     end
-                        */
-                end 
+                end else if(nc_exc_only || nc_ppccd_br || !nc_qualified_i) begin
+                    /* choosing between format 0/1/2 */
+                    if(tc_pbc_i >= 31) begin
+                        packet_format_o = F_OPT_EXT;
+                        packet_f_opt_ext_subformat_o = SF_JTC;
+                        /* value for payload TBD */
+                    end else if(jtc_enabled_i && address_in_cache_i) begin
+                        packet_format_o = F_OPT_EXT;
+                        packet_f_opt_ext_subformat_o = SF_JTC;
+                        /* value for payload TBD */
+                    end else if(!tc_branch_map_empty) begin
+                        packet_format_o = F_DIFF_DELTA;
+                        /* value for payload TBD */
+                    end else begin // branch count == 0
+                        packet_format_o = F_ADDR_ONLY;
+                        /* value for payload TBD */
+                    end
+                end else if(tc_rpt_br) begin
+                    if(tc_pbc_i >= 31) begin
+                        packet_format_o = F_OPT_EXT;
+                        packet_f_opt_ext_subformat_o = SF_PBC;
+                    end else
+                        packet_format_o = F_DIFF_DELTA;
+                end else if(tc_cci) begin
+                    packet_format_o = F_SYNC;
+                    packet_f_sync_subformat_o = SF_CONTEXT;
+                end
             end
         end
     end
