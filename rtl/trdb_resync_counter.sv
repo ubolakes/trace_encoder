@@ -22,13 +22,16 @@ module trdb_counter_emitter
     always_ff @( posedge clk_i, negedge rst_ni ) begin: counter
         if(~rst_ni) begin
             counter <= '0;
-        end else if(CYCLE_MODE && trace_enabled_i) begin
-            counter++;
-        end else if(PACKET_MODE && trace_enabled_i) begin
-            if(packet_emitted_i)
+        end else begin
+            if(counter == MAX_VALUE) begin
+                resync_max_o <= '1;
+                counter <= '0;
+            end else if(PACKET_MODE && trace_enabled_i) begin
+                if(packet_emitted_i)
+                    counter++;
+            end else if(CYCLE_MODE && trace_enabled_i) begin
                 counter++;
-        end else if(counter == MAX_VALUE) begin
-            resync_max_o <= '1;
+            end
         end
     end
 
