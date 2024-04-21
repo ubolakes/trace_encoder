@@ -141,7 +141,9 @@ module trdb_priority (
     output logic                        valid_o,
     output trdb_format_e                packet_format_o,
     output trdb_f_sync_subformat_e      packet_f_sync_subformat_o,
-    output trdb_f_opt_ext_subformat_e   packet_f_opt_ext_subformat_o // this signal is useless for snitch, since it doesn't support jtc and branch prediction
+    output trdb_f_opt_ext_subformat_e   packet_f_opt_ext_subformat_o, // this signal is useless for snitch, since it doesn't support jtc and branch prediction
+    output logic                        thaddr_o,
+    output logic                        cause_mux_o // logic, operates the MUX to choose between lc or tc cause: 0 -> lc, 1 -> tc
     );
 
     /* signals required for packet determination */
@@ -196,7 +198,7 @@ module trdb_priority (
                                 ~nc_branch_map_empty_i;
     assign  tc_f3_sf3       = tc_enc_enabled_i || tc_enc_disabled_i || tc_opmode_change_i ||
                                 lc_final_qualified_instr_i || tc_packets_lost_i;
-
+    assign thaddr_o         = thaddr_d;
 
     /* combinatorial network to determine packet format */
     // refer to flowchart at page 53 of the spec
@@ -207,6 +209,8 @@ module trdb_priority (
         packet_f_sync_subformat_o = SF_START;
         packet_f_opt_ext_subformat_o = SF_PBC;
         notify_o = '0;
+        thaddr_o = '0;
+        cause_mux_o = '0;
 
         if( valid_i) begin
             // format 3 subformat 3 packet generation
@@ -225,6 +229,8 @@ module trdb_priority (
                     if(tc_exc_only) begin
                         packet_format_o = F_SYNC;
                         packet_f_sync_subformat_o = SF_TRAP;
+                        thaddr_d = '0;
+                        cause_mux_o = 0;
                         /* thaddr_d = 0; resync_cnt = 0
                         cause = lc_cause_i; tval = lc_tval*/
                         valid_o = '1;
