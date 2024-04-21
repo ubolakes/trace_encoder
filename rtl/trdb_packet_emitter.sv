@@ -45,8 +45,16 @@ module trdb_packet_emitter
     //input logic [PRIVLEN:0] priv_i,
     //input logic [:0] time_i, // optional
     //input logic [:0] context_i, // optional
-    input logic [CAUSELEN:0] ecause_i,
+    input logic cause_mux_i,
+    /*  format 3 subformat 1 packets require sometimes lc_cause o tc_cause
+        how do I discriminate them? Need another signal?
+        The use of lc or tc values depends on a previous updiscon:
+        combinatorial network that determines the ecause depending on
+        the case.
+        Idea:   output the ecause signal from trdb_priority, choosing
+                between lc or tc*/
     input logic interrupt_i,
+    input logic thaddr_i,
     input logic [XLEN-1:0] tvec_i, // trap handler address
     input logic [XLEN-1:0] epc_i,
     //input logic [XLEN-1:0]iaddr_i,
@@ -107,7 +115,7 @@ module trdb_packet_emitter
                     For a better description refer to page 38 of the spec
     */
     // most of the time these 2 values can be compressed
-    //input logic lc_updiscon_i,
+    input logic lc_updiscon_i,
 
     input logic irreport_i,
     /*  the value of irreport is different from updiscon
@@ -166,11 +174,24 @@ module trdb_packet_emitter
                                 // understand how the Robert tracer does that
 );
     
+    // internal signals
+    logic branch;
+    logic [XLEN-1:0] address;
+    logic [CAUSELEN:0] ecause;
+    logic [:0] diff_address;
+
+
+    // assigning values
+    assign branch = ~(is_branch_i && is_branch_taken_i);
+    assign address = thaddr_i ? tvec_i : epc_i;
+    assign ecause = cause_mux_i ? tc_cause_i : lc_cause_i;
+    
+
     // combinatorial network to output packets
     always_comb begin : set_packet_bits
         // init values
         packet_type_o = {F_OPT_EXT, SF_START}; // 4'b0
-        packet_length_o = '0; // in bytes
+        packet_length_o = '0; // in bytes, computed as the length in bit of (type+payload)/8
         packet_payload_o = '0;
         packet_valid_o = '0;
         
@@ -183,32 +204,29 @@ module trdb_packet_emitter
 
                 SF_START: begin // subformat 0
                     packet_type_o = {F_SYNC, SF_START};
-                    packet_payload_o = {};
-                    packet_length_o = ; // computed as the length in bit of (type+payload)/8
+                    packet_payload_o = {branch, priv_i, time_i, context_i, iaddr_i};
+                    packet_length_o = (1 + PRIVLEN + /*TIMELEN: TBD*/ + /*CONTEXTLEN: TBD*/ + XLEN-1)/8;
                     packet_valid_o = '1;
                 end
-
 
                 SF_TRAP: begin // subformat 1
                     packet_type_o = {F_SYNC, SF_TRAP};
-                    packet_payload_o = {};
-                    packet_length_o = ; // computed as the length in bit of (type+payload)/8
+                    packet_payload_o = {branch. priv_i, time_i, context_i, ecause, interrupt_i, thaddr_i, address, tval_i };
+                    packet_length_o = ;
                     packet_valid_o = '1;
                 end
-                
                 
                 SF_CONTEXT: begin // subformat 2
                     packet_type_o = {F_SYNC, SF_CONTEXT};
-                    packet_payload_o = {};
-                    packet_length_o = ; // computed as the length in bit of (type+payload)/8
+                    packet_payload_o = {priv_i, time_i, context_i};
+                    packet_length_o = ;
                     packet_valid_o = '1;
                 end
-                
                 
                 SF_SUPPORT: begin // subformat 3
                     packet_type_o = {F_SYNC, SF_SUPPORT};
                     packet_payload_o = {};
-                    packet_length_o = ; // computed as the length in bit of (type+payload)/8
+                    packet_length_o = ;
                     packet_valid_o = '1;
                 end
                 endcase
@@ -217,16 +235,16 @@ module trdb_packet_emitter
 
             F_ADDR_ONLY: begin // format 2
                 packet_type_o = {F_ADDR_ONLY, SF_START}; // the last 2 bits have no meaning, set them to 0?
-                packet_payload_o = {};
-                packet_length_o = ; // computed as the length in bit of (type+payload)/8
+                packet_payload_o = {notify_i, lc_updiscon_i, irreport_i, irreport_i};
+                packet_length_o = ;
                 packet_valid_o = '1;
             end
 
 
             F_DIFF_DELTA: begin // format 1
                 packet_type_o = {F_DIFF_DELTA, SF_START};
-                packet_payload_o = {};
-                packet_length_o = ; // computed as the length in bit of (type+payload)/8
+                packet_payload_o = {branches_i, branch_map_i, a};
+                packet_length_o = ;
                 packet_valid_o = '1;
             end
 
@@ -236,7 +254,7 @@ module trdb_packet_emitter
                 SF_PBC: begin // subformat 0
                     packet_type_o = {F_OPT_EXT, SF_PBC};
                     packet_payload_o = {};
-                    packet_length_o = ; // computed as the length in bit of (type+payload)/8
+                    packet_length_o = ;
                     packet_valid_o = '1;
                 end
 
@@ -244,7 +262,7 @@ module trdb_packet_emitter
                 SF_JTC: begin // subformat 1
                     packet_type_o = {F_OPT_EXT, SF_JTC};
                     packet_payload_o = {};
-                    packet_length_o = ; // computed as the length in bit of (type+payload)/8
+                    packet_length_o = ;
                     packet_valid_o = '1;
                 end
                 endcase
