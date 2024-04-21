@@ -16,7 +16,8 @@ module trdb_packet_emitter
 
     // necessary info to assemble packet
     input trdb_format_e packet_format_i,
-    input trdb_subformat_e packet_subformat_i,
+    input trdb_f_sync_subformat_e trdb_f_sync_subformat_i, // subformat for format 3
+    input trdb_f_opt_ext_subformat_e trdb_f_opt_ext_subformat_i, // subformat for format 0
 
     // lc (last cycle) signals
     input logic lc_cause_i,
@@ -144,13 +145,14 @@ module trdb_packet_emitter
 
     Since snitch does NOT support any of them,
     this format of packet is not necessary
+    But signals are present for other cores
 
     */
     //input logic [:0] branch_map_i,
 
 
-    // outputs
-    output logic [PTYPELEN:0]packet_type_o, // {packet_format, packet_subformat}
+    // outputs      typelen == 4?
+    output logic [PTYPELEN:0]packet_type_o, // {packet_format, packet_subformat}?
     output logic [PLEN:0] packet_length_o, // in bytes
     output logic [PAYLOADLEN:0] packet_payload_o,
     output logic packet_valid_o,
@@ -162,7 +164,95 @@ module trdb_packet_emitter
     output logic branch_map_flush_o, // flushes the branch map
     output logic resync_timer_rst_o,  // not final
                                 // understand how the Robert tracer does that
-
 );
     
+    // combinatorial network to output packets
+    always_comb begin : set_packet_bits
+        // init values
+        packet_type_o = {F_OPT_EXT, SF_START}; // 4'b0
+        packet_length_o = '0; // in bytes
+        packet_payload_o = '0;
+        packet_valid_o = '0;
+        
+        if(valid_i) begin
+        
+            case(packet_format_i)
+
+            F_SYNC: begin // format 3
+                case(trdb_f_sync_subformat_i)
+
+                SF_START: begin // subformat 0
+                    packet_type_o = {F_SYNC, SF_START};
+                    packet_payload_o = {};
+                    packet_length_o = ; // computed as the length in bit of (type+payload)/8
+                    packet_valid_o = '1;
+                end
+
+
+                SF_TRAP: begin // subformat 1
+                    packet_type_o = {F_SYNC, SF_TRAP};
+                    packet_payload_o = {};
+                    packet_length_o = ; // computed as the length in bit of (type+payload)/8
+                    packet_valid_o = '1;
+                end
+                
+                
+                SF_CONTEXT: begin // subformat 2
+                    packet_type_o = {F_SYNC, SF_CONTEXT};
+                    packet_payload_o = {};
+                    packet_length_o = ; // computed as the length in bit of (type+payload)/8
+                    packet_valid_o = '1;
+                end
+                
+                
+                SF_SUPPORT: begin // subformat 3
+                    packet_type_o = {F_SYNC, SF_SUPPORT};
+                    packet_payload_o = {};
+                    packet_length_o = ; // computed as the length in bit of (type+payload)/8
+                    packet_valid_o = '1;
+                end
+                endcase
+            end
+
+
+            F_ADDR_ONLY: begin // format 2
+                packet_type_o = {F_ADDR_ONLY, SF_START}; // the last 2 bits have no meaning, set them to 0?
+                packet_payload_o = {};
+                packet_length_o = ; // computed as the length in bit of (type+payload)/8
+                packet_valid_o = '1;
+            end
+
+
+            F_DIFF_DELTA: begin // format 1
+                packet_type_o = {F_DIFF_DELTA, SF_START};
+                packet_payload_o = {};
+                packet_length_o = ; // computed as the length in bit of (type+payload)/8
+                packet_valid_o = '1;
+            end
+
+
+            F_OPT_EXT: begin // format 0
+                case(trdb_f_opt_ext_subformat_i)
+                SF_PBC: begin // subformat 0
+                    packet_type_o = {F_OPT_EXT, SF_PBC};
+                    packet_payload_o = {};
+                    packet_length_o = ; // computed as the length in bit of (type+payload)/8
+                    packet_valid_o = '1;
+                end
+
+
+                SF_JTC: begin // subformat 1
+                    packet_type_o = {F_OPT_EXT, SF_JTC};
+                    packet_payload_o = {};
+                    packet_length_o = ; // computed as the length in bit of (type+payload)/8
+                    packet_valid_o = '1;
+                end
+                endcase
+            end
+            endcase
+        
+        end
+    end
+
+
 endmodule
