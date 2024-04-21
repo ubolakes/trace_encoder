@@ -29,6 +29,9 @@ module trace_debugger import trdb_pkg::*;
     input logic [PCLEN:0] pc_i, //pc_q - instruction address
     input logic [:0] epc_i, // epc_q, required for format 3 subformat 1
     input logic [3:0] trigger_i,
+    input logic [1:0] ctype_i, // according to the spec it's 1 or 2 bit wide
+    // here it's 2 bit for better future compatibility
+
 
     // outputs
     // info needed for the encapsulator
@@ -39,8 +42,107 @@ module trace_debugger import trdb_pkg::*;
     // TO-DO: add constants to trdb_pkg file
 
     // control signals for the module
-
-
 );
+
+    /* TO DETERMINE IF I NEED ALL OF THEM
+    // general control of this module
+    // clock enabled
+    logic                       trace_enable;
+    logic                       clk_gated;
+    // tracing enabled
+    logic                       trace_activated; // it's read from registers
+    // proper privileges for debugging
+    logic                       debug_mode;
+    // whether input is good
+    logic                       trace_valid;
+    // control the streamer unit
+    logic                       flush_stream;
+    logic                       flush_confirm;
+    // control the packet fifo
+    logic                       clear_fifo;
+    logic                       fifo_overflow;
+    // special case to jump over vector table entries (which can't be inferred
+    // by inspecting the programs' executable
+    logic                       packet_after_exception;
+    */
+
+
+    // we have three phases, called last cycle (lc), this cycle (tc) and next
+    // cycle (nc), based on which we make decision whether we need to emit a
+    // packet or not.
+    /* last cycle signals */
+    logic   lc_exception;
+    logic   lc_updiscon;
+    /* this cycle signals */
+    logic   tc_qualified;
+    logic   tc_is_branch;
+    logic   tc_exception;
+    logic   tc_retired;
+    logic   tc_first_qualified;
+    logic   tc_privchange;
+    logic   tc_precise_context_change; // optional
+    logic   tc_context_change; // optional
+    logic   tc_context_report_as_disc; // optional
+    logic   tc_max_resync;
+    logic   tc_branch_map_empty;
+    logic   tc_branch_map_full;
+    logic   tc_branch_misprediction; // not supported by snitch
+    logic   tc_imprecise_context_report; // optional
+    logic   tc_enc_enabled;
+    logic   tc_enc_disabled;
+    logic   tc_final_instr_traced;
+    logic   tc_packets_lost;
+    /* next cycle signals */
+    logic   nc_exception;
+    logic   nc_privchange;
+    logic   nc_precise_context_report;
+    logic   nc_context_report_as_disc;
+    logic   nc_branch_map_empty;
+    logic   nc_qualified;
+    logic   nc_retired;
+
+    // registers to hold input data for a few phases
+    /*
+    Per gestire i segnali di lc, tc, nc, uso dei segnali
+    che rappresentano input e output dei due FFD che si 
+    occupano di ritardare il segnale.
+            ___________                    ___________              
+    sig0_d--| D     Q |--sig0_q == sig1_d--| D     Q |--sig1_q
+      nc    |         |    tc              |         |    lc
+            |   FF0   |                    |   FF1   |
+            |_________|                    |_________|
+    */
+
+    /* TO DO:
+    1. definire i segnali 0_d, 0_q, 1_d, 1_q
+    2. ritardarli tramite FFD
+    3. fare assign con i segnali lc, tc, nc
+    */
+
+
+ /* TO DO:  create a combinatorial network to define
+            the following signals from ctype:
+                - tc_precise_context_report_i   -> ctype == 2
+                - tc_context_report_as_disc_i   -> ctype == 3
+                - tc_imprecise_context_report_i -> ctype == 1
+                - nc_precise_context_report_i   -> ctype == 2
+                - nc_context_report_as_disc_i   -> ctype == 3
+    */
+
+    always_comb begin : ctype_manager
+        case(ctype_i)
+        2'h0: // no report - add signal        
+        2'h1:
+            tc_imprecise_context_report = '1;
+        2'h2:
+            tc_precise_context_report = '1;
+        2'h3:
+            tc_context_report_as_disc = '1;
+        endcase
+    end
+
+
+
+
     
 endmodule
