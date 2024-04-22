@@ -12,6 +12,13 @@ import trdb_pkg::*;
 module trdb_priority (
     input logic valid_i,
 
+    /* ADD SIDE BAND SIGNALS: halted or reset:
+        if the halted or reset sideband signals are asserted (see Table 10) 
+        the encoder will behave as if it has received an unqualified instruction
+        (output te_inst reporting the address of the previous instruction, 
+        followed by te_support);
+    */
+
     /*  signals for the jump target cache mode - non mandatory */
     //input logic jtc_enabled_i,
     //input logic address_in_cache_i, // communicates if the address is present in cache
@@ -154,17 +161,7 @@ module trdb_priority (
                 /* refer to the spec for the payload required*/
                 valid_o = '1;
             end else if(tc_qualified_i) begin
-                /*  update branch map?
-                    here or in packet emitter?
-                    Maybe:  send signals to packet emitter
-                            to perform the update
-                    Ragionamento:   se lo faccio qui mi servono due 
-                                    porte in meno nel packet emitter*/
-                if(is_branch_i) begin
-                
-
-
-                end else if(lc_exception_i) begin
+                if(lc_exception_i) begin
                     if(tc_exc_only) begin
                         packet_format_o = F_SYNC;
                         packet_f_sync_subformat_o = SF_TRAP;
