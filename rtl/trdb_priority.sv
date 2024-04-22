@@ -155,6 +155,8 @@ module trdb_priority (
 
         if(valid_i) begin
             // format 3 subformat 3 packet generation
+            /*  this if is not in the flowchart, but it's only described.
+                To me it made more sense to have it as the first if. */
             if(tc_f3_sf3) begin
                 packet_format_o = F_SYNC;
                 packet_f_sync_subformat_o = SF_SUPPORT;
