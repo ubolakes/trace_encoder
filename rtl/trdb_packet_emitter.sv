@@ -159,17 +159,16 @@ module trdb_packet_emitter
     //input logic [:0] branch_map_i,
 
 
-    // outputs      typelen == 4?
-    output logic [PTYPELEN:0]packet_type_o, // {packet_format, packet_subformat}?
-    output logic [PLEN:0] packet_length_o, // in bytes
+    // outputs    ptypelen == 4?
+    //output logic [PTYPELEN:0]packet_type_o, // {packet_format, packet_subformat}?
+    //output logic [PLEN:0] packet_length_o, // in bytes
+    /* this module produces only the packet payload
+    that is the forwarded to the encapsulator that
+    takes care of the type and length.*/
     output logic [PAYLOADLEN:0] packet_payload_o,
-    output logic packet_valid_o,
+    output logic packet_valid_o, // used by resync counter to determine if a packet is generated
 
-    /*outputs to perform reset resync counter
-    and update/reset branch map.
-    Question:   it should be done in this module or in
-                the one choosing the packet format*/
-    output logic branch_map_flush_o, // flushes the branch map
+    output logic branch_map_flush_o, // branch map flushed after each request
     output logic resync_timer_rst_o,  // not final
                                 // understand how the Robert tracer does that
 );
@@ -179,6 +178,7 @@ module trdb_packet_emitter
     logic [XLEN-1:0] address;
     logic [CAUSELEN:0] ecause;
     logic [:0] diff_address;
+    logic branch_map_flush_d, branch_map_flush_q;
 
 
     // assigning values
@@ -196,7 +196,12 @@ module trdb_packet_emitter
         packet_valid_o = '0;
         
         if(valid_i) begin
-        
+            // flush the branch map
+            /*  branch map flushing is done in the next cycle
+                why? understand!*/
+            branch_map_flush_d = '1;
+
+
             case(packet_format_i)
 
             F_SYNC: begin // format 3
