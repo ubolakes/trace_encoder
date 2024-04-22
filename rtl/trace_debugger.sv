@@ -80,23 +80,24 @@ module trace_debugger import trdb_pkg::*;
     logic   tc_retired;
     logic   tc_first_qualified;
     logic   tc_privchange;
-    logic   tc_precise_context_change; // optional
     logic   tc_context_change; // optional
-    logic   tc_context_report_as_disc; // optional
+    //logic   tc_precise_context_change; // requires trigger unit CPU side
+    //logic   tc_context_report_as_disc; // ibidem
+    //logic   tc_no_context_report;      // ibidem
+    //logic   tc_imprecise_context_report; // ibidem
     logic   tc_max_resync;
     logic   tc_branch_map_empty;
     logic   tc_branch_map_full;
-    logic   tc_branch_misprediction; // not supported by snitch
-    logic   tc_imprecise_context_report; // optional
+    //logic   tc_branch_misprediction; // non mandatory
     logic   tc_enc_enabled;
     logic   tc_enc_disabled;
     logic   tc_final_instr_traced;
-    logic   tc_packets_lost;
+    //logic   tc_packets_lost; // non mandatory
     /* next cycle signals */
     logic   nc_exception;
     logic   nc_privchange;
-    logic   nc_precise_context_report;
-    logic   nc_context_report_as_disc;
+    //logic   nc_precise_context_report; // same as tc version
+    //logic   nc_context_report_as_disc; // same as tc version
     logic   nc_branch_map_empty;
     logic   nc_qualified;
     logic   nc_retired;
@@ -120,15 +121,17 @@ module trace_debugger import trdb_pkg::*;
     */
 
 
- /* TO DO:  create a combinatorial network to define
-            the following signals from ctype:
-                - tc_precise_context_report_i   -> ctype == 2
-                - tc_context_report_as_disc_i   -> ctype == 3
-                - tc_imprecise_context_report_i -> ctype == 1
-                - nc_precise_context_report_i   -> ctype == 2
-                - nc_context_report_as_disc_i   -> ctype == 3
+    /*  following commented section has non mandatory signals
+        for now it's commented
     */
-
+ /* combinatorial network to define the following 
+    signals from ctype:
+    - tc_precise_context_report_i   -> ctype == 2
+    - tc_context_report_as_disc_i   -> ctype == 3
+    - tc_imprecise_context_report_i -> ctype == 1
+    - nc_precise_context_report_i   -> ctype == 2
+    - nc_context_report_as_disc_i   -> ctype == 3*/
+    /*
     always_comb begin : ctype_manager
         case(ctype_i)
         2'h0: // no report - add signal        
@@ -140,7 +143,7 @@ module trace_debugger import trdb_pkg::*;
             tc_context_report_as_disc = '1;
         endcase
     end
-
+    */
 
 
 
