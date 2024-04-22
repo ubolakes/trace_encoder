@@ -80,7 +80,7 @@ module trdb_priority (
     output logic                        valid_o,
     output trdb_format_e                packet_format_o,
     output trdb_f_sync_subformat_e      packet_f_sync_subformat_o,
-    output trdb_f_opt_ext_subformat_e   packet_f_opt_ext_subformat_o, // this signal is useless for snitch, since it doesn't support jtc and branch prediction
+    //output trdb_f_opt_ext_subformat_e   packet_f_opt_ext_subformat_o, // non mandatory, used for jtc and branch prediction
     output logic                        thaddr_o, // required for f3 sf1 packet payload
     output logic                        cause_mux_o, // operates the MUX to choose between lc or tc cause: 0 -> lc, 1 -> tc
     output logic                        tval_mux_o, // operates the MUX to choose between lc or tc tval: 0 -> lc, 1 -> tc
@@ -146,14 +146,14 @@ module trdb_priority (
         valid_o = '0;
         packet_format_o = F_OPT_EXT;
         packet_f_sync_subformat_o = SF_START;
-        packet_f_opt_ext_subformat_o = SF_PBC;
+        //packet_f_opt_ext_subformat_o = SF_PBC;
         //notify_o = '0;
         thaddr_o = '0;
         cause_mux_o = '0;
         resync_rst_o = '0;
         tval_mux_o = '0;
 
-        if( valid_i) begin
+        if(valid_i) begin
             // format 3 subformat 3 packet generation
             if(tc_f3_sf3) begin
                 packet_format_o = F_SYNC;
@@ -194,6 +194,7 @@ module trdb_priority (
                     packet_f_sync_subformat_o = SF_START;
                     resync_rst_o = '1;
                     //resync_cnt = 0
+                    // following commented code non mandatory, requires trigger unit support
                     //check if packet requested by trigger unit
                     /*if(tc_precise_context_report_i || tc_context_report_as_disc_i) begin
                         notify_o = '1;
@@ -280,11 +281,12 @@ module trdb_priority (
                         notify_o = '1;
                     end*/
                 end else if(tc_rpt_br) begin
+                    /* // non mandatory, requires support for jtc and branch prediction
                     if(tc_pbc_i >= 31) begin
                         packet_format_o = F_OPT_EXT;
                         packet_f_opt_ext_subformat_o = SF_PBC;
                         valid_o = '1;
-                    end else
+                    end else*/
                         packet_format_o = F_DIFF_DELTA;
                 end /*else if(tc_cci) begin
                     packet_format_o = F_SYNC;
