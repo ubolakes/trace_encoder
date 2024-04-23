@@ -10,6 +10,10 @@ it orders packet generation request by priority
 import trdb_pkg::*;
 
 module trdb_priority (
+
+    input logic clk_i,
+    input logic rst_ni,
+
     input logic valid_i,
 
     /* ADD SIDE BAND SIGNALS: halted or reset:
@@ -33,7 +37,6 @@ module trdb_priority (
 
     // tc (this cycle) signals
     input logic tc_qualified_i,
-    input logic tc_is_branch_i,
     input logic tc_exception_i,
 
     input logic tc_retired_i, // istr retired in tc
@@ -42,7 +45,7 @@ module trdb_priority (
     input logic tc_first_qualified_i,
     input logic tc_privchange_i,
     //input logic tc_precise_context_report_i,  // requires trigger unit CPU side
-    //input logic tc_context_change_i,          // ibidem
+    input logic tc_context_change_i,          // ibidem
     //input logic tc_context_report_as_disc_i,  // ibidem
     input logic tc_max_resync_i, // resync timer expired
     input logic tc_branch_map_empty_i,
@@ -59,7 +62,7 @@ module trdb_priority (
     input logic tc_enc_enabled_i,
     input logic tc_enc_disabled_i,
     input logic tc_opmode_change_i,
-    input logic lc_final_qualified_instr_i,
+    input logic lc_final_qualified_i,
     //input logic tc_packets_lost_i, // non mandatory
 
 
@@ -84,7 +87,6 @@ module trdb_priority (
     output logic                        thaddr_o, // required for f3 sf1 packet payload
     output logic                        cause_mux_o, // operates the MUX to choose between lc or tc cause: 0 -> lc, 1 -> tc
     output logic                        tval_mux_o, // operates the MUX to choose between lc or tc tval: 0 -> lc, 1 -> tc
-    output logic                        branch_map_flush_o, // flushes the branch map
     output logic                        resync_rst_o // resets counter
     );
 
@@ -102,7 +104,7 @@ module trdb_priority (
         if(~rst_ni) begin
             lc_thaddr_q <= '0;
         end else begin
-            lc_thaddr_q <= thaddr_d;
+            lc_thaddr_q <= lc_thaddr_d;
         end
     end
     
@@ -123,7 +125,7 @@ module trdb_priority (
     // value assignment
     assign  tc_exc_only     = tc_exception_i && ~tc_retired_i;
     assign  tc_reported     = lc_exception_i && ~lc_thaddr_q;
-    assign  tc_ppccd        = tc_priv_change_i || (tc_context_change_i /*&& 
+    assign  tc_ppccd        = tc_privchange_i || (tc_context_change_i /*&& 
                                 (tc_precise_context_report_i ||
                                 tc_context_report_as_disc_i)*/);
     assign  tc_resync_br    = tc_max_resync_i && ~tc_branch_map_empty_i;
@@ -131,12 +133,12 @@ module trdb_priority (
     assign  tc_rpt_br       = tc_branch_map_full_i /* || tc_branch_misprediction_i*/;
     //assign  tc_cci          = tc_context_change_i && tc_imprecise_context_report_i;
     assign  nc_exc_only     = nc_exception_i && ~nc_retired_i;
-    assign  nc_ppccd_br     = (nc_privchange_i || (nc_context_change_i && 
-                                (nc_precise_context_report_i || nc_context_report_as_disc_i))) && 
+    assign  nc_ppccd_br     = (nc_privchange_i || (nc_context_change_i /*&&
+                                (nc_precise_context_report_i || nc_context_report_as_disc_i)*/)) && 
                                 ~nc_branch_map_empty_i;
     assign  tc_f3_sf3       = tc_enc_enabled_i || tc_enc_disabled_i || tc_opmode_change_i ||
-                                lc_final_qualified_instr_i /*|| tc_packets_lost_i*/;
-    assign thaddr_o         = thaddr_d;
+                                lc_final_qualified_i /*|| tc_packets_lost_i*/;
+    assign thaddr_o         = lc_thaddr_d;
 
 
     /* combinatorial network to determine packet format */
@@ -148,7 +150,7 @@ module trdb_priority (
         packet_f_sync_subformat_o = SF_START;
         //packet_f_opt_ext_subformat_o = SF_PBC;
         //notify_o = '0;
-        thaddr_o = '0;
+        lc_thaddr_d = '0; // init value not defined by spec
         cause_mux_o = '0;
         resync_rst_o = '0;
         tval_mux_o = '0;
@@ -167,7 +169,7 @@ module trdb_priority (
                     if(tc_exc_only) begin
                         packet_format_o = F_SYNC;
                         packet_f_sync_subformat_o = SF_TRAP;
-                        thaddr_d = '0;
+                        lc_thaddr_d = '0;
                         resync_rst_o = '1;
                         cause_mux_o = 0;
                         tval_mux_o = '0;
@@ -183,7 +185,7 @@ module trdb_priority (
                     end else begin // not reported
                         packet_format_o = F_SYNC;
                         packet_f_sync_subformat_o = SF_TRAP;
-                        thaddr_d = '1;
+                        lc_thaddr_d = '1;
                         resync_rst_o = '1;
                         cause_mux_o = '0;
                         tval_mux_o = '0;
@@ -206,7 +208,7 @@ module trdb_priority (
                     if(tc_exc_only) begin
                         packet_format_o = F_SYNC;
                         packet_f_sync_subformat_o = SF_TRAP;
-                        thaddr_d = '0;
+                        lc_thaddr_d = '0;
                         resync_rst_o = '1;
                         cause_mux_o = '1;
                         tval_mux_o = '1;
@@ -215,18 +217,18 @@ module trdb_priority (
                         valid_o = '1;
                     end else begin
                         /* choosing between format 0/1/2 */
-                        if(tc_pbc_i >= 31) begin
+                        /*if(tc_pbc_i >= 31) begin
                         packet_format_o = F_OPT_EXT;
                         packet_f_opt_ext_subformat_o = SF_JTC;
-                        /* format 0 subformat 0
-                        value for payload TBD */
+          		// format 0 subformat 0
+                        // value for payload TBD
                         valid_o = '1;
                         end else if(jtc_enabled_i && address_in_cache_i) begin
                             packet_format_o = F_OPT_EXT;
                             packet_f_opt_ext_subformat_o = SF_JTC;
-                            /* value for payload TBD */
+                            // value for payload TBD
                             valid_o = '1;
-                        end else if(!tc_branch_map_empty) begin
+                        end else*/ if(!tc_branch_map_empty_i) begin
                             packet_format_o = F_DIFF_DELTA;
                             /* value for payload TBD */
                             valid_o = '1;
@@ -238,19 +240,19 @@ module trdb_priority (
                     end
                 end else if(tc_resync_br || tc_er_n) begin
                     /* choosing between format 0/1/2 */
-                    if(tc_pbc_i >= 31) begin
+                    /*if(tc_pbc_i >= 31) begin
                         packet_format_o = F_OPT_EXT;
                         packet_f_opt_ext_subformat_o = SF_JTC;
-                        /* value for payload TBD */
+                        // value for payload TBD
                         valid_o = '1;
                     end else if(jtc_enabled_i && address_in_cache_i) begin
                         packet_format_o = F_OPT_EXT;
                         packet_f_opt_ext_subformat_o = SF_JTC;
-                        /* value for payload TBD */
+                        // value for payload TBD
                         valid_o = '1;
-                    end else if(!tc_branch_map_empty) begin
+                    end else*/ if(!tc_branch_map_empty_i) begin
                         packet_format_o = F_DIFF_DELTA;
-                        /* value for payload TBD */
+                        // value for payload TBD
                         valid_o = '1;
                     end else begin // branch count == 0
                         packet_format_o = F_ADDR_ONLY;
@@ -259,17 +261,17 @@ module trdb_priority (
                     end
                 end else if(nc_exc_only || nc_ppccd_br || !nc_qualified_i) begin
                     /* choosing between format 0/1/2 */
-                    if(tc_pbc_i >= 31) begin
+                    /*if(tc_pbc_i >= 31) begin
                         packet_format_o = F_OPT_EXT;
                         packet_f_opt_ext_subformat_o = SF_JTC;
-                        /* value for payload TBD */
+                        // value for payload TBD
                         valid_o = '1;
                     end else if(jtc_enabled_i && address_in_cache_i) begin
                         packet_format_o = F_OPT_EXT;
                         packet_f_opt_ext_subformat_o = SF_JTC;
-                        /* value for payload TBD */
+                        // value for payload TBD
                         valid_o = '1;
-                    end else if(!tc_branch_map_empty) begin
+                    end else*/ if(!tc_branch_map_empty_i) begin
                         packet_format_o = F_DIFF_DELTA;
                         /* value for payload TBD */
                         valid_o = '1;
