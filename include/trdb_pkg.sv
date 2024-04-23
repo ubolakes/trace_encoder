@@ -1,12 +1,12 @@
 package trdb_pkg; // cercare in snitch
-    localparam CAUSELEN = ;
-    localparam TVECLEN = 
-    localparam PRIVLEN = 
-    localparam INSTLEN = ;
-    localparam PCLEN = ;
-    localparam PTYPELEN = ;
-    localparam PLEN = ;
-    localparam PAYLOADLEN = ;
+/*    localparam CAUSELEN = 4;
+    localparam TVECLEN = 30;
+    localparam PRIVLEN = 2;
+    localparam INSTLEN = 31;
+    localparam PCLEN = 31;
+    localparam PTYPELEN = 4;
+    localparam PLEN = 4;
+    localparam PAYLOADLEN = 32;*/
 `ifdef TRDB_ARCH64 // 64bit arch specific parameters
     localparam XLEN = 64;
 `else // 32bit arch
