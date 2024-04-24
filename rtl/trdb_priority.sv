@@ -74,7 +74,7 @@ module trdb_priority (
     // refer to page 52 of the spec
     //input logic halted_i,
     //input logic reset_i,
-    /*  where do I put them in the flowchart?
+    /*  where do I put them in the flowchart? all'inizio
         are they produced by the CPU?*/
 
     // trigger unit request ports, must be supported by the CPU
@@ -92,24 +92,12 @@ module trdb_priority (
     output logic                        resync_timer_rst_o // resets counter
     );
 
+
     /* signals required for packet determination */
     // last cycle
     logic   lc_thaddr_d;
     logic   lc_thaddr_q; // 1 cycle delayed
-    
-    /*  
-    The reset value is 0, the spec doesn't say how to behave.
-    The 0 value specifies an exception w/out retired instr 
-    in this cycle and an exception in the previous cycle.
-    */
-    always_ff @( posedge clk_i, negedge rst_ni ) begin : delayed_thaddr
-        if(~rst_ni) begin
-            lc_thaddr_q <= '0;
-        end else begin
-            lc_thaddr_q <= lc_thaddr_d;
-        end
-    end
-    
+
     // this cycle
     logic   tc_exc_only; // for a precise definition: page 51 of the spec
     logic   tc_reported; // ibidem
@@ -141,6 +129,19 @@ module trdb_priority (
     assign  tc_f3_sf3       = tc_enc_enabled_i || tc_enc_disabled_i || tc_opmode_change_i ||
                                 lc_final_qualified_i /*|| tc_packets_lost_i*/;
     assign thaddr_o         = lc_thaddr_d;
+
+    /*  
+    The reset value is 0, the spec doesn't say how to behave.
+    The 0 value specifies an exception w/out retired instr 
+    in this cycle and an exception in the previous cycle.
+    */
+    always_ff @( posedge clk_i, negedge rst_ni ) begin : delayed_thaddr
+        if(~rst_ni) begin
+            lc_thaddr_q <= '0;
+        end else begin
+            lc_thaddr_q <= lc_thaddr_d;
+        end
+    end
 
 
     /*TODO: add condition to determine if F2, F1, F0SF0 are requested by the trigger unit*/
