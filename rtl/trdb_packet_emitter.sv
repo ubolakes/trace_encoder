@@ -39,18 +39,13 @@ module trdb_packet_emitter
     // format 3 subformat 0 specific signals
     input logic is_branch_i,
     input logic is_branch_taken_i,
-    input logic [PRIVLEN:0] priv_i,
+    input logic [PRIV_LEN:0] priv_i,
     //input logic [:0] time_i,    // optional
     //input logic [:0] context_i, // optional
     input logic [XLEN-1:0] iaddr_i,
     input logic resync_timeout_i, // requested resync by the timer
 
     // format 3 subformat 1 specific signals
-    //input logic is_branch_i,
-    //input logic is_branch_taken_i,
-    //input logic [PRIVLEN:0] priv_i,
-    //input logic [:0] time_i, // optional
-    //input logic [:0] context_i, // optional
     input logic cause_mux_i,
     /*  format 3 subformat 1 packets require sometimes lc_cause o tc_cause
         how do I discriminate them? Need another signal?
@@ -66,13 +61,7 @@ module trdb_packet_emitter
     input logic thaddr_i,
     input logic [XLEN-1:0] tvec_i, // trap handler address
     input logic [XLEN-1:0] epc_i,
-    //input logic [XLEN-1:0]iaddr_i,
     
-    // format 3 subformat 2 specific signals
-    //input logic [PRIVLEN:0] priv_i,
-    //input logic [:0] time_i, // optional
-    //input logic [:0] context_i, // optional
-
     // format 3 subformat 3 specific signals
     input logic ienable_i, // trace encoder enabled
     input logic encoder_mode_i, // implementation specific, right now only branch trace supported (value==0). Hardwire to 0?
@@ -110,7 +99,6 @@ module trdb_packet_emitter
 
 
     // format 2 specific signals
-    //input logic [XLEN-1:0] iaddr_i,
     /*  notify -> means the packet was requested by the cpu trigger unit*/ 
     //input logic notify_i, // non mandatory
     
@@ -143,15 +131,9 @@ module trdb_packet_emitter
             - 0: no need for address
             - >0: address required
     */
-    input logic [:0] branches_i, // in Robert implementation is called branch_cnt
-    input logic [:0] branch_map_i, // in the packet it can change size to improve efficiency
-    //input logic [XLEN-1:0] iaddr_i,
-    //input logic notify_i,
-    //input logic lc_updiscon_i,
-    //input logic irreport_i, // same as format 2
-    //input logic irdepth_i, // same as format 2
+    input logic [4:0] branches_i, // in Robert implementation is called branch_cnt
+    input logic [31:0] branch_map_i, // in the packet it can change size to improve efficiency
     
-
     // format 0 specific signals
     /*  This format can have two possible subformats:
             - subformat 0: number of correctly predicted branches
@@ -159,16 +141,13 @@ module trdb_packet_emitter
 
         Non mandatory, required support by the encoder.
     */
-    //input logic [:0] branch_map_i,
 
-
-    // outputs    ptypelen == 4?
-    //output logic [PTYPELEN:0]packet_type_o, // {packet_format, packet_subformat}?
-    //output logic [PLEN:0] payload_length_o, // in bytes
+    // outputs
+    output logic [P_LEN:0] payload_length_o, // in bytes
     /* this module produces only the packet payload
     that is the forwarded to the encapsulator that
     takes care of the type and length.*/
-    output logic [PAYLOADLEN:0] packet_payload_o,
+    output logic [PAYLOAD_LEN:0] packet_payload_o,
     output logic packet_valid_o, // asserted when a packet is generated
 
     output logic branch_map_flush_o, // branch map flushed after each request
@@ -177,7 +156,7 @@ module trdb_packet_emitter
     // internal signals
     logic branch;
     logic [XLEN-1:0] address;
-    logic [CAUSELEN:0] ecause;
+    logic [CAUSE_LEN:0] ecause;
     logic [:0] diff_address;
     logic branch_map_flush_d, branch_map_flush_q;
     logic tval;
