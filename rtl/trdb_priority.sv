@@ -89,7 +89,7 @@ module trdb_priority (
     output logic                        thaddr_o, // required for f3 sf1 packet payload
     output logic                        cause_mux_o, // operates the MUX to choose between lc or tc cause: 0 -> lc, 1 -> tc
     output logic                        tval_mux_o, // operates the MUX to choose between lc or tc tval: 0 -> lc, 1 -> tc
-    output logic                        resync_rst_o // resets counter
+    output logic                        resync_timer_rst_o // resets counter
     );
 
     /* signals required for packet determination */
@@ -143,7 +143,7 @@ module trdb_priority (
     assign thaddr_o         = lc_thaddr_d;
 
 
-    /*TODO: add condition to determine if format 2, 1, 0SF0 are requested by the trigger unit*/
+    /*TODO: add condition to determine if F2, F1, F0SF0 are requested by the trigger unit*/
 
     /* combinatorial network to determine packet format */
     // refer to flowchart at page 53 of the spec
@@ -156,7 +156,7 @@ module trdb_priority (
         //notify_o = '0;
         lc_thaddr_d = '0; // init value not defined by spec
         cause_mux_o = '0;
-        resync_rst_o = '0;
+        resync_timer_rst_o = '0;
         tval_mux_o = '0;
 
         if(valid_i) begin
@@ -174,7 +174,7 @@ module trdb_priority (
                         packet_format_o = F_SYNC;
                         packet_f_sync_subformat_o = SF_TRAP;
                         lc_thaddr_d = '0;
-                        resync_rst_o = '1;
+                        resync_timer_rst_o = '1;
                         cause_mux_o = 0;
                         tval_mux_o = '0;
                         /* thaddr_d = 0; resync_cnt = 0
@@ -183,14 +183,14 @@ module trdb_priority (
                     end else if(tc_reported) begin
                         packet_format_o = F_SYNC;
                         packet_f_sync_subformat_o = SF_START;
-                        resync_rst_o = '1;
+                        resync_timer_rst_o = '1;
                         // resync_cnt = 0
                         valid_o = '1;
                     end else begin // not reported
                         packet_format_o = F_SYNC;
                         packet_f_sync_subformat_o = SF_TRAP;
                         lc_thaddr_d = '1;
-                        resync_rst_o = '1;
+                        resync_timer_rst_o = '1;
                         cause_mux_o = '0;
                         tval_mux_o = '0;
                         /*thaddr_d = 1; resync_cnt = 0
@@ -200,7 +200,7 @@ module trdb_priority (
                 end else if(tc_first_qualified_i || tc_ppccd || tc_max_resync_i) begin
                     packet_format_o = F_SYNC;
                     packet_f_sync_subformat_o = SF_START;
-                    resync_rst_o = '1;
+                    resync_timer_rst_o = '1;
                     //resync_cnt = 0
                     valid_o = '1;
                 end else if(lc_updiscon_i) begin
@@ -208,7 +208,7 @@ module trdb_priority (
                         packet_format_o = F_SYNC;
                         packet_f_sync_subformat_o = SF_TRAP;
                         lc_thaddr_d = '0;
-                        resync_rst_o = '1;
+                        resync_timer_rst_o = '1;
                         cause_mux_o = '1;
                         tval_mux_o = '1;
                         /* thaddr = 0; resync_cnt = 0
