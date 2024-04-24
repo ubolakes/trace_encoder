@@ -16,13 +16,6 @@ module trdb_priority (
 
     input logic valid_i,
 
-    /* ADD SIDE BAND SIGNALS: halted or reset:
-        if the halted or reset sideband signals are asserted (see Table 10) 
-        the encoder will behave as if it has received an unqualified instruction
-        (output te_inst reporting the address of the previous instruction, 
-        followed by te_support);
-    */
-
     /*  signals for the jump target cache mode - non mandatory */
     //input logic jtc_enabled_i,
     //input logic address_in_cache_i, // communicates if the address is present in cache
@@ -76,6 +69,12 @@ module trdb_priority (
     input logic nc_qualified_i,
 
     input logic nc_retired_i, // used w/nc_exception for signal nc_exc_only
+
+    // non mandatory sideband signals
+    // refer to page 52 of the spec
+    //input logic halted_i,
+    //input logic reset_i,
+    // where do I put them in the flowchart
 
     //output logic notify_o, // requires trigger unit CPU side
     // communicates the packet emitter that format 2 packet was requested by trigger unit
