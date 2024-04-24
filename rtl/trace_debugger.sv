@@ -20,13 +20,13 @@ module trace_debugger import trdb_pkg::*;
     input logic iretired_i, // core_events_o.retired_i 
     input logic exception_i, // exception
     input logic interrupt_i, // cause_irq_q - used with the previous one to discriminate interrupt from exception
-    input logic [CAUSELEN:0] cause_i, // cause_q
-    input logic [TVECLEN:0] tvec_i, // tvec_q, contains trap handler address
-    input logic [TVALLEN:0] tval_i, // not implemented in snitch, mandatory according to the spec
-    input logic [PRIVLEN:0] priv_lvl_i, // priv_lvl_q
-    input logic [INSTLEN:0] inst_data_i, // inst_data
+    input logic [CAUSE_LEN:0] cause_i, // cause_q
+    input logic [TVEC_LEN:0] tvec_i, // tvec_q, contains trap handler address
+    input logic [TVAL_LEN:0] tval_i, // not implemented in snitch, mandatory according to the spec
+    input logic [PRIV_LEN:0] priv_lvl_i, // priv_lvl_q
+    input logic [INST_LEN:0] inst_data_i, // inst_data
     //input logic compressed, // to discriminate compressed instructions from the others - in case the CPU supports C extension
-    input logic [PCLEN:0] pc_i, //pc_q - instruction address
+    input logic [PC_LEN:0] pc_i, //pc_q - instruction address
     input logic [:0] epc_i, // epc_q, required for format 3 subformat 1
     input logic [3:0] trigger_i,
     //input logic [1:0] ctype_i, // according to the spec it's 1 or 2 bit wide, supported by CPU
@@ -35,9 +35,9 @@ module trace_debugger import trdb_pkg::*;
 
     // outputs
     // info needed for the encapsulator
-    output logic [PTYPELEN:0]packet_type_o,
-    output logic [PLEN:0] packet_length_o, // in bytes
-    output logic [PAYLOADLEN:0] packet_payload_o
+    output logic [PTYPE_LEN:0]packet_type_o,
+    output logic [P_LEN:0] packet_length_o, // in bytes
+    output logic [PAYLOAD_LEN:0] packet_payload_o
 
     // TO-DO: add constants to trdb_pkg file
 
