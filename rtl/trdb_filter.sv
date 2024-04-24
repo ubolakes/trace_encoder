@@ -20,6 +20,7 @@ module trdb_filter
     input logic trigger_trace_on_i,
     input logic trigger_trace_off_i,
     
+    /*
     // consider/ignore filters
     input logic apply_filters_i,
 
@@ -45,7 +46,7 @@ module trdb_filter
     logic trace_activated;
 
     always_comb begin: stop_check
-        trace_req_deactivate_o = trigger_trace_off; // add other signals to make the tracing stop
+        trace_req_deactivate_o = trigger_trace_off_i; // add other signals to make the tracing stop
     end
 
     always_comb begin

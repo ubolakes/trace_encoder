@@ -169,6 +169,8 @@ module trdb_priority (
                 packet_f_sync_subformat_o = SF_SUPPORT;
                 /* refer to the spec for the payload required*/
                 valid_o = '1;
+            /* TODO:    if for halted and reset sideband signals,
+                        if at least one asserted -> considers unqualified*/  
             end else if(tc_qualified_i) begin
                 if(lc_exception_i) begin
                     if(tc_exc_only) begin
