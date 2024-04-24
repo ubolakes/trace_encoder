@@ -74,7 +74,8 @@ module trdb_priority (
     // refer to page 52 of the spec
     //input logic halted_i,
     //input logic reset_i,
-    // where do I put them in the flowchart
+    /*  where do I put them in the flowchart?
+        are they produced by the CPU?*/
 
     //output logic notify_o, // requires trigger unit CPU side
     // communicates the packet emitter that format 2 packet was requested by trigger unit
