@@ -1,6 +1,11 @@
 /* RESYNC COUNTER */
-/* this module keeps track of the emitted packets or cycles elapsed
-   it can operate in both ways */
+/*
+It keeps track of the emitted packets or cycles elapsed,
+operational mode and threshold are set by the user.
+
+It produces a signal when the counter reaches the specified
+threshold and it remains to 1 until it receives a reset signal.
+*/
 
 import trdb_pkg::*;
 
@@ -18,7 +23,7 @@ module trdb_counter_emitter
     output logic resync_max_o);
 
     logic [31:0] counter; // placeholder value
-    logic enabled;
+    logic enabled;  // operates the counter
     logic count_enabled;
 
     assign count_enabled = trace_enabled_i && enabled;
