@@ -12,18 +12,14 @@ module trdb_filter
     // uncommented signals are the ones required to simply turn on and of the encoder
 
     // enable/disable tracing
-    input logic trace_activated_i,
+    input logic trace_activated_i, // read from registers
     output logic trace_req_deactivate_o, // writes to register
 
-    // trigger unit
+    // trigger unit signals
     // this value influences the trace enabled signal
-    input logic [3:0] trigger_i,
-    /*  possible values:
-            - 2: trace-on,
-            - 3: trace-off
-    */
-
-    /*
+    input logic trigger_trace_on_i,
+    input logic trigger_trace_off_i,
+    
     // consider/ignore filters
     input logic apply_filters_i,
 
@@ -47,25 +43,10 @@ module trdb_filter
 );
 
     logic trace_activated;
-    logic trigger_trace_on;
-    logic trigger_trace_off;
 
-    always_comb begin: trigger_check
-        // init signals
-        trigger_trace_off = 0;
-        trigger_trace_on = 0;
-
-        if(trigger_i == 2) begin
-            trigger_trace_on = 1;
-            trigger_trace_off = 0;
-        end
-        else if(trigger_i == 3) begin
-            trigger_trace_off = 1;
-            trigger_trace_on = 0;
-        end
+    always_comb begin: stop_check
+        trace_req_deactivate_o = trigger_trace_off; // add other signals to make the tracing stop
     end
-
-    
 
     always_comb begin
         trace_qualified_o = '0;
