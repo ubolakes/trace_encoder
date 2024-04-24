@@ -29,6 +29,12 @@ module trdb_packet_emitter
 
     // nc (next cycle) signals
 
+    /*  the following signals used to determine 
+        if the packet emitter has to put context 
+        and/or time in the payload*/
+    input logic nocontext_i,  // both read from registers
+    input logic notime_i,
+    // in this implementation both hardwired to 0
 
     // format 3 subformat 0 specific signals
     input logic is_branch_i,
@@ -51,11 +57,10 @@ module trdb_packet_emitter
         The use of lc or tc values depends on a previous updiscon:
         combinatorial network that determines the ecause depending on
         the case.
-        Idea:   output the ecause signal from trdb_priority, choosing
-                between lc or tc*/
+        Idea:   output a signal that operates a mux to choose between lc or tc*/
 
     input logic tval_mux_i, 
-    // operates the mux to determine if lc_tval o tc_tval
+    // same as cause_mux, but for lc_tval o tc_tval
 
     input logic interrupt_i,
     input logic thaddr_i,
@@ -94,8 +99,8 @@ module trdb_packet_emitter
     //input logic seq_inferred_jump_i, // to implement
     //input logic trace_implicit_ret_i, // implemented in Robert tracer
     //input logic trace_implicit_exc_i, // to implement
-    //input logic trace_branch_prediction_i, // not supported by snitch, hardwired to 0 (?)
-    //input logic jump_target_cache_i, // not supported by snitch, hardwired to 0 (?)
+    //input logic trace_branch_prediction_i, // non mandatory
+    //input logic jump_target_cache_i, // non mandatory
     //input logic trace_full_addr_i, // implemented in Robert tracer
 
     // about DATA trace, in stand-by at the moment
@@ -177,12 +182,14 @@ module trdb_packet_emitter
     logic [:0] diff_address;
     logic branch_map_flush_d, branch_map_flush_q;
     logic tval;
+    logic time_and_context; // determines if the payload requires time and/or context
 
     // assigning values
     assign branch = ~(is_branch_i && is_branch_taken_i);
     assign address = thaddr_i ? tvec_i : epc_i;
     assign ecause = cause_mux_i ? tc_cause_i : lc_cause_i;
     assign tval = tval_mux_i ? tc_tval_i : lc_tval_i;
+    assign time_and_context = {notime_i, nocontext_i};
 
     // combinatorial network to output packets
     always_comb begin : set_packet_bits
@@ -207,20 +214,35 @@ module trdb_packet_emitter
                 case(trdb_f_sync_subformat_i)
 
                 SF_START: begin // subformat 0
-                    packet_payload_o = {F_SYNC, F_START, branch, priv_i, /*time_i, context_i,*/ iaddr_i};
-                    payload_length_o = (1 + PRIVLEN + /*TIMELEN: TBD + CONTEXTLEN: TBD*/ + XLEN-1)/8;
+                    case(time_and_context)
+                    2'h0: begin
+                        packet_payload_o = {F_SYNC, F_START, branch, priv_i, iaddr_i};
+                        payload_length_o = (1 + PRIVLEN + XLEN-1)/8;
+                    end
+                    /*TODO: other cases*/
+                    endcase
                     packet_valid_o = '1;
                 end
 
                 SF_TRAP: begin // subformat 1
-                    packet_payload_o = {F_SYNC, SF_TRAP, branch, priv_i, /*time_i, context_i,*/ ecause, interrupt_i, thaddr_i, address, tval};
-                    payload_length_o = ;
+                    case(time_and_context)
+                    2'h0: begin
+                        packet_payload_o = {F_SYNC, SF_TRAP, branch, priv_i, ecause, interrupt_i, thaddr_i, address, tval};
+                        payload_length_o = ;
+                    end
+                    /*TODO: other cases*/
+                    endcase
                     packet_valid_o = '1;
                 end
                 
                 SF_CONTEXT: begin // subformat 2
-                    packet_payload_o = {F_SYNC, SF_CONTEXT, priv_i/*,time_i, context_i*/};
-                    payload_length_o = ;
+                    case(time_and_context)
+                    2'h0: begin
+                        packet_payload_o = {F_SYNC, SF_CONTEXT, priv_i};
+                        payload_length_o = ;
+                    end
+                    /*TODO: other cases*/
+                    endcase
                     packet_valid_o = '1;
                 end
                 
@@ -267,6 +289,10 @@ module trdb_packet_emitter
                 /* requires non mandatory support for jtc and branch prediction
                 case(trdb_f_opt_ext_subformat_i)
                 SF_PBC: begin // subformat 0
+                /*  There can be two type of payloads for this subformat:
+                    1. no address, branch count
+                    2. address, branch count
+                * /    
                     packet_payload_o = {F_OPT_EXT, SF_PBC, etc..};
                     payload_length_o = ;
                     packet_valid_o = '1;
