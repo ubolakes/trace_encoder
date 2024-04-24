@@ -37,7 +37,7 @@ module trdb_priority (
     
     input logic tc_first_qualified_i,
     input logic tc_privchange_i,
-    //input logic tc_precise_context_report_i,  // requires trigger unit CPU side
+    //input logic tc_precise_context_report_i,  // requires ctype signal CPU side
     input logic tc_context_change_i,          // ibidem
     //input logic tc_context_report_as_disc_i,  // ibidem
     input logic tc_max_resync_i, // resync timer expired
@@ -47,7 +47,7 @@ module trdb_priority (
     //input logic tc_branch_misprediction_i, // non mandatory
 
     // cci: imprecise context change
-    //input logic tc_imprecise_context_report_i, // requires trigger unit CPU side
+    //input logic tc_imprecise_context_report_i, // requires ctype signal CPU side
 
     //input logic tc_pbc_i, // correctly predicted branch count, non mandatory
 
@@ -63,7 +63,7 @@ module trdb_priority (
     input logic nc_exception_i,
     input logic nc_privchange_i,
     input logic nc_context_change_i,
-    //input logic nc_precise_context_report_i,  // requires trigger unit CPU side
+    //input logic nc_precise_context_report_i,  // requires ctype signal CPU side
     //input logic nc_context_report_as_disc_i,  // ibidem
     input logic nc_branch_map_empty_i,
     input logic nc_qualified_i,
@@ -77,7 +77,9 @@ module trdb_priority (
     /*  where do I put them in the flowchart?
         are they produced by the CPU?*/
 
-    //output logic notify_o, // requires trigger unit CPU side
+    // trigger unit request ports, must be supported by the CPU
+    //input logic tc_trigger_req_i,
+    //output logic notify_o,
     // communicates the packet emitter that format 2 packet was requested by trigger unit
 
     output logic                        valid_o,
@@ -141,6 +143,8 @@ module trdb_priority (
     assign thaddr_o         = lc_thaddr_d;
 
 
+    /*TODO: add condition to determine if format 2, 1, 0SF0 are requested by the trigger unit*/
+
     /* combinatorial network to determine packet format */
     // refer to flowchart at page 53 of the spec
     always_comb begin : select_packet_format
@@ -198,11 +202,6 @@ module trdb_priority (
                     packet_f_sync_subformat_o = SF_START;
                     resync_rst_o = '1;
                     //resync_cnt = 0
-                    // following commented code non mandatory, requires trigger unit support
-                    //check if packet requested by trigger unit
-                    /*if(tc_precise_context_report_i || tc_context_report_as_disc_i) begin
-                        notify_o = '1;
-                    end*/
                     valid_o = '1;
                 end else if(lc_updiscon_i) begin
                     if(tc_exc_only) begin
@@ -230,11 +229,9 @@ module trdb_priority (
                             valid_o = '1;
                         end else*/ if(!tc_branch_map_empty_i) begin
                             packet_format_o = F_DIFF_DELTA;
-                            /* value for payload TBD */
                             valid_o = '1;
                         end else begin // branch count == 0
                             packet_format_o = F_ADDR_ONLY;
-                            /* value for payload TBD */
                             valid_o = '1;
                         end
                     end
@@ -252,11 +249,9 @@ module trdb_priority (
                         valid_o = '1;
                     end else*/ if(!tc_branch_map_empty_i) begin
                         packet_format_o = F_DIFF_DELTA;
-                        // value for payload TBD
                         valid_o = '1;
                     end else begin // branch count == 0
                         packet_format_o = F_ADDR_ONLY;
-                        /* value for payload TBD */
                         valid_o = '1;
                     end
                 end else if(nc_exc_only || nc_ppccd_br || !nc_qualified_i) begin
@@ -273,11 +268,9 @@ module trdb_priority (
                         valid_o = '1;
                     end else*/ if(!tc_branch_map_empty_i) begin
                         packet_format_o = F_DIFF_DELTA;
-                        /* value for payload TBD */
                         valid_o = '1;
                     end else begin // branch count == 0
                         packet_format_o = F_ADDR_ONLY;
-                        /* value for payload TBD */
                         valid_o = '1;
                     end
                     // check if packet was requested by trigger unit
@@ -290,12 +283,13 @@ module trdb_priority (
                         packet_format_o = F_OPT_EXT;
                         packet_f_opt_ext_subformat_o = SF_PBC;
                         valid_o = '1;
-                    end else*/
+                    end else begin*/
                         packet_format_o = F_DIFF_DELTA;
-                end /*else if(tc_cci) begin
+                        valid_o = '1;
+                    //end
+                end /*else if(tc_cci) begin // non mandatory, requires support for context
                     packet_format_o = F_SYNC;
                     packet_f_sync_subformat_o = SF_CONTEXT;
-                    notify_o = '1; // requested by trigger unit
                     valid_o = '1;
                 end*/
             end
