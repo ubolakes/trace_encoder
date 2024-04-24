@@ -16,8 +16,8 @@ module trdb_packet_emitter
 
     // necessary info to assemble packet
     input trdb_format_e packet_format_i,
-    input trdb_f_sync_subformat_e trdb_f_sync_subformat_i, // subformat for format 3
-    //input trdb_f_opt_ext_subformat_e trdb_f_opt_ext_subformat_i, // non mandatory,subformat for format 0
+    input trdb_f_sync_subformat_e packet_f_sync_subformat_i, // subformat for format 3
+    //input trdb_f_opt_ext_subformat_e packet_f_opt_ext_subformat_i, // non mandatory,subformat for format 0
 
     // lc (last cycle) signals
     input logic lc_cause_i,
@@ -172,7 +172,6 @@ module trdb_packet_emitter
     output logic packet_valid_o, // asserted when a packet is generated
 
     output logic branch_map_flush_o, // branch map flushed after each request
-    output logic resync_timer_rst_o,  // resets resync counter
 );
     
     // internal signals
@@ -211,13 +210,13 @@ module trdb_packet_emitter
             case(packet_format_i)
 
             F_SYNC: begin // format 3
-                case(trdb_f_sync_subformat_i)
+                case(packet_f_sync_subformat_i)
 
                 SF_START: begin // subformat 0
                     case(time_and_context)
                     2'h0: begin
                         packet_payload_o = {F_SYNC, F_START, branch, priv_i, iaddr_i};
-                        payload_length_o = (1 + PRIVLEN + XLEN-1)/8;
+                        payload_length_o = (2 + 2 + 1 + PRIVLEN + XLEN-1)/8;
                     end
                     /*TODO: other cases*/
                     endcase
@@ -228,7 +227,7 @@ module trdb_packet_emitter
                     case(time_and_context)
                     2'h0: begin
                         packet_payload_o = {F_SYNC, SF_TRAP, branch, priv_i, ecause, interrupt_i, thaddr_i, address, tval};
-                        payload_length_o = ;
+                        payload_length_o = (2 + 2 + 1 + PRIVLEN + CAUSELEN + 1 + 1 + XLEN-1 + TVALLEN)/8;
                     end
                     /*TODO: other cases*/
                     endcase
@@ -239,7 +238,7 @@ module trdb_packet_emitter
                     case(time_and_context)
                     2'h0: begin
                         packet_payload_o = {F_SYNC, SF_CONTEXT, priv_i};
-                        payload_length_o = ;
+                        payload_length_o = (2 + 2 + PRIVLEN)/8;
                     end
                     /*TODO: other cases*/
                     endcase
@@ -248,7 +247,7 @@ module trdb_packet_emitter
                 
                 SF_SUPPORT: begin // subformat 3
                     packet_payload_o = {F_SYNC, SF_SUPPORT, ienable_i, encoder_mode_i, qual_status_i, ioptions_i/*, denable_i, dloss_i, doptions_i*/};
-                    payload_length_o = ;
+                    payload_length_o = (2 + 2 + 1 + 1 + 2 + /*ioptions length*/ /*+ 1 + 1 + doptions length*/)/8;
                     packet_valid_o = '1;
                 end
                 endcase
@@ -256,8 +255,8 @@ module trdb_packet_emitter
 
 
             F_ADDR_ONLY: begin // format 2
-                packet_payload_o = {F_ADDR_ONLY, iaddr_i, /*notify_i,*/ lc_updiscon_i, irreport_i/*, irdepth_i*/};
-                payload_length_o = ;
+                packet_payload_o = {F_ADDR_ONLY, iaddr_i, notify_i, lc_updiscon_i, irreport_i/*, irdepth_i*/};
+                payload_length_o = (2 + XLEN-1 + 1 + 1 + 1 + /*irdepth length*/)/8;
                 packet_valid_o = '1;
             end
 
@@ -275,11 +274,11 @@ module trdb_packet_emitter
                 for examples if the branch map is full.
             */
                 if(branches_i < '31) begin // branch map not full - address
-                    packet_payload_o = {F_DIFF_DELTA, branches_i, branch_map_i, iaddr_i, /*notify_i,*/ lc_updiscon_i, irreport_i/*, irdepth_i*/};
-                    payload_length_o = ;
+                    packet_payload_o = {F_DIFF_DELTA, branches_i, branch_map_i, iaddr_i, notify_i, lc_updiscon_i, irreport_i/*, irdepth_i*/};
+                    payload_length_o = (2 + 5 + 31 + XLEN-1 + 1 + 1 + 1 + /*irdepth length*/)/8;
                 end else /*if(branches_i == '31)*/ begin // branch map full - no address
                     packet_payload_o = {F_DIFF_DELTA, branches_i, branch_map_i};
-                    payload_length_o = ;
+                    payload_length_o = (2 + 5 + 31)/8;
                 end
                 packet_valid_o = '1;
             end
@@ -287,7 +286,7 @@ module trdb_packet_emitter
 
             F_OPT_EXT: begin // format 0
                 /* requires non mandatory support for jtc and branch prediction
-                case(trdb_f_opt_ext_subformat_i)
+                case(packet_f_opt_ext_subformat_i)
                 SF_PBC: begin // subformat 0
                 /*  There can be two type of payloads for this subformat:
                     1. no address, branch count
