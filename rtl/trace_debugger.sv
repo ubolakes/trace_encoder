@@ -29,7 +29,7 @@ module trace_debugger import trdb_pkg::*;
     input logic [PCLEN:0] pc_i, //pc_q - instruction address
     input logic [:0] epc_i, // epc_q, required for format 3 subformat 1
     input logic [3:0] trigger_i,
-    input logic [1:0] ctype_i, // according to the spec it's 1 or 2 bit wide
+    //input logic [1:0] ctype_i, // according to the spec it's 1 or 2 bit wide, supported by CPU
     // here it's 2 bit for better future compatibility
 
 
@@ -81,7 +81,7 @@ module trace_debugger import trdb_pkg::*;
     logic   tc_first_qualified;
     logic   tc_privchange;
     logic   tc_context_change; // optional
-    //logic   tc_precise_context_change; // requires trigger unit CPU side
+    //logic   tc_precise_context_change; // requires ctype signal CPU side
     //logic   tc_context_report_as_disc; // ibidem
     //logic   tc_no_context_report;      // ibidem
     //logic   tc_imprecise_context_report; // ibidem
@@ -126,6 +126,7 @@ module trace_debugger import trdb_pkg::*;
     */
  /* combinatorial network to define the following 
     signals from ctype:
+    - tc_no_context_report_i        -> ctype == 0
     - tc_precise_context_report_i   -> ctype == 2
     - tc_context_report_as_disc_i   -> ctype == 3
     - tc_imprecise_context_report_i -> ctype == 1
@@ -135,6 +136,7 @@ module trace_debugger import trdb_pkg::*;
     always_comb begin : ctype_manager
         case(ctype_i)
         2'h0: // no report - add signal        
+            tc_no_context_report
         2'h1:
             tc_imprecise_context_report = '1;
         2'h2:
@@ -145,7 +147,12 @@ module trace_debugger import trdb_pkg::*;
     end
     */
 
-
+    /*TODO: create a trigger decoder that produces:
+                - trigger_trace_on  -> 2
+                - trigger_trace_off -> 3
+                - trigger_notify    -> 4
+    */
+    // maybe it's enough to define values and hardwire them to 0
 
     
 endmodule
