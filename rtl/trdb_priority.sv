@@ -93,11 +93,7 @@ module trdb_priority (
     );
 
 
-    /* signals required for packet determination */
-    // last cycle
-    logic   lc_thaddr_d;
-    logic   lc_thaddr_q; // 1 cycle delayed
-
+    /* internal signals required for packet determination */
     // this cycle
     logic   tc_exc_only; // for a precise definition: page 51 of the spec
     logic   tc_reported; // ibidem
@@ -106,6 +102,7 @@ module trdb_priority (
     logic   tc_er_n; // ibidem
     logic   tc_rpt_br; // ibidem
     //logic   tc_cci; // ibidem
+    logic   tc_reported_d, tc_reported_q;
 
     // next cycle
     logic   nc_exc_only;
@@ -114,7 +111,7 @@ module trdb_priority (
 
     // value assignment
     assign  tc_exc_only     = tc_exception_i && ~tc_retired_i;
-    assign  tc_reported     = lc_exception_i && ~lc_thaddr_q;
+    assign  tc_reported     = tc_reported_q; // not necessary since the signal is used only internally TODO: edit
     assign  tc_ppccd        = tc_privchange_i || (tc_context_change_i /*&& 
                                 (tc_precise_context_report_i ||
                                 tc_context_report_as_disc_i)*/);
@@ -128,21 +125,19 @@ module trdb_priority (
                                 ~nc_branch_map_empty_i;
     assign  tc_f3_sf3       = tc_enc_enabled_i || tc_enc_disabled_i || tc_opmode_change_i ||
                                 lc_final_qualified_i /*|| tc_packets_lost_i*/;
-    assign thaddr_o         = lc_thaddr_d;
 
     /*  
     The reset value is 0, the spec doesn't say how to behave.
     The 0 value specifies an exception w/out retired instr 
     in this cycle and an exception in the previous cycle.
     */
-    always_ff @( posedge clk_i, negedge rst_ni ) begin : delayed_thaddr
+    always_ff @( posedge clk_i, negedge rst_ni ) begin : delayed_tc_reported
         if(~rst_ni) begin
-            lc_thaddr_q <= '0;
+            tc_reported_q <= '0;
         end else begin
-            lc_thaddr_q <= lc_thaddr_d;
+            tc_reported_q <= tc_reported_d;
         end
     end
-
 
     /*TODO: add condition to determine if F2, F1, F0SF0 are requested by the trigger unit*/
 
@@ -155,10 +150,11 @@ module trdb_priority (
         packet_f_sync_subformat_o = SF_START;
         //packet_f_opt_ext_subformat_o = SF_PBC;
         //notify_o = '0;
-        lc_thaddr_d = '0; // init value not defined by spec
+        thaddr_o = '0;
         cause_mux_o = '0;
         resync_timer_rst_o = '0;
         tval_mux_o = '0;
+        tc_reported_d = '0;
 
         if(valid_i) begin
             // format 3 subformat 3 packet generation
@@ -176,14 +172,15 @@ module trdb_priority (
                     if(tc_exc_only) begin
                         packet_format_o = F_SYNC;
                         packet_f_sync_subformat_o = SF_TRAP;
-                        lc_thaddr_d = '0;
                         resync_timer_rst_o = '1;
                         cause_mux_o = 0;
                         tval_mux_o = '0;
+                        tc_reported_d = '1;
+                        thaddr_o = '0;
                         /* thaddr_d = 0; resync_cnt = 0
                         cause = lc_cause_i; tval = lc_tval*/
                         valid_o = '1;
-                    end else if(tc_reported) begin
+                    end else if(tc_reported) begin // TODO: change it with tc_reported_q
                         packet_format_o = F_SYNC;
                         packet_f_sync_subformat_o = SF_START;
                         resync_timer_rst_o = '1;
@@ -192,10 +189,10 @@ module trdb_priority (
                     end else begin // not reported
                         packet_format_o = F_SYNC;
                         packet_f_sync_subformat_o = SF_TRAP;
-                        lc_thaddr_d = '1;
                         resync_timer_rst_o = '1;
                         cause_mux_o = '0;
                         tval_mux_o = '0;
+                        thaddr_o = '1;
                         /*thaddr_d = 1; resync_cnt = 0
                         cause = lc_cause_i; tval = lc_tval */ 
                         valid_o = '1;
@@ -210,7 +207,7 @@ module trdb_priority (
                     if(tc_exc_only) begin
                         packet_format_o = F_SYNC;
                         packet_f_sync_subformat_o = SF_TRAP;
-                        lc_thaddr_d = '0;
+                        thaddr_o = '0;
                         resync_timer_rst_o = '1;
                         cause_mux_o = '1;
                         tval_mux_o = '1;
