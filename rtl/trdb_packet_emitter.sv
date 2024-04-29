@@ -71,27 +71,16 @@ module trdb_packet_emitter
     // it doesn't require a dedicated input signal
     // because it's generated using other signals
 
-    input logic [:0] ioptions_i, // implementation specific
-    /*  Run-time configuration bits for INSTRUCTION trace.
-        These modes are optional, only the delta address is mandatory
-        Examples:
-            - sequentially inferred jump: don't report the targets of sequentially inferable jumps
-            - implicit return: don't report the targets of sequentially inferrable jumps
-            - implicit exception: don't report function return addresses
-            - branch prediction: branch predictor enabled (not supported in snitch)
-            - jump target cache: enabled JTC (not supported in snitch)
-            - full address: always output full addresses
-
-        it requires info from the CSRs storing the values
-        For mandatory only modes it can be only 1
-    */
-    //input logic seq_inferred_jump_i, // to implement
-    //input logic trace_implicit_ret_i, // implemented in Robert tracer
-    //input logic trace_implicit_exc_i, // to implement
-    //input logic trace_branch_prediction_i, // non mandatory
-    //input logic jump_target_cache_i, // non mandatory
-    //input logic trace_full_addr_i, // implemented in Robert tracer
-
+    /*  used for ioptions struct
+        determine if a certain mode is enabled  */
+    input logic delta_address_i, // mandatory
+    input logic full_address_i, // non mandatory
+    input logic implicit_exception_i, // non mandatory
+    input logic sijump_i, // non mandatory
+    input logic implicit_return_i, // non mandatory
+    input logic branch_prediction_i, // non mandatory
+    input logic jump_target_cache_i, // non mandatory
+    
     // about DATA trace, in stand-by at the moment
     //input logic denable_i, // DATA trace enabled, if supported
     //input logic dloss_i, // one or more DATA trace packets lost, if supported
@@ -161,6 +150,7 @@ module trdb_packet_emitter
     logic branch_map_flush_d, branch_map_flush_q;
     logic tval;
     logic time_and_context; // determines if the payload requires time and/or context
+    logic ioptions ioptions;
 
     // assigning values
     assign branch = ~(is_branch_i && is_branch_taken_i);
@@ -195,7 +185,7 @@ module trdb_packet_emitter
                     case(time_and_context)
                     2'h0: begin
                         packet_payload_o = {F_SYNC, F_START, branch, priv_i, iaddr_i};
-                        payload_length_o = (2 + 2 + 1 + PRIVLEN + XLEN-1)/8;
+                        payload_length_o = (2 + 2 + 1 + PRIV_LEN + XLEN-1)/8;
                     end
                     /*TODO: other cases*/
                     endcase
@@ -206,7 +196,7 @@ module trdb_packet_emitter
                     case(time_and_context)
                     2'h0: begin
                         packet_payload_o = {F_SYNC, SF_TRAP, branch, priv_i, ecause, interrupt_i, thaddr_i, address, tval};
-                        payload_length_o = (2 + 2 + 1 + PRIVLEN + CAUSELEN + 1 + 1 + XLEN-1 + TVALLEN)/8;
+                        payload_length_o = (2 + 2 + 1 + PRIV_LEN + CAUSE_LEN + 1 + 1 + XLEN-1 + TVAL_LEN)/8;
                     end
                     /*TODO: other cases*/
                     endcase
@@ -217,7 +207,7 @@ module trdb_packet_emitter
                     case(time_and_context)
                     2'h0: begin
                         packet_payload_o = {F_SYNC, SF_CONTEXT, priv_i};
-                        payload_length_o = (2 + 2 + PRIVLEN)/8;
+                        payload_length_o = (2 + 2 + PRIV_LEN)/8;
                     end
                     /*TODO: other cases*/
                     endcase
@@ -225,8 +215,17 @@ module trdb_packet_emitter
                 end
                 
                 SF_SUPPORT: begin // subformat 3
-                    packet_payload_o = {F_SYNC, SF_SUPPORT, ienable_i, encoder_mode_i, qual_status_i, ioptions_i/*, denable_i, dloss_i, doptions_i*/};
-                    payload_length_o = (2 + 2 + 1 + 1 + 2 + /*ioptions length*/ /*+ 1 + 1 + doptions length*/)/8;
+                    // filling the ioptions struct
+                    ioptions.delta_address = delta_address_i; // mandatory
+                    ioptions.full_address = full_address_i; // non mandatory
+                    ioptions.implicit_exception = implicit_exception_i; // non mandatory
+                    ioptions.sijump = sijump_i; // non mandatory
+                    ioptions.implicit_return = implicit_return_i; // non mandatory
+                    ioptions.branch_prediction = branch_taken_prediction_i; // non mandatory
+                    ioptions.jump_target_cache = jump_target_cache_i; // non mandatory
+
+                    packet_payload_o = {F_SYNC, SF_SUPPORT, ienable_i, encoder_mode_i, qual_status_i, ioptions/*, denable_i, dloss_i, doptions_i*/};
+                    payload_length_o = (2 + 2 + 1 + 1 + 2 + $bits(ioptions) /*+ 1 + 1 + doptions length*/)/8;
                     packet_valid_o = '1;
                 end
                 endcase
@@ -234,8 +233,8 @@ module trdb_packet_emitter
 
 
             F_ADDR_ONLY: begin // format 2
-                packet_payload_o = {F_ADDR_ONLY, iaddr_i, notify_i, lc_updiscon_i, irreport_i/*, irdepth_i*/};
-                payload_length_o = (2 + XLEN-1 + 1 + 1 + 1 + /*irdepth length*/)/8;
+                packet_payload_o = {F_ADDR_ONLY, iaddr_i, notify_i, lc_updiscon_i, irreport_i, irdepth_i};
+                payload_length_o = (2 + XLEN-1 + 1 + 1 + 1 + $bits(irdepth_i))/8;
                 packet_valid_o = '1;
             end
 
@@ -253,8 +252,8 @@ module trdb_packet_emitter
                 for examples if the branch map is full.
             */
                 if(branches_i < '31) begin // branch map not full - address
-                    packet_payload_o = {F_DIFF_DELTA, branches_i, branch_map_i, iaddr_i, notify_i, lc_updiscon_i, irreport_i/*, irdepth_i*/};
-                    payload_length_o = (2 + 5 + 31 + XLEN-1 + 1 + 1 + 1 + /*irdepth length*/)/8;
+                    packet_payload_o = {F_DIFF_DELTA, branches_i, branch_map_i, iaddr_i, notify_i, lc_updiscon_i, irreport_i, irdepth_i};
+                    payload_length_o = (2 + 5 + 31 + XLEN-1 + 1 + 1 + 1 + $bits(irdepth_i))/8;
                 end else /*if(branches_i == '31)*/ begin // branch map full - no address
                     packet_payload_o = {F_DIFF_DELTA, branches_i, branch_map_i};
                     payload_length_o = (2 + 5 + 31)/8;
