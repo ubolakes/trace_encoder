@@ -9,7 +9,7 @@ threshold and it remains to 1 until it receives a reset signal.
 
 import trdb_pkg::*;
 
-module trdb_counter_emitter
+module trdb_resync_counter
 #(  parameter MODE = CYCLE_MODE, // counts cycles as default
     parameter MAX_VALUE = 2'hFFFF ) // default max value, can be personalized
     (
@@ -22,7 +22,9 @@ module trdb_counter_emitter
 
     output logic resync_max_o);
 
-    logic [31:0] counter; // placeholder value
+    localparam COUNTER_WIDTH = $clog2(MAX_VALUE);
+
+    logic [COUNTER_WIDTH-1:0] counter; // placeholder value
     logic enabled;  // operates the counter
     logic count_enabled;
 
