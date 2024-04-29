@@ -41,5 +41,31 @@ typedef enum logic[0:0] {
     SF_JTC = 1'h1 // jump target cache in spec
 } trdb_f_opt_ext_subformat_e;
 
+// qual_status values necessary for format 3 subformat 3
+// packet payload
+typedef enum logic[1:0] {
+    NO_CHANGE   = 2'h0;
+    ENDED_REP   = 2'h1;
+    TRACE_LOST  = 2'h2;
+    ENDED_NTR   = 2'h3;
+} qual_status;
+
+// struct necessary to store ioptions values for
+// format 3 subformat 3 packets
+// they are read from registers
+typedef struct packed {
+    logic delta_address; // mandatory
+    logic full_address; // optional - name according to the spec
+    logic implicit_exception; // optional - name according to the spec 
+    logic sijump; // optional - name according to the spec
+    logic implicit_return; // optional
+    logic branch_prediction; // optional
+    logic jump_target_cache; // optional
+} ioptions; // instruction trace options
+
+/*TODO:
+    doptions struct for data tracing
+    refer to page 36 of the spec */
+
 
 endpackage
