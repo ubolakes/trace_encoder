@@ -16,39 +16,42 @@ module trdb_resync_counter
     input logic clk_i,
     input logic rst_ni,
 
-    input logic trace_enabled_i, // it counts with the tracer
+    input logic trace_enabled_i, // it comes from filter
     input logic packet_emitted_i,
     input logic resync_rst_i,
 
     output logic resync_max_o);
 
-    localparam COUNTER_WIDTH = $clog2(MAX_VALUE);
+    localparam COUNTER_LEN = $clog2(MAX_VALUE);
 
-    logic [COUNTER_WIDTH-1:0] counter; // placeholder value
-    logic enabled;  // operates the counter
+    logic [COUNTER_LEN-1:0] counter; // placeholder value
+    logic enabled_d, enabled_q;  // operates the counter
     logic count_enabled;
+    logic resync_max_d, resync_max_q;
 
-    assign count_enabled = trace_enabled_i && enabled;
+    assign count_enabled = trace_enabled_i && enabled_q;
+    assign enabled_d = counter == MAX_VALUE ? 0 : 1;
+    assign resync_max_d = ~enabled_d; //counter == MAX_VALUE ? 1 : 0;
+    assign resync_max_o = resync_max_q;
 
     always_ff @( posedge clk_i, negedge rst_ni ) begin: counter
         if(~rst_ni) begin
             counter <= '0;
-            enabled <= '1; // enabled by default
+            enabled_q <= '1; // counter enabled by default
+            resync_max_q <= '0;
         end else begin
-            if(counter == MAX_VALUE) begin
-                resync_max_o <= '1;
-                //counter <= '0; // reset to zero is done by priority module
-                enabled <= '0; // waits for a resync reset to count
-            end else if(PACKET_MODE && count_enabled) begin
+            // the if-then-else block is allowed in this synchronous block?
+            if(PACKET_MODE && count_enabled) begin
                 if(packet_emitted_i)
                     counter++;
             end else if(CYCLE_MODE && count_enabled) begin
                 counter++;
             end else if(resync_rst_i) begin
-                resync_max_o <= '0;
-                counter <= '0;
-                enabled <= '1;
+                counter <= '0; // reset to zero is done after receiving the reset signal
             end
+            // updating FF values
+            resync_max_q <= resync_max_d;
+            enabled_q <= enabled_d;
         end
     end
 
