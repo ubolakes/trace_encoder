@@ -45,9 +45,7 @@ module trdb_filter
 
     logic trace_activated;
 
-    always_comb begin: stop_check
-        trace_req_deactivate_o = trigger_trace_off_i; // add other signals to make the tracing stop
-    end
+    assign trace_req_deactivate_o = trigger_trace_off_i;
 
     always_comb begin
         trace_qualified_o = '0;
