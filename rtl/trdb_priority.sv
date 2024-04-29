@@ -22,7 +22,7 @@ module trdb_priority (
 
     // refer to page 53 of the specs for clarification
 
-    /*TO DO: determine width of signals, not all are logic*/
+    /*TODO: determine width of signals, not all are logic*/
 
     // lc (last cycle) signals
     input logic lc_exception_i,
@@ -77,32 +77,39 @@ module trdb_priority (
     /*  where do I put them in the flowchart? all'inizio
         are they produced by the CPU?*/
 
+    // inputs for irreport and irdepth
+    input logic implicit_return_i, // tells if the mode is enabled
+    input logic [:0] call_counter_size_i, // size of nested calls counter, 2^value
+    input logic [:0] return_stack_size_i, // size of nested calls stack, 2^value
+
     // trigger unit request ports, must be supported by the CPU
     //input logic tc_trigger_req_i,
     //output logic notify_o,
     // communicates the packet emitter that format 2 packet was requested by trigger unit
 
-    output logic                        valid_o,
-    output trdb_format_e                packet_format_o,
-    output trdb_f_sync_subformat_e      packet_f_sync_subformat_o,
-    //output trdb_f_opt_ext_subformat_e   packet_f_opt_ext_subformat_o, // non mandatory, used for jtc and branch prediction
-    output logic                        thaddr_o, // required for f3 sf1 packet payload
-    output logic                        cause_mux_o, // operates the MUX to choose between lc or tc cause: 0 -> lc, 1 -> tc
-    output logic                        tval_mux_o, // operates the MUX to choose between lc or tc tval: 0 -> lc, 1 -> tc
-    output logic                        resync_timer_rst_o // resets counter
+    output logic                                valid_o,
+    output trdb_format_e                        packet_format_o,
+    output trdb_f_sync_subformat_e              packet_f_sync_subformat_o,
+    //output trdb_f_opt_ext_subformat_e         packet_f_opt_ext_subformat_o, // non mandatory, used for jtc and branch prediction
+    output logic                                thaddr_o, // required for f3 sf1 packet payload
+    output logic                                cause_mux_o, // operates the MUX to choose between lc or tc cause: 0 -> lc, 1 -> tc
+    output logic                                tval_mux_o, // operates the MUX to choose between lc or tc tval: 0 -> lc, 1 -> tc
+    output logic                                resync_timer_rst_o, // resets counter
+    output qual_status                          qual_status_o,
+    output logic                                irreport_o,
+    output logic [2**call_counter_size_i-1:0]   irdepth_o
     );
 
 
     /* internal signals required for packet determination */
     // this cycle
     logic   tc_exc_only; // for a precise definition: page 51 of the spec
-    logic   tc_reported; // ibidem
     logic   tc_ppccd; // ibidem
     logic   tc_resync_br; // ibidem
     logic   tc_er_n; // ibidem
     logic   tc_rpt_br; // ibidem
     //logic   tc_cci; // ibidem
-    logic   tc_reported_d, tc_reported_q;
+    logic   tc_reported_d, tc_reported_q; // ibidem
 
     // next cycle
     logic   nc_exc_only;
@@ -111,7 +118,6 @@ module trdb_priority (
 
     // value assignment
     assign  tc_exc_only     = tc_exception_i && ~tc_retired_i;
-    assign  tc_reported     = tc_reported_q; // not necessary since the signal is used only internally TODO: edit
     assign  tc_ppccd        = tc_privchange_i || (tc_context_change_i /*&& 
                                 (tc_precise_context_report_i ||
                                 tc_context_report_as_disc_i)*/);
@@ -155,6 +161,7 @@ module trdb_priority (
         resync_timer_rst_o = '0;
         tval_mux_o = '0;
         tc_reported_d = '0;
+        qual_status_o = NO_CHANGE;
 
         if(valid_i) begin
             // format 3 subformat 3 packet generation
@@ -163,7 +170,9 @@ module trdb_priority (
             if(tc_f3_sf3) begin
                 packet_format_o = F_SYNC;
                 packet_f_sync_subformat_o = SF_SUPPORT;
-                /* refer to the spec for the payload required*/
+                /*TODO:
+                    do a case-switch or if-then-else to determine
+                    the value of qual_status, it depends on inputs*/
                 valid_o = '1;
             /* TODO:    if for halted and reset sideband signals,
                         if at least one asserted -> considers unqualified*/  
@@ -180,7 +189,7 @@ module trdb_priority (
                         /* thaddr_d = 0; resync_cnt = 0
                         cause = lc_cause_i; tval = lc_tval*/
                         valid_o = '1;
-                    end else if(tc_reported) begin // TODO: change it with tc_reported_q
+                    end else if(tc_reported_q) begin
                         packet_format_o = F_SYNC;
                         packet_f_sync_subformat_o = SF_START;
                         resync_timer_rst_o = '1;
@@ -216,24 +225,29 @@ module trdb_priority (
                         valid_o = '1;
                     end else begin
                         /* choosing between format 0/1/2 */
-                        /*if(tc_pbc_i >= 31) begin
+                        /*if(tc_pbc_i >= 31) begin // format 0 subformat 0
                         packet_format_o = F_OPT_EXT;
                         packet_f_opt_ext_subformat_o = SF_JTC;
-          		// format 0 subformat 0
                         // value for payload TBD
-                        valid_o = '1;
-                        end else if(jtc_enabled_i && address_in_cache_i) begin
+                        end else if(jtc_enabled_i && address_in_cache_i) begin // format 0 subformat 1
                             packet_format_o = F_OPT_EXT;
                             packet_f_opt_ext_subformat_o = SF_JTC;
                             // value for payload TBD
-                            valid_o = '1;
                         end else*/ if(!tc_branch_map_empty_i) begin
                             packet_format_o = F_DIFF_DELTA;
-                            valid_o = '1;
                         end else begin // branch count == 0
                             packet_format_o = F_ADDR_ONLY;
-                            valid_o = '1;
                         end
+                        // if to send irreport and irdepth to emitter
+                        // necessary for type 0,1,2 packet payloads
+                        if(implicit_return_i == '0 && (call_counter_size_i == 0 || 
+                            return_stack_size_i == 0)) begin
+                            // in this case irdepth and irreport has the same value as updiscon
+                            irreport_o = lc_updiscon_i;
+                            irdepth_o = lc_updiscon_i;
+                        end
+                        // TODO: implicit_return mode enabled
+                        valid_o = '1;
                     end
                 end else if(tc_resync_br || tc_er_n) begin
                     /* choosing between format 0/1/2 */
@@ -241,42 +255,50 @@ module trdb_priority (
                         packet_format_o = F_OPT_EXT;
                         packet_f_opt_ext_subformat_o = SF_JTC;
                         // value for payload TBD
-                        valid_o = '1;
                     end else if(jtc_enabled_i && address_in_cache_i) begin
                         packet_format_o = F_OPT_EXT;
                         packet_f_opt_ext_subformat_o = SF_JTC;
                         // value for payload TBD
-                        valid_o = '1;
                     end else*/ if(!tc_branch_map_empty_i) begin
                         packet_format_o = F_DIFF_DELTA;
-                        valid_o = '1;
                     end else begin // branch count == 0
                         packet_format_o = F_ADDR_ONLY;
-                        valid_o = '1;
                     end
+                    // if to send irreport and irdepth to emitter
+                    // necessary for type 0,1,2 packet payloads
+                    if(implicit_return_i == '0 && (call_counter_size_i == 0 || 
+                        return_stack_size_i == 0)) begin
+                        // in this case irdepth and irreport has the same value as updiscon
+                        irreport_o = lc_updiscon_i;
+                        irdepth_o = lc_updiscon_i;
+                    end
+                    // TODO: implicit_return mode enabled
+                    valid_o = '1;
                 end else if(nc_exc_only || nc_ppccd_br || !nc_qualified_i) begin
                     /* choosing between format 0/1/2 */
                     /*if(tc_pbc_i >= 31) begin
                         packet_format_o = F_OPT_EXT;
                         packet_f_opt_ext_subformat_o = SF_JTC;
                         // value for payload TBD
-                        valid_o = '1;
                     end else if(jtc_enabled_i && address_in_cache_i) begin
                         packet_format_o = F_OPT_EXT;
                         packet_f_opt_ext_subformat_o = SF_JTC;
                         // value for payload TBD
-                        valid_o = '1;
                     end else*/ if(!tc_branch_map_empty_i) begin
                         packet_format_o = F_DIFF_DELTA;
-                        valid_o = '1;
                     end else begin // branch count == 0
                         packet_format_o = F_ADDR_ONLY;
-                        valid_o = '1;
                     end
-                    // check if packet was requested by trigger unit
-                    /*if(nc_precise_context_report_i || nc_context_report_as_disc_i) begin
-                        notify_o = '1;
-                    end*/
+                    // if to send irreport and irdepth to emitter
+                    // necessary for type 0,1,2 packet payloads
+                    if(implicit_return_i == 0 && (call_counter_size_i == 0 || 
+                        return_stack_size_i == 0)) begin
+                        // in this case irdepth and irreport has the same value as updiscon
+                        irreport_o = lc_updiscon_i;
+                        irdepth_o = lc_updiscon_i;
+                    end
+                    // TODO: implicit_return mode enabled
+                    valid_o = '1;
                 end else if(tc_rpt_br) begin
                     /* // non mandatory, requires support for jtc and branch prediction
                     if(tc_pbc_i >= 31) begin
@@ -285,6 +307,15 @@ module trdb_priority (
                         valid_o = '1;
                     end else begin*/
                         packet_format_o = F_DIFF_DELTA;
+                        // if to send irreport and irdepth to emitter
+                        // necessary for type 0,1,2 packet payloads
+                        if(implicit_return_i == 0 && (call_counter_size_i == 0 || 
+                            return_stack_size_i == 0)) begin
+                            // in this case irdepth and irreport has the same value as updiscon
+                            irreport_o = lc_updiscon_i;
+                            irdepth_o = lc_updiscon_i;
+                        end
+                        // TODO: implicit_return mode enabled
                         valid_o = '1;
                     //end
                 end /*else if(tc_cci) begin // non mandatory, requires support for context
