@@ -71,7 +71,7 @@ module trdb_packet_emitter
     // it doesn't require a dedicated input signal
     // because it's generated using other signals
 
-    /*  used for ioptions struct
+    /*  used for ioptions value
         determine if a certain mode is enabled  */
     input logic delta_address_i, // mandatory
     input logic full_address_i, // non mandatory
@@ -215,14 +215,22 @@ module trdb_packet_emitter
                 end
                 
                 SF_SUPPORT: begin // subformat 3
-                    // filling the ioptions struct
-                    ioptions.delta_address = delta_address_i; // mandatory
-                    ioptions.full_address = full_address_i; // non mandatory
-                    ioptions.implicit_exception = implicit_exception_i; // non mandatory
-                    ioptions.sijump = sijump_i; // non mandatory
-                    ioptions.implicit_return = implicit_return_i; // non mandatory
-                    ioptions.branch_prediction = branch_taken_prediction_i; // non mandatory
-                    ioptions.jump_target_cache = jump_target_cache_i; // non mandatory
+                    // computing ioptions mode
+                    if(delta_address_i) begin
+                        ioptions = DELTA_ADDRESS;
+                    end else if(full_address_i) begin
+                        ioptions = FULL_ADDRESS;
+                    end else if(implicit_exception_i) begin
+                        ioptions = IMPLICIT_EXCEPTION;
+                    end else if(sijump_i) begin
+                        ioptions = SIJUMP;
+                    end else if(implicit_return_i) begin
+                        ioptions = IMPLICIT_RETURN;
+                    end else if(branch_prediction_i) begin
+                        ioptions = BRANCH_PREDICTION;
+                    end else if(jump_target_cache_i) begin
+                        ioptions = JUMP_TARGET_CACHE;
+                    end
 
                     packet_payload_o = {F_SYNC, SF_SUPPORT, ienable_i, encoder_mode_i, qual_status_i, ioptions/*, denable_i, dloss_i, doptions_i*/};
                     payload_length_o = (2 + 2 + 1 + 1 + 2 + $bits(ioptions) /*+ 1 + 1 + doptions length*/)/8;

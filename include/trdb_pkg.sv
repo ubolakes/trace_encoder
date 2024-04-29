@@ -50,17 +50,16 @@ typedef enum logic[1:0] {
     ENDED_NTR   = 2'h3;
 } qual_status;
 
-// struct necessary to store ioptions values for
+// enum that determines the ioptions values for
 // format 3 subformat 3 packets
-// they are read from registers
-typedef struct packed {
-    logic delta_address; // mandatory
-    logic full_address; // optional - name according to the spec
-    logic implicit_exception; // optional - name according to the spec 
-    logic sijump; // optional - name according to the spec
-    logic implicit_return; // optional
-    logic branch_prediction; // optional
-    logic jump_target_cache; // optional
+typedef enum logic[2:0] {
+    DELTA_ADDRESS       = 3'h0;
+    FULL_ADDRESS        = 3'h1;
+    IMPLICIT_EXCEPTION  = 3'h2;
+    SIJUMP              = 3'h3;
+    IMPLICIT_RETURN     = 3'h4;
+    BRANCH_PREDICTION   = 3'h5;
+    JUMP_TARGET_CACHE   = 3'h6;
 } ioptions; // instruction trace options
 
 /*TODO:
