@@ -125,7 +125,7 @@ module trdb_priority (
                                 (tc_precise_context_report_i ||
                                 tc_context_report_as_disc_i)*/);
     assign  tc_resync_br    = tc_max_resync_i && ~tc_branch_map_empty_i;
-    assign  tc_er_n         = tc_exception_i && tc_retired_i;
+    assign  tc_er_n         = (tc_exception_i && tc_retired_i) /*|| tc_trigger_req_i*/;
     assign  tc_rpt_br       = tc_branch_map_full_i /* || tc_branch_misprediction_i*/;
     //assign  tc_cci          = tc_context_change_i && tc_imprecise_context_report_i;
     assign  nc_exc_only     = nc_exception_i && ~nc_retired_i;
@@ -140,7 +140,7 @@ module trdb_priority (
     The 0 value specifies an exception w/out retired instr 
     in this cycle and an exception in the previous cycle.
     */
-    always_ff @( posedge clk_i, negedge rst_ni ) begin : delayed_tc_reported
+    always_ff @( posedge clk_i, negedge rst_ni ) begin
         if(~rst_ni) begin
             tc_reported_q <= '0;
             lc_ended_ntr_q <= '0;
@@ -266,6 +266,11 @@ module trdb_priority (
                         valid_o = '1;
                     end
                 end else if(tc_resync_br || tc_er_n) begin
+                    // non mandatory 
+                    /* if(tc_er_n && tc_trigger_req_i) begin // requested from trigger unit
+                        notify_o = '1;
+                    end */
+                    
                     /* choosing between format 0/1/2 */
                     /*if(tc_pbc_i >= 31) begin
                         packet_format_o = F_OPT_EXT;
