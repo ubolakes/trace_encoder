@@ -46,7 +46,6 @@ module trdb_priority (
     input logic tc_branch_map_full_i,
     //input logic tc_branch_misprediction_i, // non mandatory
 
-    // cci: imprecise context change
     //input logic tc_imprecise_context_report_i, // requires ctype signal CPU side
 
     //input logic tc_pbc_i, // correctly predicted branch count, non mandatory
@@ -95,7 +94,7 @@ module trdb_priority (
     output logic                                cause_mux_o, // operates the MUX to choose between lc or tc cause: 0 -> lc, 1 -> tc
     output logic                                tval_mux_o, // operates the MUX to choose between lc or tc tval: 0 -> lc, 1 -> tc
     output logic                                resync_timer_rst_o, // resets counter
-    output qual_status                          qual_status_o,
+    output qual_status_e                        qual_status_o,
     output logic                                irreport_o,
     output logic [2**call_counter_size_i-1:0]   irdepth_o
     );

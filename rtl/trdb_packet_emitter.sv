@@ -66,11 +66,7 @@ module trdb_packet_emitter
     // format 3 subformat 3 specific signals
     input logic ienable_i, // trace encoder enabled
     input logic encoder_mode_i, // implementation specific, right now only branch trace supported (value==0). Hardwire to 0?
-    input logic [1:0] qual_status_i, // to be understood
-    /*  it indicates the tracing has ended, it has two possible values: ended_rep and ended_ntr
-        At page 37 of the specs there's a more accurate description*/
-    // it doesn't require a dedicated input signal
-    // because it's generated using other signals
+    input qual_status_e qual_status_i,
 
     /*  used for ioptions value
         determine if a certain mode is enabled  */
@@ -92,25 +88,12 @@ module trdb_packet_emitter
     /*  notify -> means the packet was requested by the cpu trigger unit*/ 
     //input logic notify_i, // non mandatory
     
-    /* updiscon ->  if it has a different value from notify,
-                    means there was an exception/other flow 
-                    changes during a loop.
-                    This way the trace reconstruction is easier.
-                    For a better description refer to page 38 of the spec
-    */
     // most of the time these 2 values can be compressed
     input logic lc_updiscon_i,
 
     // necessary if implicit_return mode is enabled
     //input logic irreport_i,
-    /*  the value of irreport is different from updiscon
-        if this packet is reporting an instr that is the
-        last one retired before an exception, interrupt, 
-        priv change, resync.
-        With this is also reported the traced nested calls, 
-        that are counted if implicit_return mode is enabled
-        (and available)
-    */
+
     input logic [:0] call_counter_size_i, // size of nested calls counter, 2^value
     input logic [:0] return_stack_size_i, // size of nested calls stack, 2^value
     //input logic [2**call_counter_size_i-1:0] irdepth_i, // keeps count of the traced nested calls
@@ -154,7 +137,7 @@ module trdb_packet_emitter
     logic branch_map_flush_d, branch_map_flush_q;
     logic tval;
     logic time_and_context; // determines if the payload requires time and/or context
-    ioptions ioptions;
+    ioptions_e ioptions;
     logic notify;
     logic updiscon;
     logic irreport;
@@ -257,11 +240,21 @@ module trdb_packet_emitter
                     irreport = updsicon;
                     irdepth = irdepth_i;
                 end else begin*/
-                notify = iaddr_i[XLEN-1];
-                updiscon = notify;
-                irreport = updiscon;
-                irdepth = {2**call_counter_size_i-1{updiscon}};
-                
+
+                // case of an updiscon
+                if(lc_updiscon_i) begin
+                    notify = iaddr_i[XLEN-1];
+                    updiscon = !notify;
+                    irreport = updiscon;
+                    irdepth = {2**call_counter_size_i-1{updiscon}};
+                end else begin
+                    notify = iaddr_i[XLEN-1];
+                    updiscon = notify;
+                    irreport = updiscon;
+                    irdepth = {2**call_counter_size_i-1{updiscon}};
+                end
+                // TODO: support for implicit_return mode
+
                 packet_payload_o = {F_ADDR_ONLY, iaddr_i, notify, updiscon, irreport, irdepth};
                 payload_length_o = $bits(packet_payload_o)/8; //(2 + XLEN-1 + 1 + 1 + 1 + $bits(irdepth_i))/8;
                 packet_valid_o = '1;
@@ -289,10 +282,20 @@ module trdb_packet_emitter
                     irreport = updsicon;
                     irdepth = irdepth_i;
                 end else begin*/
-                notify = iaddr_i[XLEN-1];
-                updiscon = notify;
-                irreport = updiscon;
-                irdepth = {2**call_counter_size_i-1{updiscon}};
+
+                // case of an updiscon
+                if(lc_updiscon_i) begin
+                    notify = iaddr_i[XLEN-1];
+                    updiscon = !notify;
+                    irreport = updiscon;
+                    irdepth = {2**call_counter_size_i-1{updiscon}};
+                end else begin // other cases
+                    notify = iaddr_i[XLEN-1];
+                    updiscon = notify;
+                    irreport = updiscon;
+                    irdepth = {2**call_counter_size_i-1{updiscon}};
+                end
+                // TODO: support for implicit_return mode
 
                 if(branches_i < '31) begin // branch map not full - address
                     packet_payload_o = {F_DIFF_DELTA, branches_i, branch_map_i, diff_addr_i, notify, updsicon, irreport, irdepth};
