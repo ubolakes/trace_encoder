@@ -17,6 +17,11 @@ package trdb_pkg; // cercare in snitch
     localparam CYCLE_MODE = 0;
     localparam PACKET_MODE = 1;
 
+    // parameters for irreport and irdepth
+    // ask if they make sense
+    /*localparam CALL_COUNTER_SIZE = 0;
+    localparam RETURN_STACK_SIZE = 0;*/
+
 
 // packet types
 typedef enum logic[1:0] { 
@@ -48,7 +53,7 @@ typedef enum logic[1:0] {
     ENDED_REP   = 2'h1;
     TRACE_LOST  = 2'h2;
     ENDED_NTR   = 2'h3;
-} qual_status;
+} qual_status_e;
 
 // enum that determines the ioptions values for
 // format 3 subformat 3 packets
@@ -60,7 +65,7 @@ typedef enum logic[2:0] {
     IMPLICIT_RETURN     = 3'h4;
     BRANCH_PREDICTION   = 3'h5;
     JUMP_TARGET_CACHE   = 3'h6;
-} ioptions; // instruction trace options
+} ioptions_e; // instruction trace options
 
 /*TODO:
     doptions struct for data tracing
