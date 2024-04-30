@@ -102,6 +102,9 @@ module trdb_priority (
 
 
     /* internal signals required for packet determination */
+    // last cycle
+    logic   lc_ended_ntr_d, lc_ended_ntr_q;
+    logic   lc_ended_rep_d, lc_ended_rep_q;
     // this cycle
     logic   tc_exc_only; // for a precise definition: page 51 of the spec
     logic   tc_ppccd; // ibidem
@@ -140,8 +143,12 @@ module trdb_priority (
     always_ff @( posedge clk_i, negedge rst_ni ) begin : delayed_tc_reported
         if(~rst_ni) begin
             tc_reported_q <= '0;
+            lc_ended_ntr_q <= '0;
+            lc_ended_rep_q <= '0;
         end else begin
             tc_reported_q <= tc_reported_d;
+            lc_ended_ntr_q <= lc_ended_ntr_d;
+            lc_ended_rep_q <= lc_ended_rep_d;
         end
     end
 
@@ -162,7 +169,9 @@ module trdb_priority (
         tval_mux_o = '0;
         tc_reported_d = '0;
         qual_status_o = NO_CHANGE;
-
+        lc_ended_ntr_d = '0;
+        lc_ended_rep_d = '0;
+        
         if(valid_i) begin
             // format 3 subformat 3 packet generation
             /*  this if is not in the flowchart, but it's only described.
@@ -170,9 +179,14 @@ module trdb_priority (
             if(tc_f3_sf3) begin
                 packet_format_o = F_SYNC;
                 packet_f_sync_subformat_o = SF_SUPPORT;
-                /*TODO:
-                    do a case-switch or if-then-else to determine
-                    the value of qual_status, it depends on inputs*/
+                // if-then-else to determine qual_status value for payload
+                if(lc_ended_ntr_q == '1) begin
+                    qual_status_o = ENDED_NTR;
+                end else if(lc_ended_rep_q == '1) begin
+                    qual_status_o = ENDED_REP;
+                end else if(tc_packets_lost_i == '1) begin
+                    qual_status_o = TRACE_LOST;
+                end
                 valid_o = '1;
             /* TODO:    if for halted and reset sideband signals,
                         if at least one asserted -> considers unqualified*/  
@@ -213,6 +227,8 @@ module trdb_priority (
                     //resync_cnt = 0
                     valid_o = '1;
                 end else if(lc_updiscon_i) begin
+                    // packet generated due to updiscon
+                    lc_ended_ntr_d = '1;
                     if(tc_exc_only) begin
                         packet_format_o = F_SYNC;
                         packet_f_sync_subformat_o = SF_TRAP;
@@ -275,6 +291,10 @@ module trdb_priority (
                     // TODO: implicit_return mode enabled
                     valid_o = '1;
                 end else if(nc_exc_only || nc_ppccd_br || !nc_qualified_i) begin
+                    if(!nc_qualified_i) begin
+                        // the packet is sent because it's the last instr qualified
+                        lc_ended_rep_d = '1;
+                    end
                     /* choosing between format 0/1/2 */
                     /*if(tc_pbc_i >= 31) begin
                         packet_format_o = F_OPT_EXT;
