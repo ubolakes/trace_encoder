@@ -75,12 +75,12 @@ module trdb_packet_emitter
     /*  used for ioptions value
         determine if a certain mode is enabled  */
     input logic delta_address_i, // mandatory
-    input logic full_address_i, // non mandatory
-    input logic implicit_exception_i, // non mandatory
-    input logic sijump_i, // non mandatory
-    input logic implicit_return_i, // non mandatory
-    input logic branch_prediction_i, // non mandatory
-    input logic jump_target_cache_i, // non mandatory
+    //input logic full_address_i, // non mandatory
+    //input logic implicit_exception_i, // non mandatory
+    //input logic sijump_i, // non mandatory
+    //input logic implicit_return_i, // non mandatory
+    //input logic branch_prediction_i, // non mandatory
+    //input logic jump_target_cache_i, // non mandatory
     
     // about DATA trace, in stand-by at the moment
     //input logic denable_i, // DATA trace enabled, if supported
@@ -226,7 +226,7 @@ module trdb_packet_emitter
                     // computing ioptions mode
                     if(delta_address_i) begin
                         ioptions = DELTA_ADDRESS;
-                    end else if(full_address_i) begin
+                    end /*else if(full_address_i) begin // non mandatory
                         ioptions = FULL_ADDRESS;
                     end else if(implicit_exception_i) begin
                         ioptions = IMPLICIT_EXCEPTION;
@@ -238,7 +238,7 @@ module trdb_packet_emitter
                         ioptions = BRANCH_PREDICTION;
                     end else if(jump_target_cache_i) begin
                         ioptions = JUMP_TARGET_CACHE;
-                    end
+                    end*/
 
                     packet_payload_o = {F_SYNC, SF_SUPPORT, ienable_i, encoder_mode_i, qual_status_i, ioptions/*, denable_i, dloss_i, doptions_i*/};
                     payload_length_o = $bits(packet_payload_o)/8; //(2 + 2 + 1 + 1 + 2 + $bits(ioptions) /*+ 1 + 1 + doptions length*/)/8;
@@ -261,6 +261,7 @@ module trdb_packet_emitter
                 updiscon = notify;
                 irreport = updiscon;
                 irdepth = {2**call_counter_size_i-1{updiscon}};
+                
                 packet_payload_o = {F_ADDR_ONLY, iaddr_i, notify, updiscon, irreport, irdepth};
                 payload_length_o = $bits(packet_payload_o)/8; //(2 + XLEN-1 + 1 + 1 + 1 + $bits(irdepth_i))/8;
                 packet_valid_o = '1;
