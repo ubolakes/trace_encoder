@@ -169,7 +169,7 @@ module trdb_packet_emitter
         if(valid_i) begin
             // flush the branch map
         /*  branch map flushing is done in the next cycle.
-            Because we don't want to be instantly deleted
+            Because we don't want it to be instantly deleted
             since we need to read from it to populate the 
             packet payload.    
         */
@@ -185,7 +185,7 @@ module trdb_packet_emitter
                     case(time_and_context)
                     2'h0: begin
                         packet_payload_o = {F_SYNC, F_START, branch, priv_i, iaddr_i};
-                        payload_length_o = (2 + 2 + 1 + PRIV_LEN + XLEN-1)/8;
+                        payload_length_o = $bits(packet_payload_o)/8; //(2 + 2 + 1 + PRIV_LEN + XLEN-1)/8;
                     end
                     /*TODO: other cases*/
                     endcase
@@ -196,7 +196,7 @@ module trdb_packet_emitter
                     case(time_and_context)
                     2'h0: begin
                         packet_payload_o = {F_SYNC, SF_TRAP, branch, priv_i, ecause, interrupt_i, thaddr_i, address, tval};
-                        payload_length_o = (2 + 2 + 1 + PRIV_LEN + CAUSE_LEN + 1 + 1 + XLEN-1 + TVAL_LEN)/8;
+                        payload_length_o = $bits(packet_payload_o)/8; //(2 + 2 + 1 + PRIV_LEN + CAUSE_LEN + 1 + 1 + XLEN-1 + TVAL_LEN)/8;
                     end
                     /*TODO: other cases*/
                     endcase
@@ -207,7 +207,7 @@ module trdb_packet_emitter
                     case(time_and_context)
                     2'h0: begin
                         packet_payload_o = {F_SYNC, SF_CONTEXT, priv_i};
-                        payload_length_o = (2 + 2 + PRIV_LEN)/8;
+                        payload_length_o = $bits(packet_payload_o)/8; //(2 + 2 + PRIV_LEN)/8;
                     end
                     /*TODO: other cases*/
                     endcase
@@ -233,7 +233,7 @@ module trdb_packet_emitter
                     end
 
                     packet_payload_o = {F_SYNC, SF_SUPPORT, ienable_i, encoder_mode_i, qual_status_i, ioptions/*, denable_i, dloss_i, doptions_i*/};
-                    payload_length_o = (2 + 2 + 1 + 1 + 2 + $bits(ioptions) /*+ 1 + 1 + doptions length*/)/8;
+                    payload_length_o = $bits(packet_payload_o)/8; //(2 + 2 + 1 + 1 + 2 + $bits(ioptions) /*+ 1 + 1 + doptions length*/)/8;
                     packet_valid_o = '1;
                 end
                 endcase
@@ -242,7 +242,7 @@ module trdb_packet_emitter
 
             F_ADDR_ONLY: begin // format 2
                 packet_payload_o = {F_ADDR_ONLY, iaddr_i, notify_i, lc_updiscon_i, irreport_i, irdepth_i};
-                payload_length_o = (2 + XLEN-1 + 1 + 1 + 1 + $bits(irdepth_i))/8;
+                payload_length_o = $bits(packet_payload_o)/8; //(2 + XLEN-1 + 1 + 1 + 1 + $bits(irdepth_i))/8;
                 packet_valid_o = '1;
             end
 
@@ -261,10 +261,10 @@ module trdb_packet_emitter
             */
                 if(branches_i < '31) begin // branch map not full - address
                     packet_payload_o = {F_DIFF_DELTA, branches_i, branch_map_i, iaddr_i, notify_i, lc_updiscon_i, irreport_i, irdepth_i};
-                    payload_length_o = (2 + 5 + 31 + XLEN-1 + 1 + 1 + 1 + $bits(irdepth_i))/8;
+                    payload_length_o = $bits(packet_payload_o)/8; //(2 + 5 + 31 + XLEN-1 + 1 + 1 + 1 + $bits(irdepth_i))/8;
                 end else /*if(branches_i == '31)*/ begin // branch map full - no address
                     packet_payload_o = {F_DIFF_DELTA, branches_i, branch_map_i};
-                    payload_length_o = (2 + 5 + 31)/8;
+                    payload_length_o = $bits(packet_payload_o)/8; //(2 + 5 + 31)/8;
                 end
                 packet_valid_o = '1;
             end
@@ -279,13 +279,13 @@ module trdb_packet_emitter
                     2. address, branch count
                 * /    
                     packet_payload_o = {F_OPT_EXT, SF_PBC, etc..};
-                    payload_length_o = ;
+                    payload_length_o = $bits(packet_payload_o)/8;;
                     packet_valid_o = '1;
                 end
 
                 SF_JTC: begin // subformat 1
                     packet_payload_o = {F_OPT_EXT, SF_JTC, etc..};
-                    payload_length_o = ;
+                    payload_length_o = $bits(packet_payload_o)/8;;
                     packet_valid_o = '1;
                 end
                 endcase
