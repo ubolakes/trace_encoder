@@ -73,13 +73,11 @@ module trdb_priority (
     // refer to page 52 of the spec
     //input logic halted_i,
     //input logic reset_i,
-    /*  where do I put them in the flowchart? all'inizio
-        are they produced by the CPU?*/
 
-    // inputs for irreport and irdepth
-    input logic implicit_return_i, // tells if the mode is enabled
-    input logic [:0] call_counter_size_i, // size of nested calls counter, 2^value
-    input logic [:0] return_stack_size_i, // size of nested calls stack, 2^value
+    // inputs for irreport and irdepth, non mandatory
+    //input logic implicit_return_i, // tells if the mode is enabled
+    //input logic [:0] call_counter_size_i, // size of nested calls counter, 2^value
+    //input logic [:0] return_stack_size_i, // size of nested calls stack, 2^value
 
     // trigger unit request ports, must be supported by the CPU
     //input logic tc_trigger_req_i,
@@ -94,9 +92,8 @@ module trdb_priority (
     output logic                                cause_mux_o, // operates the MUX to choose between lc or tc cause: 0 -> lc, 1 -> tc
     output logic                                tval_mux_o, // operates the MUX to choose between lc or tc tval: 0 -> lc, 1 -> tc
     output logic                                resync_timer_rst_o, // resets counter
-    output qual_status_e                        qual_status_o,
-    output logic                                irreport_o,
-    output logic [2**call_counter_size_i-1:0]   irdepth_o
+    output qual_status_e                        qual_status_o
+    //output logic                                irreport_o, // non mandatory, required implicit return mode
     );
 
 
@@ -253,15 +250,6 @@ module trdb_priority (
                         end else begin // branch count == 0
                             packet_format_o = F_ADDR_ONLY;
                         end
-                        // if to send irreport and irdepth to emitter
-                        // necessary for type 0,1,2 packet payloads
-                        if(implicit_return_i == '0 && (call_counter_size_i == 0 || 
-                            return_stack_size_i == 0)) begin
-                            // in this case irdepth and irreport has the same value as updiscon
-                            irreport_o = lc_updiscon_i;
-                            irdepth_o = lc_updiscon_i;
-                        end
-                        // TODO: implicit_return mode enabled
                         valid_o = '1;
                     end
                 end else if(tc_resync_br || tc_er_n) begin
@@ -284,15 +272,6 @@ module trdb_priority (
                     end else begin // branch count == 0
                         packet_format_o = F_ADDR_ONLY;
                     end
-                    // if to send irreport and irdepth to emitter
-                    // necessary for type 0,1,2 packet payloads
-                    if(implicit_return_i == '0 && (call_counter_size_i == 0 || 
-                        return_stack_size_i == 0)) begin
-                        // in this case irdepth and irreport has the same value as updiscon
-                        irreport_o = lc_updiscon_i;
-                        irdepth_o = lc_updiscon_i;
-                    end
-                    // TODO: implicit_return mode enabled
                     valid_o = '1;
                 end else if(nc_exc_only || nc_ppccd_br || !nc_qualified_i) begin
                     if(!nc_qualified_i) begin
@@ -313,15 +292,6 @@ module trdb_priority (
                     end else begin // branch count == 0
                         packet_format_o = F_ADDR_ONLY;
                     end
-                    // if to send irreport and irdepth to emitter
-                    // necessary for type 0,1,2 packet payloads
-                    if(implicit_return_i == 0 && (call_counter_size_i == 0 || 
-                        return_stack_size_i == 0)) begin
-                        // in this case irdepth and irreport has the same value as updiscon
-                        irreport_o = lc_updiscon_i;
-                        irdepth_o = lc_updiscon_i;
-                    end
-                    // TODO: implicit_return mode enabled
                     valid_o = '1;
                 end else if(tc_rpt_br) begin
                     /* // non mandatory, requires support for jtc and branch prediction
@@ -331,15 +301,6 @@ module trdb_priority (
                         valid_o = '1;
                     end else begin*/
                         packet_format_o = F_DIFF_DELTA;
-                        // if to send irreport and irdepth to emitter
-                        // necessary for type 0,1,2 packet payloads
-                        if(implicit_return_i == 0 && (call_counter_size_i == 0 || 
-                            return_stack_size_i == 0)) begin
-                            // in this case irdepth and irreport has the same value as updiscon
-                            irreport_o = lc_updiscon_i;
-                            irdepth_o = lc_updiscon_i;
-                        end
-                        // TODO: implicit_return mode enabled
                         valid_o = '1;
                     //end
                 end /*else if(tc_cci) begin // non mandatory, requires support for context
