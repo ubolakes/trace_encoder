@@ -15,7 +15,8 @@ module tb_trdb_priority();
     logic tc_first_qualified_i;
     logic tc_privchange_i;
     logic tc_context_change_i;
-    logic tc_max_resync_i;
+    logic tc_gt_max_resync_i;
+    logic tc_et_max_resync_i;
     logic tc_branch_map_empty_i;
     logic tc_branch_map_full_i;
     logic tc_enc_enabled_i;
@@ -37,6 +38,7 @@ module tb_trdb_priority();
     logic cause_mux_o;
     logic tval_mux_o;
     logic resync_timer_rst_o;
+    logic [1:0] qual_status_o;
 
     //testing only output
     logic expected_valid;
@@ -46,6 +48,7 @@ module tb_trdb_priority();
     logic expected_cause_mux;
     logic expected_tval_mux;
     logic expected_resync_timer_rst;
+    logic [0:2] expected_qual_status;
     
     // iteration variable
     logic [31:0] i;
@@ -63,7 +66,8 @@ module tb_trdb_priority();
         .tc_first_qualified_i(tc_first_qualified_i),
         .tc_privchange_i(tc_privchange_i),
         .tc_context_change_i(tc_context_change_i),
-        .tc_max_resync_i(tc_max_resync_i),
+        .tc_gt_max_resync_i(tc_gt_max_resync_i),
+        .tc_et_max_resync_i(tc_et_max_resync_i),
         .tc_branch_map_empty_i(tc_branch_map_empty_i),
         .tc_branch_map_full_i(tc_branch_map_full_i),
         .tc_enc_enabled_i(tc_enc_enabled_i),
@@ -82,10 +86,11 @@ module tb_trdb_priority();
         .thaddr_o(thaddr_o),
         .cause_mux_o(cause_mux_o),
         .tval_mux_o(tval_mux_o),
-        .resync_timer_rst_o(resync_timer_rst_o)
+        .resync_timer_rst_o(resync_timer_rst_o),
+        .qual_status_o(qual_status_o)
     );
 
-    logic [30:0] test_vector[1000:0];
+    logic [33:0] test_vector[1000:0];
     //     length of line    # of lines
     
     initial // reading test vector
@@ -98,11 +103,11 @@ module tb_trdb_priority();
     always @(posedge clk) // on posedge we get expected output
     begin
         {reset, valid_i, lc_exception_i, lc_updiscon_i, tc_qualified_i, tc_exception_i, tc_retired_i,
-        tc_first_qualified_i, tc_privchange_i, tc_context_change_i, tc_max_resync_i, tc_branch_map_empty_i,
+        tc_first_qualified_i, tc_privchange_i, tc_context_change_i, tc_gt_max_resync_i, tc_et_max_resync_i, tc_branch_map_empty_i,
         tc_branch_map_full_i, tc_enc_enabled_i, tc_enc_disabled_i, tc_opmode_change_i, lc_final_qualified_i,
         nc_exception_i, nc_privchange_i, nc_context_change_i, nc_branch_map_empty_i, nc_qualified_i, nc_retired_i,
         expected_valid, expected_format, expected_subformat, expected_thaddr, expected_cause_mux, expected_tval_mux,
-        expected_resync_timer_rst} = test_vector[i]; #10;
+        expected_resync_timer_rst, expected_qual_status} = test_vector[i]; #10;
     end
 
     always @(negedge clk) // on negedge we compare the expected result with the actual one
@@ -135,7 +140,10 @@ module tb_trdb_priority();
         if(expected_resync_timer_rst !== resync_timer_rst_o) begin
             $display("Wrong resync_rst: %b!=%b", expected_resync_timer_rst, resync_timer_rst_o);
         end    
-        
+        // expected_qual_status_o
+        if(expected_qual_status !== qual_status_o) begin
+            $display("Wrong qual_status: %b!=%b", expected_qual_status, qual_status_o);
+        end    
         i = i + 1; // incrementing index
     end
 
