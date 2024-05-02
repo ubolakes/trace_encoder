@@ -94,8 +94,9 @@ module trdb_priority (
     output logic                                tval_mux_o, // operates the MUX to choose between lc or tc tval: 0 -> lc, 1 -> tc
     output logic                                resync_timer_rst_o, // resets counter
     output qual_status_e                        qual_status_o
-    //output logic                                irreport_o, // non mandatory, required implicit return mode
     );
+    //output logic                                irreport_o, // non mandatory, required implicit return mode
+    //);
 
 
     /* internal signals required for packet determination */
@@ -181,9 +182,9 @@ module trdb_priority (
                     qual_status_o = ENDED_NTR;
                 end else if(lc_ended_rep_q == '1) begin
                     qual_status_o = ENDED_REP;
-                end else if(tc_packets_lost_i == '1) begin
+                end/* else if(tc_packets_lost_i == '1) begin
                     qual_status_o = TRACE_LOST;
-                end
+                end*/
                 valid_o = '1;
             /* TODO:    if for halted and reset sideband signals,
                         if at least one asserted -> considers unqualified*/  

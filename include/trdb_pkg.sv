@@ -52,22 +52,22 @@ typedef enum logic[0:0] {
 // qual_status values necessary for format 3 subformat 3
 // packet payload
 typedef enum logic[1:0] {
-    NO_CHANGE   = 2'h0;
-    ENDED_REP   = 2'h1;
-    TRACE_LOST  = 2'h2;
-    ENDED_NTR   = 2'h3;
+    NO_CHANGE   = 2'h0,
+    ENDED_REP   = 2'h1,
+    TRACE_LOST  = 2'h2,
+    ENDED_NTR   = 2'h3
 } qual_status_e;
 
 // enum that determines the ioptions values for
 // format 3 subformat 3 packets
 typedef enum logic[2:0] {
-    DELTA_ADDRESS       = 3'h0;
-    FULL_ADDRESS        = 3'h1;
-    IMPLICIT_EXCEPTION  = 3'h2;
-    SIJUMP              = 3'h3;
-    IMPLICIT_RETURN     = 3'h4;
-    BRANCH_PREDICTION   = 3'h5;
-    JUMP_TARGET_CACHE   = 3'h6;
+    DELTA_ADDRESS       = 3'h0,
+    FULL_ADDRESS        = 3'h1,
+    IMPLICIT_EXCEPTION  = 3'h2,
+    SIJUMP              = 3'h3,
+    IMPLICIT_RETURN     = 3'h4,
+    BRANCH_PREDICTION   = 3'h5,
+    JUMP_TARGET_CACHE   = 3'h6
 } ioptions_e; // instruction trace options
 
 /*TODO:
