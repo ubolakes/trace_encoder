@@ -19,9 +19,12 @@ package trdb_pkg; // cercare in snitch
 
     // parameters for irreport and irdepth
     // ask if they make sense
-    /*localparam CALL_COUNTER_SIZE = 0;
-    localparam RETURN_STACK_SIZE = 0;*/
+    localparam CALL_COUNTER_SIZE = '0;
+    localparam RETURN_STACK_SIZE = '0;
 
+    // parameter for branch map - defined by spec
+    localparam BRANCH_MAP_LEN = 30;
+    localparam BRANCH_COUNT_LEN = 4;
 
 // packet types
 typedef enum logic[1:0] { 
