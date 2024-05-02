@@ -40,7 +40,8 @@ module trdb_priority (
     //input logic tc_precise_context_report_i,  // requires ctype signal CPU side
     input logic tc_context_change_i,          // ibidem
     //input logic tc_context_report_as_disc_i,  // ibidem
-    input logic tc_max_resync_i, // resync timer expired
+    input logic tc_gt_max_resync_i, // greater than timeout
+    input logic tc_et_max_resync_i, // one step to timeout
     input logic tc_branch_map_empty_i,
     
     input logic tc_branch_map_full_i,
@@ -120,7 +121,7 @@ module trdb_priority (
     assign  tc_ppccd        = tc_privchange_i || (tc_context_change_i /*&& 
                                 (tc_precise_context_report_i ||
                                 tc_context_report_as_disc_i)*/);
-    assign  tc_resync_br    = tc_max_resync_i && ~tc_branch_map_empty_i;
+    assign  tc_resync_br    = tc_et_max_resync_i && ~tc_branch_map_empty_i;
     assign  tc_er_n         = (tc_exception_i && tc_retired_i) /*|| tc_trigger_req_i*/;
     assign  tc_rpt_br       = tc_branch_map_full_i /* || tc_branch_misprediction_i*/;
     //assign  tc_cci          = tc_context_change_i && tc_imprecise_context_report_i;
@@ -216,7 +217,7 @@ module trdb_priority (
                         cause = lc_cause_i; tval = lc_tval */ 
                         valid_o = '1;
                         end
-                end else if(tc_first_qualified_i || tc_ppccd || tc_max_resync_i) begin
+                end else if(tc_first_qualified_i || tc_ppccd || tc_gt_max_resync_i) begin
                     packet_format_o = F_SYNC;
                     packet_f_sync_subformat_o = SF_START;
                     resync_timer_rst_o = '1;
