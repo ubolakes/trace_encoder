@@ -43,7 +43,6 @@ module trdb_packet_emitter
     //input logic [:0] time_i,    // optional
     //input logic [:0] context_i, // optional
     input logic [XLEN-1:0] iaddr_i,
-    input logic [XLEN-2:0] diff_addr_i, // delta address
     input logic resync_timeout_i, // requested resync by the timer
 
     // format 3 subformat 1 specific signals
@@ -94,9 +93,9 @@ module trdb_packet_emitter
     // necessary if implicit_return mode is enabled
     //input logic irreport_i,
 
-    input logic [:0] call_counter_size_i, // size of nested calls counter, 2^value
-    input logic [:0] return_stack_size_i, // size of nested calls stack, 2^value
-    //input logic [2**call_counter_size_i-1:0] irdepth_i, // keeps count of the traced nested calls
+    //input logic [:0] call_counter_size_i, // read from package, size of nested calls counter, 2^value
+    //input logic [:0] return_stack_size_i, // read from package, size of nested calls stack, 2^value
+    //input logic [2**call_counter_size_i-1:0] irdepth_i, // non mandatory, keeps count of the traced nested calls
 
     // format 1 specific signals
     /*  this format exists in two modes:
@@ -107,8 +106,8 @@ module trdb_packet_emitter
             - 0: no need for address
             - >0: address required
     */
-    input logic [4:0] branches_i, // in Robert implementation is called branch_cnt
-    input logic [31:0] branch_map_i, // in the packet it can change size to improve efficiency
+    input logic [BRANCH_COUNT_LEN:0] branches_i,
+    input logic [BRANCH_MAP_LEN:0] branch_map_i, // in the packet it can change size to improve efficiency
     
     // format 0 specific signals
     /*  This format can have two possible subformats:
@@ -119,11 +118,11 @@ module trdb_packet_emitter
     */
 
     // outputs
-    output logic [P_LEN:0] payload_length_o, // in bytes
     /* this module produces only the packet payload
     that is the forwarded to the encapsulator that
     takes care of the type and length.*/
     output logic [PAYLOAD_LEN:0] packet_payload_o,
+    output logic [P_LEN:0] payload_length_o, // in bytes
     output logic packet_valid_o, // asserted when a packet is generated
 
     output logic branch_map_flush_o, // branch map flushed after each request
@@ -133,7 +132,9 @@ module trdb_packet_emitter
     logic branch;
     logic [XLEN-1:0] address;
     logic [CAUSE_LEN:0] ecause;
-    logic [:0] diff_addr;
+    logic [XLEN-2:0] diff_addr;
+    logic [XLEN-1:0] latest_addr_d;
+    logic [XLEN-1:0] latest_addr_q;
     logic branch_map_flush_d, branch_map_flush_q;
     logic tval;
     logic time_and_context; // determines if the payload requires time and/or context
@@ -141,7 +142,8 @@ module trdb_packet_emitter
     logic notify;
     logic updiscon;
     logic irreport;
-    logic [2**call_counter_size_i-1:0] irdepth;
+    logic [2**CALL_COUNTER_SIZE-1:0] irdepth;
+    logic update_latest_address;
 
     // assigning values
     assign branch = ~(is_branch_i && is_branch_taken_i);
@@ -149,6 +151,16 @@ module trdb_packet_emitter
     assign ecause = cause_mux_i ? tc_cause_i : lc_cause_i;
     assign tval = tval_mux_i ? tc_tval_i : lc_tval_i;
     assign time_and_context = {notime_i, nocontext_i};
+    assign latest_addr_d = update_latest_address ? iaddr_i : latest_addr_q; // update only if valid input
+
+    // register to store the last address emitted in a packet
+    always_ff @(posedge clk_i, negedge rst_ni) begin
+        if(~rst_ni) begin
+            latest_addr_q <= '0;
+        end else begin
+            latest_addr_q <= latest_addr_d;
+        end
+    end
 
     // combinatorial network to output packets
     always_comb begin : set_packet_bits
@@ -156,6 +168,8 @@ module trdb_packet_emitter
         payload_length_o = '0; // in bytes, computed as the length in bit of (type+payload)/8
         packet_payload_o = '0;
         packet_valid_o = '0;
+        diff_addr = '0;
+        update_latest_address = '0;
         
         if(valid_i) begin
             // flush the branch map
@@ -173,6 +187,9 @@ module trdb_packet_emitter
                 case(packet_f_sync_subformat_i)
 
                 SF_START: begin // subformat 0
+                    // updating latest address sent in a packet
+                    update_latest_address = '1;
+
                     case(time_and_context)
                     2'h0: begin
                         packet_payload_o = {F_SYNC, F_START, branch, priv_i, iaddr_i};
@@ -184,6 +201,9 @@ module trdb_packet_emitter
                 end
 
                 SF_TRAP: begin // subformat 1
+                    // updating latest address sent in a packet
+                    update_latest_address = '1;
+                    
                     case(time_and_context)
                     2'h0: begin
                         packet_payload_o = {F_SYNC, SF_TRAP, branch, priv_i, ecause, interrupt_i, thaddr_i, address, tval};
@@ -232,6 +252,9 @@ module trdb_packet_emitter
 
 
             F_ADDR_ONLY: begin // format 2
+                // updating latest address sent in a packet
+                update_latest_address = '1;
+                    
                 // requires trigger unit in CPU
                 /*
                 if(notify_i) begin // request from trigger unit
@@ -246,14 +269,20 @@ module trdb_packet_emitter
                     notify = iaddr_i[XLEN-1];
                     updiscon = !notify;
                     irreport = updiscon;
-                    irdepth = {2**call_counter_size_i-1{updiscon}};
-                end else begin
+                    irdepth = {2**CALL_COUNTER_SIZE{updiscon}};
+                /* non mandatory
+                end else if(implicit_mode_i && irreport_i) begin // request for implicit return mode
+                    notify = iaddr_i[XLEN-1];
+                    updiscon = notify;
+                    irreport = !updiscon;
+                    irdepth = irdepth_i;
+                */
+                end else begin //other cases
                     notify = iaddr_i[XLEN-1];
                     updiscon = notify;
                     irreport = updiscon;
-                    irdepth = {2**call_counter_size_i-1{updiscon}};
+                    irdepth = {2**CALL_COUNTER_SIZE{updiscon}};
                 end
-                // TODO: support for implicit_return mode
 
                 packet_payload_o = {F_ADDR_ONLY, iaddr_i, notify, updiscon, irreport, irdepth};
                 payload_length_o = $bits(packet_payload_o)/8; //(2 + XLEN-1 + 1 + 1 + 1 + $bits(irdepth_i))/8;
@@ -274,6 +303,9 @@ module trdb_packet_emitter
                 Type 2 payload is used when the address is not needed,
                 for examples if the branch map is full.
             */
+                // updating latest address sent in a packet
+                update_latest_address = '1;    
+
                 // requires trigger unit in CPU
                 /*
                 if(notify_i) begin // request from trigger unit
@@ -288,17 +320,26 @@ module trdb_packet_emitter
                     notify = iaddr_i[XLEN-1];
                     updiscon = !notify;
                     irreport = updiscon;
-                    irdepth = {2**call_counter_size_i-1{updiscon}};
+                    irdepth = {2**CALL_COUNTER_SIZE{updiscon}};
+                /* non mandatory
+                end else if(implicit_return_i && irreport_i) begin // request for implicit return mode
+                    notify = iaddr_i[XLEN-1];
+                    updiscon = notify;
+                    irreport = !updiscon;
+                    irdepth = irdepth_i;
+                */
                 end else begin // other cases
                     notify = iaddr_i[XLEN-1];
                     updiscon = notify;
                     irreport = updiscon;
-                    irdepth = {2**call_counter_size_i-1{updiscon}};
+                    irdepth = {2**CALL_COUNTER_SIZE{updiscon}};
                 end
-                // TODO: support for implicit_return mode
+
+                // computing differential address
+                diff_addr = iaddr_i - latest_addr_q;
 
                 if(branches_i < '31) begin // branch map not full - address
-                    packet_payload_o = {F_DIFF_DELTA, branches_i, branch_map_i, diff_addr_i, notify, updsicon, irreport, irdepth};
+                    packet_payload_o = {F_DIFF_DELTA, branches_i, branch_map_i, diff_addr, notify, updsicon, irreport, irdepth};
                     payload_length_o = $bits(packet_payload_o)/8; //(2 + 5 + 31 + XLEN-1 + 1 + 1 + 1 + $bits(irdepth_i))/8;
                 end else /*if(branches_i == '31)*/ begin // branch map full - no address
                     packet_payload_o = {F_DIFF_DELTA, branches_i, branch_map_i};
@@ -321,7 +362,7 @@ module trdb_packet_emitter
                 notify = iaddr_i[XLEN-1];
                 updiscon = notify;
                 irreport = updiscon;
-                irdepth = {2**call_counter_size_i-1{updiscon}};
+                irdepth = {2**CALL_COUNTER_SIZE{updiscon}};
                 end */
                 
                 /* requires non mandatory support for jtc and branch prediction
@@ -331,6 +372,11 @@ module trdb_packet_emitter
                     1. no address, branch count
                     2. address, branch count
                 * /    
+                
+                    // only for F0SF0 payload w/address
+                    // updating latest address sent in a packet
+                    //update_latest_address = '1;
+
                     packet_payload_o = {F_OPT_EXT, SF_PBC, etc..};
                     payload_length_o = $bits(packet_payload_o)/8;;
                     packet_valid_o = '1;
