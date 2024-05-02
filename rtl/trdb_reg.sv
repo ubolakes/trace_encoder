@@ -25,14 +25,14 @@ module trdb_reg
     output logic notime_o,
     output logic encoder_mode_o,
     output logic delta_address_o,
+    /* non mandatory
     output logic full_address_o,
     output logic implicit_exception_o,
     output logic sijump_o,
     output logic implicit_return_o,
     output logic branch_prediction_o,
     output logic jump_target_cache_o,
-
-
+    */
 
     );
 
