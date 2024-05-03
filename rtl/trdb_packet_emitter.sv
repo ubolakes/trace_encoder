@@ -151,14 +151,15 @@ module trdb_packet_emitter
     assign ecause = cause_mux_i ? tc_cause_i : lc_cause_i;
     assign tval = tval_mux_i ? tc_tval_i : lc_tval_i;
     assign time_and_context = {notime_i, nocontext_i};
-    assign latest_addr_d = update_latest_address ? iaddr_i : latest_addr_q; // update only if valid input
 
     // register to store the last address emitted in a packet
     always_ff @(posedge clk_i, negedge rst_ni) begin
         if(~rst_ni) begin
             latest_addr_q <= '0;
         end else begin
-            latest_addr_q <= latest_addr_d;
+            if(update_latest_address) begin
+                latest_addr_q <= iaddr_i;
+            end
         end
     end
 

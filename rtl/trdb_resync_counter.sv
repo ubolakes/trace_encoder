@@ -26,10 +26,13 @@ module trdb_resync_counter
 
     localparam COUNTER_LEN = $clog2(MAX_VALUE);
 
-    logic [COUNTER_LEN-1:0] counter; // placeholder value
+    logic [COUNTER_LEN-1:0] counter_q;
+    logic [COUNTER_LEN-1:0] counter_d;
     logic enabled_d, enabled_q;  // operates the counter
     logic count_enabled;
     logic gt_resync_max_d, gt_resync_max_q;
+    logic packet_count_enabled;
+    logic cycle_count_enabled;
 
 
     assign count_enabled = trace_enabled_i && enabled_q;
@@ -37,21 +40,19 @@ module trdb_resync_counter
     assign gt_resync_max_d = ~enabled_d; //counter == MAX_VALUE ? 1 : 0;
     assign gt_resync_max_o = gt_resync_max_q; 
     assign et_resync_max_o = counter == MAX_VALUE-1 ? 1 : 0;
+    assign packet_count_enabled = count_enabled && PACKET_MODE && packet_emitted_i;
+    assign cycle_count_enabled = count_enabled && CYCLE_MODE;
 
     always_ff @( posedge clk_i, negedge rst_ni ) begin: counter
         if(~rst_ni) begin
-            counter <= '0;
+            counter_q <= '0;
             enabled_q <= '1; // counter enabled by default
             gt_resync_max_q <= '0;
         end else begin
-            // the if-then-else block is allowed in this synchronous block?
-            if(PACKET_MODE && count_enabled) begin
-                if(packet_emitted_i)
-                    counter++;
-            end else if(CYCLE_MODE && count_enabled) begin
-                counter++;
+            if(packet_count_enabled || cycle_count_enabled) begin
+                counter_q <= counter_d + 1;
             end else if(resync_rst_i) begin
-                counter <= '0; // reset to zero is done after receiving the reset signal
+                counter_q <= '0; // reset to zero is done after receiving the reset signal
             end
             // updating FF values
             gt_resync_max_q <= gt_resync_max_d;
