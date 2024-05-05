@@ -13,6 +13,9 @@ package trdb_pkg; // cercare in snitch
     localparam XLEN = 32;
 `endif // common parameters
     
+
+    // test if commit works on new laptop
+
     // parameters for resync counter
     localparam CYCLE_MODE = 0;
     localparam PACKET_MODE = 1;
