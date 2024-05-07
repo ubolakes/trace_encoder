@@ -103,6 +103,8 @@ module trdb_priority (
     logic   tc_rpt_br; // ibidem
     //logic   tc_cci; // ibidem
     logic   tc_reported_d, tc_reported_q; // ibidem
+    logic   reported_update; // determines when reported_q updates 
+    // reported is updated when the lc_exception was updated or not
 
     // next cycle
     logic   nc_exc_only;
@@ -124,6 +126,8 @@ module trdb_priority (
                                 ~nc_branch_map_empty_i;
     assign  tc_f3_sf3       = tc_enc_enabled_i || tc_enc_disabled_i || tc_opmode_change_i ||
                                 lc_final_qualified_i /*|| tc_packets_lost_i*/;
+    assign reported_update  =   (packet_format_o == F_SYNC && packet_f_sync_subformat_o == SF_TRAP && ~thaddr_o) || 
+                                (packet_format_o == F_SYNC && packet_f_sync_subformat_o == SF_START && ~tc_exc_only);
 
     /*  
     The reset value is 0, the spec doesn't say how to behave.
@@ -136,7 +140,9 @@ module trdb_priority (
             lc_ended_ntr_q <= '0;
             lc_ended_rep_q <= '0;
         end else begin
-            tc_reported_q <= tc_reported_d;
+            if(reported_update) begin
+                tc_reported_q <= tc_reported_d;
+            end
             lc_ended_ntr_q <= lc_ended_ntr_d;
             lc_ended_rep_q <= lc_ended_rep_d;
         end
@@ -197,6 +203,7 @@ module trdb_priority (
                         packet_format_o = F_SYNC;
                         packet_f_sync_subformat_o = SF_START;
                         resync_timer_rst_o = '1;
+                        //reported_d = '0; // not necessary
                         // resync_cnt = 0
                         valid_o = '1;
                     end else begin // not reported
