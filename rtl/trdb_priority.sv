@@ -31,24 +31,18 @@ module trdb_priority (
     // tc (this cycle) signals
     input logic tc_qualified_i,
     input logic tc_exception_i,
-
-    input logic tc_retired_i, // istr retired in tc
-    // used to create tc_exc_only and er_n signal
-    
+    input logic tc_retired_i,
     input logic tc_first_qualified_i,
     input logic tc_privchange_i,
+    input logic tc_context_change_i,
     //input logic tc_precise_context_report_i,  // requires ctype signal CPU side
-    input logic tc_context_change_i,          // ibidem
     //input logic tc_context_report_as_disc_i,  // ibidem
+    //input logic tc_imprecise_context_report_i, // ibidem
     input logic tc_gt_max_resync_i, // greater than timeout
     input logic tc_et_max_resync_i, // one step to timeout
     input logic tc_branch_map_empty_i,
-    
     input logic tc_branch_map_full_i,
     //input logic tc_branch_misprediction_i, // non mandatory
-
-    //input logic tc_imprecise_context_report_i, // requires ctype signal CPU side
-
     //input logic tc_pbc_i, // correctly predicted branch count, non mandatory
 
     // format 3 subformat 3 - NOT shown in graph
@@ -58,7 +52,6 @@ module trdb_priority (
     input logic lc_final_qualified_i,
     //input logic tc_packets_lost_i, // non mandatory
 
-
     // nc (next cycle) signals
     input logic nc_exception_i,
     input logic nc_privchange_i,
@@ -67,7 +60,6 @@ module trdb_priority (
     //input logic nc_context_report_as_disc_i,  // ibidem
     input logic nc_branch_map_empty_i,
     input logic nc_qualified_i,
-
     input logic nc_retired_i, // used w/nc_exception for signal nc_exc_only
 
     // non mandatory sideband signals

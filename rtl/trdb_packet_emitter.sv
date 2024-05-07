@@ -7,7 +7,7 @@ import trdb_pkg::*;
 
 module trdb_packet_emitter
 (
-    // TO DO: add signals width
+    // TODO: add signals width
 
     input logic clk_i,
     input logic rst_ni,
@@ -17,15 +17,15 @@ module trdb_packet_emitter
     // necessary info to assemble packet
     input trdb_format_e packet_format_i,
     input trdb_f_sync_subformat_e packet_f_sync_subformat_i, // subformat for format 3
-    //input trdb_f_opt_ext_subformat_e packet_f_opt_ext_subformat_i, // non mandatory,subformat for format 0
+    //input trdb_f_opt_ext_subformat_e packet_f_opt_ext_subformat_i, // non mandatory, subformat for format 0
 
     // lc (last cycle) signals
-    input logic lc_cause_i,
-    input logic lc_tval_i,
+    input logic [CAUSE_LEN-1:0] lc_cause_i,
+    input logic [TVAL_LEN-1:0]  lc_tval_i,
 
     // tc (this cycle) signals
-    input logic tc_cause_i,
-    input logic tc_tval_i,
+    input logic [CAUSE_LEN-1:0] tc_cause_i,
+    input logic [TVAL_LEN-1:0]  tc_tval_i,
 
     // nc (next cycle) signals
 
