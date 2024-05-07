@@ -107,6 +107,19 @@ module trace_debugger import trdb_pkg::*;
     logic                   nc_qualified;
     logic                   nc_retired;
 
+    
+    /* MANAGING LC, TC, NC SIGNALS */
+    /*
+    To manage lc, tc, nc signals I decided to use two 
+    serially connected FFs.
+            ___________                    ___________              
+    sig0_d--| D     Q |--sig0_q == sig1_d--| D     Q |--sig1_q
+      nc    |         |    tc              |         |    lc
+            |   FF0   |                    |   FF1   |
+            |_________|                    |_________|
+    */
+
+
     /* SIGNALS RECAP
         - this cycle -> _d and _q
             signal is assigned with _q (or 0_q in case it has a lc version)
@@ -116,6 +129,16 @@ module trace_debugger import trdb_pkg::*;
     */
 
     /* signals for FFs */
+    /* last cycle */
+    logic                   exception0_d, exception0_q;
+    logic                   exception1_d, exception1_q;
+    logic                   updiscon0_d, updiscon0_q;
+    logic                   updiscon1_d, updiscon1_q;
+    logic [CAUSE_LEN-1:0]   cause0_d, cause0_q;
+    logic [CAUSE_LEN-1:0]   cause1_d, cause1_q;
+    logic [TVAL_LEN-1:0]    tval0_d, tval0_q;
+    logic [TVAL_LEN-1:0]    tval1_d, tval1_q;
+
     /* this cycle */
     logic   qualified_d, qualified_q;
     logic   is_branch_d, is_branch_q;
@@ -138,38 +161,7 @@ module trace_debugger import trdb_pkg::*;
     //logic   branch_misprediction_d, branch_misprediction_q; // non mandatory
     logic   enc_enabled_d, enc_enabled_q;
     logic   enc_disabled_d, enc_disabled_q;
-    logic   packets_lost_d, packets_lost_q; // non mandatory
-
-    /* last cycle */
-    logic                   exception0_d, exception0_q;
-    logic                   exception1_d, exception1_q;
-    logic                   updiscon0_d, updiscon0_q;
-    logic                   updiscon1_d, updiscon1_q;
-    logic [CAUSE_LEN-1:0]   cause0_d, cause0_q;
-    logic [CAUSE_LEN-1:0]   cause1_d, cause1_q;
-    logic [TVAL_LEN-1:0]    tval0_d, tval0_q;
-    logic [TVAL_LEN-1:0]    tval1_d, tval1_q;
-
-    // registers to hold input data for a few phases
-    /*
-    Per gestire i segnali di lc, tc, nc, uso dei segnali
-    che rappresentano input e output dei due FFD che si 
-    occupano di ritardare il segnale.
-            ___________                    ___________              
-    sig0_d--| D     Q |--sig0_q == sig1_d--| D     Q |--sig1_q
-      nc    |         |    tc              |         |    lc
-            |   FF0   |                    |   FF1   |
-            |_________|                    |_________|
-    */
-
-    
-
-
-    /* TODO:
-    1. definire i segnali 0_d, 0_q, 1_d, 1_q
-    2. ritardarli tramite FFD
-    3. fare assign con i segnali lc, tc, nc
-    */
+    //logic   packets_lost_d, packets_lost_q; // non mandatory
 
 
     /*  the following commented section has non mandatory signals
@@ -255,15 +247,64 @@ module trace_debugger import trdb_pkg::*;
     assign nc_retired = retired_d;
 
     /* MODULES INSTANTIATION */
-    
+
 
     /* REGISTERS */
-
     always_ff @( posedge clk_i, negedge rst_ni ) begin : registers
         if(~rst_ni) begin
-            // setting all _q values to 0
+            exception0_q <= '0;
+            exception1_q <= '0;
+            updiscon0_q <= '0;
+            updiscon1_q <= '0;
+            cause0_q <= '0;
+            cause1_q <= '0;
+            tval0_q <= '0;
+            tval1_q <= '0;
+            qualified_q <= '0;
+            is_branch_q <= '0;
+            retired_q <= '0;
+            first_qualified_q <= '0;
+            privchange_q <= '0;
+            context_change_q <= '0;
+            //precise_context_report_q <= '0; // requires ctype signal CPU side
+            //context_report_as_disc_q <= '0; //ibidem
+            //no_context_report_q <= '0; // ibidem
+            //imprecise_context_report_q <= '0; // ibidem
+            gt_max_resync_q <= '0;
+            et_max_resync_q <= '0;
+            branch_map_empty_q <= '0;
+            branch_map_full_q <= '0;
+            //branch_misprediction_q <= '0; // non mandatory
+            enc_enabled_q <= '0;
+            enc_disabled_q <= '0;
+            //packets_lost_q <= '0; // non mandatory
         end else begin
-            // assigning _d signals to _q ones
+            exception0_q <= exception0_d;
+            exception1_q <= exception1_d;
+            updiscon0_q <= updiscon0_d;
+            updiscon1_q <= updiscon1_d;
+            cause0_q <= cause0_d;
+            cause1_q <= cause1_d;
+            tval0_q <= tval0_d;
+            tval1_q <= tval1_d;
+            qualified_q <= qualified_d;
+            is_branch_q <= is_branch_d;
+            retired_q <= retired_d;
+            first_qualified_q <= first_qualified_d;
+            privchange_q <= privchange_d;
+            context_change_q <= context_change_d;
+            //precise_context_report_q <= precise_context_report_d; // requires ctype signal CPU side
+            //context_report_as_disc_q <= context_report_as_disc_d; //ibidem
+            //no_context_report_q <= no_context_report_d; // ibidem
+            //imprecise_context_report_q <= imprecise_context_report_d; // ibidem
+            gt_max_resync_q <= gt_max_resync_d;
+            et_max_resync_q <= et_max_resync_d;
+            branch_map_empty_q <= branch_map_empty_d;
+            branch_map_full_q <= branch_map_full_d;
+            //branch_misprediction_q <= branch_misprediction_d; // non mandatory
+            enc_enabled_q <= enc_enabled_d;
+            enc_disabled_q <= enc_disabled_d;
+            //packets_lost_q <= packets_lost_d; // non mandatory       
         end
     end
 
