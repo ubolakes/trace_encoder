@@ -247,7 +247,162 @@ module trace_debugger import trdb_pkg::*;
     assign nc_retired = retired_d;
 
     /* MODULES INSTANTIATION */
+    /* REGISTERS */
+    trdb_reg i_trdb_reg(
+        .clk_i(),
+        .rst_ni(),
 
+        .trace_activated_o(),
+        .nocontext_o(),
+        .notime_o(),
+        .encoder_mode_o(),
+        .delta_address_o()
+    );
+
+    /* FILTER */
+    trdb_filter i_trdb_filter(
+        .trace_activated_i(),
+        .trigger_trace_on_i(),
+        .trigger_trace_off_i(),
+
+        .trace_req_deactivate_o(),
+        .trace_qualified_o()
+    );
+
+    /* PRIORITY */
+    trdb_priority i_trdb_priority(
+        .clk_i(),
+        .rst_ni(),
+        .valid_i(),
+        .lc_exception_i(),
+        .lc_updiscon_i(),
+        .tc_qualified_i(),
+        .tc_exception_i(),
+        .tc_retired_i(),
+        .tc_first_qualified_i(),
+        .tc_privchange_i(),
+        .tc_context_change_i(), // non mandatory
+        //.tc_precise_context_report_i(), // requires ctype signal CPU side
+        //.tc_context_report_as_disc_i(), // ibidem
+        //.tc_imprecise_context_report_i(), // ibidem
+        .tc_gt_max_resync_i(),
+        .tc_et_max_resync_i(),
+        .tc_branch_map_empty_i(),
+        .tc_branch_map_full_i(),
+        //.tc_branch_misprediction_i(), // non mandatory
+        //.tc_pbc_i(), // non mandatory
+        .tc_enc_enabled_i(),
+        .tc_enc_disabled_i(),
+        .tc_opmode_change_i(),
+        .lc_final_qualified_i(),
+        //.tc_packets_lost_i(), // non mandatory
+        .nc_exception_i(),
+        .nc_privchange_i(),
+        .nc_context_change_i(),
+        //.nc_precise_context_report_i(), // requires ctype signal CPU side
+        //.nc_context_report_as_disc_i(), // ibidem
+        .nc_branch_map_empty_i(),
+        .nc_qualified_i(),
+        .nc_retired_i(),
+        //.halted_i(), // non mandatory side band signal
+        //.reset_i(), // ibidem
+        //.implicit_return_i(), // non mandatory
+        //.tc_trigger_req_i(), // non mandatory
+        //.notify_o(), // non mandatory, depends on trigger request
+
+        .valid_o(),
+        .packet_format_o(),
+        .packet_f_sync_subformat_o(),
+        //.packet_f_opt_ext_subformat_o(), // non mandatory
+        .thaddr_o(),
+        .cause_mux_o(),
+        .tval_mux_o(),
+        .resync_timer_rst_o(),
+        .qual_status_o()
+    );
+
+    /* BRANCH MAP */
+    trdb_branch_map i_trdb_branch_map(
+        .clk_i(),
+        .rst_ni(),
+        .valid_i(),
+        .branch_taken_i(),
+        .flush_i(),
+        //.branch_taken_prediction_i(), // non mandatory
+
+        .map_o(),
+        .branches_o(),
+        //.pbc_o(), // non mandatory - branch prediction mode
+        //.misprediction_o(), // non mandatory - ibidem
+        .is_full_o(),
+        .is_empty_o()
+    );
+
+    /* PACKET EMITTER */
+    trdb_packet_emitter i_trdb_packet_emitter(
+        .clk_i(),
+        .rst_ni(),
+        .valid_i(),
+        .packet_format_i(),
+        .packet_f_sync_subformat_i(),
+        //.packet_f_opt_ext_subformat_i(), // non mandatory
+        .lc_cause_i(),
+        .lc_tval_i(),
+        .tc_cause_i(),
+        .tc_tval_i(),
+        .nocontext_i(),
+        .notime_i(),
+        .is_branch_i(),
+        .is_branch_taken_i(),
+        .priv_i(),
+        //.time_i(), // non mandatory
+        //.context_i(), // non mandatory
+        .iaddr_i(),
+        .resync_timeout_i(),
+        .cause_mux_i(),
+        .tval_mux_i(),
+        .interrupt_i(),
+        .thaddr_i(),
+        .tvec_i(),
+        .epc_i(),
+        .ienable_i(),
+        .encoder_mode_i(),
+        .qual_status_i(),
+        .delta_address_i(),
+        //.full_address_i(), // non mandatory
+        //.implicit_exception_i(), // non mandatory
+        //.sijump_i(), // non mandatory
+        //.implicit_return_i(), // non mandatory
+        //.branch_prediction_i(), // non mandatory
+        //.jump_target_cache_i(), // non mandatory
+        //.denable_i(), // stand-by
+        //.dloss_i(), //stand-by
+        //.notify_i(), // non mandatory
+        .lc_updiscon_i(),
+        //.irreport_i(), // non mandatory
+        //.irdepth_i(), // non mandatory
+        .branches_i(),
+        .branch_map_i(),
+        
+        .packet_payload_o(),
+        .payload_length_o(),
+        .packet_valid_o(),
+        .branch_map_flush_o()
+    );
+
+    /* RESYNC COUNTER */
+    trdb_resync_counter
+        #(  .MODE(),        // can be chosen by the user
+            .MAX_VALUE())
+    i_trdb_resync_counter(
+        .clk_i(),
+        .rst_ni(),
+        .trace_enabled_i(),
+        .packet_emitted_i(),
+        .resync_rst_i(),
+        .gt_resync_max_o(),
+        .et_resync_max_o()
+    );
 
     /* REGISTERS */
     always_ff @( posedge clk_i, negedge rst_ni ) begin : registers
