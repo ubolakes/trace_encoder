@@ -36,7 +36,7 @@ module trace_debugger import trdb_pkg::*;
 
     // outputs
     // info needed for the encapsulator
-    output logic [PTYPE_LEN:0]packet_type_o,
+    output logic [PTYPE_LEN:0] packet_type_o,
     output logic [P_LEN:0] packet_length_o, // in bytes
     output logic [PAYLOAD_LEN:0] packet_payload_o
 
@@ -47,30 +47,30 @@ module trace_debugger import trdb_pkg::*;
 
     /* signals for management */
     // registers
-    logic trace_activated;
-    logic nocontext;
-    logic notime;
-    logic encoder_mode;
-    logic delta_address;
+    logic                           trace_activated;
+    logic                           nocontext;
+    logic                           notime;
+    logic                           encoder_mode;
+    logic                           delta_address;
     // filter
-    logic trigger_trace_on; // hardwired to 0?
-    logic trigger_trace_off; // hardwired to 0?
-    //logic qualified; // is it needed or I can use qualified_d?
-    logic trace_req_deactivate;
+    logic                           trigger_trace_on; // hardwired to 0?
+    logic                           trigger_trace_off; // hardwired to 0?
+    //logic                           qualified; // is it needed or I can use qualified_d?
+    logic                           trace_req_deactivate;
     // filter
-    logic trace_valid; // TODO
+    logic                           trace_valid; // TODO
     // priority
-    logic packet_valid;
-    trdb_format_e packet_format;
-    trdb_f_sync_subformat_e packet_f_sync_subformat;
-    logic thaddr;
-    logic cause_mux;
-    logic tval_mux;
-    qual_status_e qual_status;
-    logic branch_map_flush;
-    logic [BRANCH_MAP_LEN-1:0] branch_map;
-    logic [BRANCH_COUNT_LEN-1:0] branch_count;
-    
+    logic                           packet_valid;
+    trdb_format_e                   packet_format;
+    trdb_f_sync_subformat_e         packet_f_sync_subformat;
+    logic                           thaddr;
+    logic                           cause_mux;
+    logic                           tval_mux;
+    qual_status_e                   qual_status;
+    logic                           branch_map_flush;
+    logic [BRANCH_MAP_LEN-1:0]      branch_map;
+    logic [BRANCH_COUNT_LEN-1:0]    branch_count;
+    logic                           packet_emitted;
 
 
 
@@ -267,7 +267,7 @@ module trace_debugger import trdb_pkg::*;
     assign nc_retired = retired_d;
 
     /* MODULES INSTANTIATION */
-    /* REGISTERS */
+    /* MAPPED REGISTERS */
     trdb_reg i_trdb_reg(
         .clk_i(),
         .rst_ni(rst_ni),
@@ -362,7 +362,7 @@ module trace_debugger import trdb_pkg::*;
     trdb_packet_emitter i_trdb_packet_emitter(
         .clk_i(),
         .rst_ni(),
-        .valid_i(),
+        .valid_i(), // tc -> delay from input
         .packet_format_i(packet_format),
         .packet_f_sync_subformat_i(packet_f_sync_subformat),
         //.packet_f_opt_ext_subformat_i(), // non mandatory
@@ -372,19 +372,19 @@ module trace_debugger import trdb_pkg::*;
         .tc_tval_i(tc_tval),
         .nocontext_i(nocontext),
         .notime_i(notime),
-        .is_branch_i(),
-        .is_branch_taken_i(),
-        .priv_i(),
+        .is_branch_i(),         // tc -> delay from input
+        .is_branch_taken_i(),   // tc -> delay from input
+        .priv_i(),              // tc -> delay from input
         //.time_i(), // non mandatory
         //.context_i(), // non mandatory
-        .iaddr_i(),
+        .iaddr_i(), // tc -> delay from input
         .resync_timeout_i(),
         .cause_mux_i(cause_mux),
         .tval_mux_i(tval_mux),
-        .interrupt_i(),
+        .interrupt_i(), //tc -> delay from input
         .thaddr_i(thaddr),
-        .tvec_i(),
-        .epc_i(),
+        .tvec_i(), // tc -> delay from input
+        .epc_i(),  // tc -> delay from input
         .ienable_i(),
         .encoder_mode_i(encoder_mode),
         .qual_status_i(qual_status),
@@ -404,27 +404,28 @@ module trace_debugger import trdb_pkg::*;
         .branches_i(branch_count),
         .branch_map_i(branch_map),
         
-        .packet_payload_o(),
-        .payload_length_o(),
-        .packet_valid_o(),
+        .packet_payload_o(packet_payload_o),
+        .payload_length_o(packet_length_o),
+        .packet_valid_o(packet_emitted),
         .branch_map_flush_o(branch_map_flush)
     );
 
     /* RESYNC COUNTER */
     trdb_resync_counter
-        #(  .MODE(),        // can be chosen by the user
-            .MAX_VALUE())
+        /*#(  .MODE(),          // can be chosen by the user
+            .MAX_VALUE())*/     // for testing let's keep at default
     i_trdb_resync_counter(
         .clk_i(),
         .rst_ni(),
         .trace_enabled_i(),
-        .packet_emitted_i(),
+        .packet_emitted_i(packet_emitted),
         .resync_rst_i(),
-        .gt_resync_max_o(),
-        .et_resync_max_o()
+        .gt_resync_max_o(gt_max_resync_d),
+        .et_resync_max_o(et_max_resync_d)
     );
 
-    /* REGISTERS */
+    /* REGISTERS MANAGEMENT */
+    // TODO: look at Robert's implementation to better understand
     always_ff @( posedge clk_i, negedge rst_ni ) begin : registers
         if(~rst_ni) begin
             exception0_q <= '0;
