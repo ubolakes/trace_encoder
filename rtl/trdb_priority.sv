@@ -82,8 +82,7 @@ module trdb_priority (
     output trdb_f_sync_subformat_e              packet_f_sync_subformat_o,
     //output trdb_f_opt_ext_subformat_e         packet_f_opt_ext_subformat_o, // non mandatory, used for jtc and branch prediction
     output logic                                thaddr_o, // required for f3 sf1 packet payload
-    output logic                                cause_mux_o, // operates the MUX to choose between lc or tc cause: 0 -> lc, 1 -> tc
-    output logic                                tval_mux_o, // operates the MUX to choose between lc or tc tval: 0 -> lc, 1 -> tc
+    output logic                                lc_tc_mux_o, // operates the MUX to choose between lc or tc cause, tval, interrupt: 0 -> lc, 1 
     output logic                                resync_timer_rst_o, // resets counter
     output qual_status_e                        qual_status_o
     );
@@ -160,9 +159,8 @@ module trdb_priority (
         //packet_f_opt_ext_subformat_o = SF_PBC;
         //notify_o = '0;
         thaddr_o = '0;
-        cause_mux_o = '0;
+        lc_tc_mux_o = '0;
         resync_timer_rst_o = '0;
-        tval_mux_o = '0;
         tc_reported_d = '0;
         qual_status_o = NO_CHANGE;
         lc_ended_ntr_d = '0;
@@ -192,8 +190,7 @@ module trdb_priority (
                         packet_format_o = F_SYNC;
                         packet_f_sync_subformat_o = SF_TRAP;
                         resync_timer_rst_o = '1;
-                        cause_mux_o = 0;
-                        tval_mux_o = '0;
+                        lc_tc_mux_o = 0;
                         tc_reported_d = '1;
                         thaddr_o = '0;
                         /* thaddr_d = 0; resync_cnt = 0
@@ -210,8 +207,7 @@ module trdb_priority (
                         packet_format_o = F_SYNC;
                         packet_f_sync_subformat_o = SF_TRAP;
                         resync_timer_rst_o = '1;
-                        cause_mux_o = '0;
-                        tval_mux_o = '0;
+                        lc_tc_mux_o = '0;
                         thaddr_o = '1;
                         /*thaddr_d = 1; resync_cnt = 0
                         cause = lc_cause_i; tval = lc_tval */ 
@@ -231,8 +227,7 @@ module trdb_priority (
                         packet_f_sync_subformat_o = SF_TRAP;
                         thaddr_o = '0;
                         resync_timer_rst_o = '1;
-                        cause_mux_o = '1;
-                        tval_mux_o = '1;
+                        lc_tc_mux_o = '1;
                         /* thaddr = 0; resync_cnt = 0
                         cause = tc_cause_i; tval = tc_tval  */
                         valid_o = '1;

@@ -22,10 +22,12 @@ module trdb_packet_emitter
     // lc (last cycle) signals
     input logic [CAUSE_LEN-1:0] lc_cause_i,
     input logic [TVAL_LEN-1:0]  lc_tval_i,
+    input logic lc_interrupt_i;
 
     // tc (this cycle) signals
     input logic [CAUSE_LEN-1:0] tc_cause_i,
     input logic [TVAL_LEN-1:0]  tc_tval_i,
+    input logic tc_interrupt_i;
 
     // nc (next cycle) signals
 
@@ -46,18 +48,10 @@ module trdb_packet_emitter
     input logic resync_timeout_i, // requested resync by the timer
 
     // format 3 subformat 1 specific signals
-    input logic cause_mux_i,
+    input logic lc_tc_mux_i,
     /*  format 3 subformat 1 packets require sometimes lc_cause o tc_cause
-        how do I discriminate them? Need another signal?
-        The use of lc or tc values depends on a previous updiscon:
-        combinatorial network that determines the ecause depending on
-        the case.
-        Idea:   output a signal that operates a mux to choose between lc or tc*/
+        To discriminate I use a mux to choose between lc or tc */
 
-    input logic tval_mux_i, 
-    // same as cause_mux, but for lc_tval o tc_tval
-
-    input logic interrupt_i,
     input logic thaddr_i,
     input logic [XLEN-1:0] tvec_i, // trap handler address
     input logic [XLEN-1:0] epc_i,
@@ -148,8 +142,9 @@ module trdb_packet_emitter
     // assigning values
     assign branch = ~(is_branch_i && is_branch_taken_i);
     assign address = thaddr_i ? tvec_i : epc_i;
-    assign ecause = cause_mux_i ? tc_cause_i : lc_cause_i;
-    assign tval = tval_mux_i ? tc_tval_i : lc_tval_i;
+    assign ecause = lc_tc_mux_i ? tc_cause_i : lc_cause_i;
+    assign tval = lc_tc_mux_i ? tc_tval_i : lc_tval_i;
+    assign interrupt = lc_tc_mux_i ? tc_interrupt_i : lc_interrupt_i;
     assign time_and_context = {notime_i, nocontext_i};
 
     // register to store the last address emitted in a packet
@@ -207,7 +202,7 @@ module trdb_packet_emitter
                     
                     case(time_and_context)
                     2'h0: begin
-                        packet_payload_o = {F_SYNC, SF_TRAP, branch, priv_i, ecause, interrupt_i, thaddr_i, address, tval};
+                        packet_payload_o = {F_SYNC, SF_TRAP, branch, priv_i, ecause, interrupt, thaddr_i, address, tval};
                         payload_length_o = $bits(packet_payload_o)/8; //(2 + 2 + 1 + PRIV_LEN + CAUSE_LEN + 1 + 1 + XLEN-1 + TVAL_LEN)/8;
                     end
                     /*TODO: other cases*/
