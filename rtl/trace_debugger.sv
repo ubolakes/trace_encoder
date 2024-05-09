@@ -16,7 +16,7 @@ module trace_debugger import trdb_pkg::*;
     - instr address
     */
     // mandatory inputs
-    input logic                 instr_valid_i, // inst_valid_o
+    input logic                 inst_valid_i, // inst_valid_o
     input logic                 iretired_i, // core_events_o.retired_i 
     input logic                 exception_i, // exception
     input logic                 interrupt_i, // cause_irq_q - used with the previous one to discriminate interrupt from exception
@@ -156,7 +156,7 @@ module trace_debugger import trdb_pkg::*;
     logic                   final_qualified_d, final_qualified_q;
 
     /* this cycle */
-    logic                   instr_valid_d, instr_valid_q;
+    logic                   inst_valid_d, inst_valid_q;
     logic                   is_branch_d, is_branch_q;
     logic                   retired_d, retired_q;
     logic [PC_LEN:0]        pc_d, pc_q;
@@ -215,6 +215,9 @@ module trace_debugger import trdb_pkg::*;
     // maybe it's enough to define values and hardwire them to 0
 
     /* ASSIGNMENT */
+    /* hardwired assignments */
+    assign encoder_mode = '0;
+
     /* between FFs assignments */
     assign exception1_d = exception0_q;
     assign updiscon1_d = updiscon0_q;
@@ -234,9 +237,11 @@ module trace_debugger import trdb_pkg::*;
     assign tvec_d = tvec_i;
     assign epc_d = epc_i;
     assign final_qualified_d = tc_qualified && ~nc_qualified; // == tc_final_qualified
-    assign instr_valid_d = instr_valid_i;
+    assign inst_valid_d = inst_valid_i;
     assign priv_lvl_d = priv_lvl_i;
-    assign privchange_d = priv_lvl_q != priv_lvl_d ? 1 : 0;
+    assign privchange_d = (priv_lvl_q != priv_lvl_d) && tc_valid;
+    assign enc_enabled_d =; // TODO
+    assign enc_disabled_d =; // TODO
 
     /* last cycle */
     assign lc_exception = exception1_q;
@@ -248,7 +253,7 @@ module trace_debugger import trdb_pkg::*;
     assign lc_final_qualified = final_qualified_q;
 
     /* this cycle */
-    assign tc_valid = instr_valid_q;
+    assign tc_valid = inst_valid_q;
     assign tc_qualified = qualified0_q;
     assign tc_is_branch = is_branch_q;
     assign tc_exception = exception0_q;
@@ -462,7 +467,7 @@ module trace_debugger import trdb_pkg::*;
             tval1_q <= '0;
             qualified0_q <= '0;
             qualified1_q <= '0;
-            instr_valid_q <= '0;
+            inst_valid_q <= '0;
             is_branch_q <= '0;
             retired_q <= '0;
             tvec_q <= '0;
@@ -496,7 +501,7 @@ module trace_debugger import trdb_pkg::*;
             tval1_q <= tval1_d;
             qualified0_q <= qualified0_d;
             qualified1_q <= qualified1_d;
-            instr_valid_q <= instr_valid_d;
+            inst_valid_q <= inst_valid_d;
             is_branch_q <= is_branch_d;
             retired_q <= retired_d;
             tvec_q <= tvec_d;
