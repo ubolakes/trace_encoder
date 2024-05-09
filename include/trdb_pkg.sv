@@ -7,15 +7,14 @@ package trdb_pkg; // cercare in snitch
     localparam PTYPE_LEN = 4;
     localparam P_LEN = 4;
     localparam PAYLOAD_LEN = 31;
+    localparam EPC_LEN = 31; // same as PC, does it make sense to have it 
+    localparam TRIGGER_LEN = 4;
 `ifdef TRDB_ARCH64 // 64bit arch specific parameters
     localparam XLEN = 64;
 `else // 32bit arch
     localparam XLEN = 32;
 `endif // common parameters
     
-
-    // test if commit works on new laptop
-
     // parameters for resync counter
     localparam CYCLE_MODE = 0;
     localparam PACKET_MODE = 1;
