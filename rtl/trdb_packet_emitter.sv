@@ -45,7 +45,6 @@ module trdb_packet_emitter
     //input logic [:0] time_i,    // optional
     //input logic [:0] context_i, // optional
     input logic [XLEN-1:0] iaddr_i,
-    input logic resync_timeout_i, // requested resync by the timer
 
     // format 3 subformat 1 specific signals
     input logic lc_tc_mux_i,
