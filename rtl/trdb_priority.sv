@@ -34,7 +34,7 @@ module trdb_priority (
     input logic tc_retired_i,
     input logic tc_first_qualified_i,
     input logic tc_privchange_i,
-    input logic tc_context_change_i,
+    //input logic tc_context_change_i, // non mandatory
     //input logic tc_precise_context_report_i,  // requires ctype signal CPU side
     //input logic tc_context_report_as_disc_i,  // ibidem
     //input logic tc_imprecise_context_report_i, // ibidem
@@ -55,7 +55,7 @@ module trdb_priority (
     // nc (next cycle) signals
     input logic nc_exception_i,
     input logic nc_privchange_i,
-    input logic nc_context_change_i,
+    //input logic nc_context_change_i, // non mandatory
     //input logic nc_precise_context_report_i,  // requires ctype signal CPU side
     //input logic nc_context_report_as_disc_i,  // ibidem
     input logic nc_branch_map_empty_i,
@@ -112,16 +112,16 @@ module trdb_priority (
 
     // value assignment
     assign  tc_exc_only     = tc_exception_i && ~tc_retired_i;
-    assign  tc_ppccd        = tc_privchange_i || (tc_context_change_i /*&& 
+    assign  tc_ppccd        = tc_privchange_i /*|| (tc_context_change_i && 
                                 (tc_precise_context_report_i ||
-                                tc_context_report_as_disc_i)*/);
+                                tc_context_report_as_disc_i))*/;
     assign  tc_resync_br    = tc_et_max_resync_i && ~tc_branch_map_empty_i;
     assign  tc_er_n         = (tc_exception_i && tc_retired_i) /*|| tc_trigger_req_i*/;
     assign  tc_rpt_br       = tc_branch_map_full_i /* || tc_branch_misprediction_i*/;
     //assign  tc_cci          = tc_context_change_i && tc_imprecise_context_report_i;
     assign  nc_exc_only     = nc_exception_i && ~nc_retired_i;
-    assign  nc_ppccd_br     = (nc_privchange_i || (nc_context_change_i /*&&
-                                (nc_precise_context_report_i || nc_context_report_as_disc_i)*/)) && 
+    assign  nc_ppccd_br     = (nc_privchange_i /*|| (nc_context_change_i &&
+                                (nc_precise_context_report_i || nc_context_report_as_disc_i))*/) && 
                                 ~nc_branch_map_empty_i;
     assign  tc_f3_sf3       = tc_enc_enabled_i || tc_enc_disabled_i || tc_opmode_change_i ||
                                 lc_final_qualified_i /*|| tc_packets_lost_i*/;
