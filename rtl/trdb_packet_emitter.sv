@@ -122,6 +122,7 @@ module trdb_packet_emitter
 );
     
     // internal signals
+    //TODO: check signals length
     logic branch;
     logic [XLEN-1:0] address;
     logic [CAUSE_LEN:0] ecause;

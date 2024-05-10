@@ -143,16 +143,6 @@ module trace_debugger import trdb_pkg::*;
     examples of this are: exception_i
     
     Nonetheless all inputs must be sampled and the output of the FF is considered nc.
-
-    */
-
-
-    /* SIGNALS RECAP
-        - this cycle -> _d and _q
-            signal is assigned with _q (or 0_q in case it has a lc version)
-
-        - last cycle -> 0_d, 0_q and 1_d, 1_q
-            signal is assigned with 1_q
     */
 
     /* signals for FFs */
@@ -245,6 +235,8 @@ module trace_debugger import trdb_pkg::*;
     /* hardwired assignments */
     assign encoder_mode = '0;
     assign compressed = '0;
+    assign trigger_trace_on = '0;
+    assign trigger_trace_off = '0;
 
     /* between FFs assignments */
     assign inst_valid1_d = inst_valid0_q;
@@ -342,7 +334,6 @@ module trace_debugger import trdb_pkg::*;
     trdb_reg i_trdb_reg(
         .clk_i(),
         .rst_ni(rst_ni),
-
         .trace_activated_o(trace_activated),
         .nocontext_o(nocontext),
         .notime_o(notime),
@@ -356,7 +347,6 @@ module trace_debugger import trdb_pkg::*;
         .trace_activated_i(trace_activated),
         .trigger_trace_on_i(trigger_trace_on),
         .trigger_trace_off_i(trigger_trace_off),
-
         .trace_req_deactivate_o(trace_req_deactivate),
         .trace_qualified_o(qualified0_d)
     );
@@ -402,7 +392,6 @@ module trace_debugger import trdb_pkg::*;
         //.implicit_return_i(), // non mandatory
         //.tc_trigger_req_i(), // non mandatory
         //.notify_o(), // non mandatory, depends on trigger request
-
         .valid_o(packet_valid),
         .packet_format_o(packet_format),
         .packet_f_sync_subformat_o(packet_f_sync_subformat),
@@ -422,7 +411,6 @@ module trace_debugger import trdb_pkg::*;
         .branch_taken_i(),
         .flush_i(branch_map_flush),
         //.branch_taken_prediction_i(), // non mandatory
-
         .map_o(branch_map),
         .branches_o(branch_count),
         //.pbc_o(), // non mandatory - branch prediction mode
@@ -502,7 +490,7 @@ module trace_debugger import trdb_pkg::*;
         .compressed_i(compressed), // non supported on snitch
         .tc_iaddr_i(tc_iaddr),
         .nc_iaddr_i(nc_iaddr),
-        .tc_exception_i(),
+        .tc_exception_i(tc_exception),
         .is_branch_o(is_branch),
         .is_branch_taken_o(is_branch_taken),
         .updiscon_o(tc_updiscon)
