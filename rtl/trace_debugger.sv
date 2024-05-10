@@ -25,11 +25,11 @@ module trace_debugger import trdb_pkg::*;
     input logic [TVAL_LEN:0]    tval_i, // not implemented in snitch, mandatory according to the spec
     input logic [PRIV_LEN:0]    priv_lvl_i, // priv_lvl_q
     input logic [INST_LEN:0]    inst_data_i, // inst_data
-    //input logic compressed, // to discriminate compressed instructions from the others - in case the CPU supports C extension
+    //input logic                 compressed, // to discriminate compressed instructions from the others - in case the CPU supports C extension
     input logic [PC_LEN:0]      pc_i, //pc_q - instruction address
     input logic [EPC_LEN:0]     epc_i, // epc_q, required for format 3 subformat 1
     input logic [TRIGGER_LEN:0] trigger_i,
-    //input logic [CTYPE_LEN:0] ctype_i, // according to the spec it's 1 or 2 bit wide, supported by CPU
+    //input logic [CTYPE_LEN:0]   ctype_i, // according to the spec it's 1 or 2 bit wide, supported by CPU
     // here it's 2 bit for better future compatibility
 
     // outputs
@@ -66,9 +66,14 @@ module trace_debugger import trdb_pkg::*;
     logic                           resync_rst;
     // packet emitter
     logic                           packet_valid;
+    logic                           is_branch;
+    logic                           is_branch_taken;
     // resync counter
     logic                           packet_emitted;
-
+    // hardwired
+    logic                           compressed;
+    // not classified
+    logic                           tc_updiscon;
 
     // we have three phases, called last cycle (lc), this cycle (tc) and next
     // cycle (nc), based on which we make decision whether we need to emit a
@@ -84,7 +89,6 @@ module trace_debugger import trdb_pkg::*;
     logic                   tc_valid;
     logic                   tc_qualified;
     logic [PC_LEN:0]        tc_iaddr;
-    logic                   tc_is_branch;
     logic                   tc_exception;
     logic                   tc_retired;
     logic [TVEC_LEN:0]      tc_tvec;
@@ -117,6 +121,7 @@ module trace_debugger import trdb_pkg::*;
     logic                   nc_branch_map_empty;
     logic                   nc_qualified;
     logic                   nc_retired;
+    logic [PC_LEN:0]        nc_iaddr;
 
     
     /* MANAGING LC, TC, NC SIGNALS */
@@ -143,8 +148,7 @@ module trace_debugger import trdb_pkg::*;
     /* last cycle */
     logic                   exception0_d, exception0_q;
     logic                   exception1_d, exception1_q;
-    logic                   updiscon0_d, updiscon0_q;
-    logic                   updiscon1_d, updiscon1_q;
+    logic                   updiscon_d, updiscon_q;
     logic [CAUSE_LEN-1:0]   cause0_d, cause0_q;
     logic [CAUSE_LEN-1:0]   cause1_d, cause1_q;
     logic [TVAL_LEN-1:0]    tval0_d, tval0_q;
@@ -157,8 +161,8 @@ module trace_debugger import trdb_pkg::*;
 
     /* this cycle */
     logic                   inst_valid_d, inst_valid_q;
-    logic                   is_branch_d, is_branch_q;
     logic                   retired_d, retired_q;
+    logic                   inst_data_d, inst_data_q;
     logic [PC_LEN:0]        pc_d, pc_q;
     logic [EPC_LEN:0]       epc_d, epc_d;
     logic [TVEC_LEN:0]      tvec_d, tvec_q;
@@ -217,10 +221,10 @@ module trace_debugger import trdb_pkg::*;
     /* ASSIGNMENT */
     /* hardwired assignments */
     assign encoder_mode = '0;
+    assign compressed = '0;
 
     /* between FFs assignments */
     assign exception1_d = exception0_q;
-    assign updiscon1_d = updiscon0_q;
     assign cause1_d = cause0_q;
     assign tval1_d = tval0_q;
     assign interrupt1_d = interrupt0_q;
@@ -228,11 +232,12 @@ module trace_debugger import trdb_pkg::*;
 
     /* FFs inputs */
     assign exception0_d = exception_i;
-    assign updiscon0_d = updiscon;
+    assign updiscon_d = tc_updiscon;
     assign cause0_d = cause_i;
     assign tval0_d = tval_i;
     assign interrupt0_d = interrupt_i;
     assign retired_d = retired_i;
+    assign inst_data_d = inst_data_i;
     assign pc_d = pc_i;
     assign tvec_d = tvec_i;
     assign epc_d = epc_i;
@@ -245,7 +250,7 @@ module trace_debugger import trdb_pkg::*;
 
     /* last cycle */
     assign lc_exception = exception1_q;
-    assign lc_updiscon = updiscon1_q;
+    assign lc_updiscon = updiscon_q;
     assign lc_cause = cause1_q;
     assign lc_tval = tval1_q;
     assign lc_interrupt = interrupt1_q;
@@ -255,9 +260,9 @@ module trace_debugger import trdb_pkg::*;
     /* this cycle */
     assign tc_valid = inst_valid_q;
     assign tc_qualified = qualified0_q;
-    assign tc_is_branch = is_branch_q;
     assign tc_exception = exception0_q;
     assign tc_retired = retired_q;
+    assign tc_inst_data = inst_data_q;
     assign tc_iaddr = pc_q;
     assign tc_tvec = tvec_q;
     assign tc_epc = epc_q;
@@ -290,6 +295,7 @@ module trace_debugger import trdb_pkg::*;
     assign nc_branch_map_empty = branch_map_empty_d;
     assign nc_qualified = qualified0_d;
     assign nc_retired = retired_d;
+    assign nc_iaddr = pc_d;
 
     /* MODULES INSTANTIATION */
     /* MAPPED REGISTERS */
@@ -403,8 +409,8 @@ module trace_debugger import trdb_pkg::*;
         .tc_interrupt_i(tc_interrupt),
         .nocontext_i(nocontext),
         .notime_i(notime),
-        .is_branch_i(),         // tc -> delay from input
-        .is_branch_taken_i(),   // tc -> delay from input
+        .is_branch_i(is_branch),         // tc
+        .is_branch_taken_i(is_branch_taken),   // tc
         .priv_i(priv_lvl_q),    // tc -> delay from input
         //.time_i(), // non mandatory
         //.context_i(), // non mandatory
@@ -440,10 +446,7 @@ module trace_debugger import trdb_pkg::*;
 
     /* RESYNC COUNTER */
     // TODO: recheck for correctness
-    trdb_resync_counter
-        /*#(  .MODE(),          // can be chosen by the user
-            .MAX_VALUE())*/     // for testing let's keep at default
-    i_trdb_resync_counter(
+    trdb_resync_counter i_trdb_resync_counter( // for testing we keep the def settings
         .clk_i(),
         .rst_ni(rst_ni),
         .trace_enabled_i(),
@@ -452,6 +455,19 @@ module trace_debugger import trdb_pkg::*;
         .gt_resync_max_o(gt_max_resync_d),
         .et_resync_max_o(et_max_resync_d)
     );
+
+    /* INST TYPE DETECTOR */
+    trdb_itype_detector i_trdb_itype_detector(
+        .valid_i(),
+        .tc_inst_data_i(tc_inst_data),
+        .compressed_i(compressed), // non supported on snitch
+        .tc_iaddr_i(tc_iaddr),
+        .nc_iaddr_i(nc_iaddr),
+        .is_branch_o(is_branch),
+        .is_branch_taken_o(is_branch_taken),
+        .updiscon_o(tc_updiscon)
+    );
+
 
     /* REGISTERS MANAGEMENT */
     // TODO: look at Robert's implementation to better understand
@@ -468,8 +484,8 @@ module trace_debugger import trdb_pkg::*;
             qualified0_q <= '0;
             qualified1_q <= '0;
             inst_valid_q <= '0;
-            is_branch_q <= '0;
             retired_q <= '0;
+            inst_data_q <= '0;
             tvec_q <= '0;
             epc_q <= '0;
             privchange_q <= '0;
@@ -502,8 +518,8 @@ module trace_debugger import trdb_pkg::*;
             qualified0_q <= qualified0_d;
             qualified1_q <= qualified1_d;
             inst_valid_q <= inst_valid_d;
-            is_branch_q <= is_branch_d;
             retired_q <= retired_d;
+            inst_data_q <= inst_data_d;
             tvec_q <= tvec_d;
             epc_q <= epc_d;
             privchange_q <= privchange_d;
