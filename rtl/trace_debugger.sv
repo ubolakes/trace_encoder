@@ -28,7 +28,7 @@ module trace_debugger import trdb_pkg::*;
     //input logic                 compressed, // to discriminate compressed instructions from the others - in case the CPU supports C extension
     input logic [PC_LEN:0]      pc_i, //pc_q - instruction address
     input logic [EPC_LEN:0]     epc_i, // epc_q, required for format 3 subformat 1
-    input logic [TRIGGER_LEN:0] trigger_i,
+    //input logic [TRIGGER_LEN:0] trigger_i, // must be supported CPU side
     //input logic [CTYPE_LEN:0]   ctype_i, // according to the spec it's 1 or 2 bit wide, supported by CPU
     // here it's 2 bit for better future compatibility
 
@@ -133,6 +133,17 @@ module trace_debugger import trdb_pkg::*;
       nc    |         |    tc              |         |    lc
             |   FF0   |                    |   FF1   |
             |_________|                    |_________|
+    
+    For input signals I need another FF to sample them:
+            ___________                    ___________                    ___________
+    sig_i --| D     Q |--sig0_q == sig1_d--| D     Q |--sig1_q == sig2_d--| D     Q |--sig2_q
+    input   |         |    nc              |         |    tc              |         |    lc
+            |   FF0   |                    |   FF1   |                    |   FF2   |
+            |_________|                    |_________|                    |_________|
+    examples of this are: exception_i
+    
+    Nonetheless all inputs must be sampled and the output of the FF is considered nc.
+
     */
 
 
@@ -145,37 +156,50 @@ module trace_debugger import trdb_pkg::*;
     */
 
     /* signals for FFs */
-    /* last cycle */
+    //TODO: split signals into: next cycles, this cycle, last cycle
+    // inputs - temporary classification
+    logic                   inst_valid0_d, inst_valid0_q;
+    logic                   inst_valid1_d, inst_valid1_q;
+    logic                   iretired0_d, iretired0_q;
+    logic                   iretired1_d, iretired1_q;
     logic                   exception0_d, exception0_q;
     logic                   exception1_d, exception1_q;
-    logic                   updiscon_d, updiscon_q;
-    logic [CAUSE_LEN-1:0]   cause0_d, cause0_q;
-    logic [CAUSE_LEN-1:0]   cause1_d, cause1_q;
-    logic [TVAL_LEN-1:0]    tval0_d, tval0_q;
-    logic [TVAL_LEN-1:0]    tval1_d, tval1_q;
+    logic                   exception2_d, exception2_q;
     logic                   interrupt0_d, interrupt0_q;
     logic                   interrupt1_d, interrupt1_q;
+    logic                   interrupt2_d, interrupt2_q;           
+    logic [CAUSE_LEN-1:0]   cause0_d, cause0_q;
+    logic [CAUSE_LEN-1:0]   cause1_d, cause1_q;
+    logic [CAUSE_LEN-1:0]   cause2_d, cause2_q;
+    logic [TVEC_LEN-1:0]    tvec0_d, tvec0_q;
+    logic [TVEC_LEN-1:0]    tvec1_d, tvec1_q;
+    logic [TVAL_LEN-1:0]    tval0_d, tval0_q;
+    logic [TVAL_LEN-1:0]    tval1_d, tval1_q;
+    logic [TVAL_LEN-1:0]    tval2_d, tval2_q;
+    logic [PRIV_LEN-1:0]    priv_lvl0_d, priv_lvl0_q;
+    logic [PRIV_LEN-1:0]    priv_lvl1_d, priv_lvl1_q;
+    logic [INST_LEN-1:0]    inst_data0_d, inst_data0_q;
+    logic [INST_LEN-1:0]    inst_data1_d, inst_data1_q;
+    logic [PC_LEN-1:0]      iaddr0_d, iaddr0_q;
+    logic [PC_LEN-1:0]      iaddr1_d, iaddr1_q;
+    logic [EPC_LEN-1:0]     epc0_d, epc0_q;
+    logic [EPC_LEN-1:0]     epc1_d, epc1_q;
+    
+    /* last cycle - temporary classification*/
+    logic                   updiscon_d, updiscon_q;
     logic                   qualified0_d, qualified0_q;
     logic                   qualified1_d, qualified1_q;
     logic                   final_qualified_d, final_qualified_q;
 
-    /* this cycle */
-    logic                   inst_valid_d, inst_valid_q;
-    logic                   retired_d, retired_q;
-    logic                   inst_data_d, inst_data_q;
-    logic [PC_LEN:0]        pc_d, pc_q;
-    logic [EPC_LEN:0]       epc_d, epc_d;
-    logic [TVEC_LEN:0]      tvec_d, tvec_q;
+    /* this cycle - temporary classification */
     logic                   privchange_d, privchange_q;
     logic                   context_change_d, context_change_q; // non mandatory
     //logic                   precise_context_report_d, precise_context_report_q; // requires ctype signal CPU side
     //logic                   context_report_as_disc_d, context_report_as_disc_q; // ibidem
     //logic                   no_context_report_d, no_context_report_q; // ibidem
     //logic                   imprecise_context_report_d, imprecise_context_report_q; // ibidem
-    
     logic                   gt_max_resync_d, gt_max_resync_q;
     logic                   et_max_resync_d, et_max_resync_q;
-
     logic                   branch_map_empty_d, branch_map_empty_q;
     logic                   branch_map_full_d, branch_map_full_q;
     //logic                   branch_misprediction_d, branch_misprediction_q; // non mandatory
@@ -183,7 +207,6 @@ module trace_debugger import trdb_pkg::*;
     logic                   enc_disabled_d, enc_disabled_q;
     logic                   opmode_change_d, opmode_change_q;
     //logic                   packets_lost_d, packets_lost_q; // non mandatory
-    logic                   priv_lvl_d, priv_lvl_q;
 
     /*  the following commented section has non mandatory signals
         for now it's commented
@@ -224,48 +247,65 @@ module trace_debugger import trdb_pkg::*;
     assign compressed = '0;
 
     /* between FFs assignments */
+    assign inst_valid1_d = inst_valid0_q;
+    assign iretired1_d = iretired0_q;
     assign exception1_d = exception0_q;
-    assign cause1_d = cause0_q;
-    assign tval1_d = tval0_q;
+    assign exception2_d = exception1_q;
     assign interrupt1_d = interrupt0_q;
-    assign qualified1_d = qualified0_q;
+    assign interrupt2_d = interrupt1_q;
+    assign cause1_d = cause0_q;
+    assign cause2_d = cause1_q;
+    assign tvec1_d = tvec0_q;
+    assign tval1_d = tval0_q;
+    assign tval2_d = tval1_q;
+    assign priv_lvl1_d = priv_lvl0_q;
+    assign inst_data1_d = inst_data0_q;
+    assign iaddr1_d = iaddr0_q;
+    assign epc1_d = epc0_q;
+
+    assign qualified1_d = qualified0_q; // TODO: check if it makes sense
 
     /* FFs inputs */
+    assign inst_valid0_d = inst_valid_i;
+    assign iretired0_d = iretired_i;
     assign exception0_d = exception_i;
-    assign updiscon_d = tc_updiscon;
-    assign cause0_d = cause_i;
-    assign tval0_d = tval_i;
     assign interrupt0_d = interrupt_i;
-    assign retired_d = retired_i;
-    assign inst_data_d = inst_data_i;
-    assign pc_d = pc_i;
-    assign tvec_d = tvec_i;
-    assign epc_d = epc_i;
+    assign cause0_d = cause_i;
+    assign tvec0_d = tvec_i;
+    assign tval0_d = tval_i;
+    assign priv_lvl0_d = priv_lvl_i;
+    assign inst_data0_d = inst_data_i;
+    assign iaddr0_d = pc_i;
+    assign epc0_d = epc_i;
+
+    assign updiscon_d = tc_updiscon;
     assign final_qualified_d = tc_qualified && ~nc_qualified; // == tc_final_qualified
-    assign inst_valid_d = inst_valid_i;
-    assign priv_lvl_d = priv_lvl_i;
-    assign privchange_d = (priv_lvl_q != priv_lvl_d) && tc_valid;
+    assign privchange_d = (priv_lvl0_q != priv_lvl1_q) && tc_valid;
     assign enc_enabled_d =; // TODO
     assign enc_disabled_d =; // TODO
 
     /* last cycle */
-    assign lc_exception = exception1_q;
+    assign lc_exception = exception2_q;
     assign lc_updiscon = updiscon_q;
-    assign lc_cause = cause1_q;
-    assign lc_tval = tval1_q;
-    assign lc_interrupt = interrupt1_q;
+    assign lc_cause = cause2_q;
+    assign lc_tval = tval2_q;
+    assign lc_interrupt = interrupt2_q;
     assign lc_qualified = qualified1_q;
     assign lc_final_qualified = final_qualified_q;
 
     /* this cycle */
-    assign tc_valid = inst_valid_q;
+    assign tc_valid = inst_valid1_q;
+    assign tc_retired = iretired1_q;
+    assign tc_exception = exception1_q;
+    assign tc_interrupt = interrupt1_q;
+    assign tc_cause = cause1_q;
+    assign tc_tvec = tvec1_q;
+    assign tc_tval = tval1_q;
+    assign tc_inst_data = inst_data1_q;
+    assign tc_iaddr = iaddr1_q;
+    assign tc_epc = epc1_q;
+
     assign tc_qualified = qualified0_q;
-    assign tc_exception = exception0_q;
-    assign tc_retired = retired_q;
-    assign tc_inst_data = inst_data_q;
-    assign tc_iaddr = pc_q;
-    assign tc_tvec = tvec_q;
-    assign tc_epc = epc_q;
     assign tc_first_qualified = !lc_qualified && tc_qualified;
     assign tc_privchange = privchange_q;
     assign tc_context_change = context_change_q; // non mandatory
@@ -282,20 +322,19 @@ module trace_debugger import trdb_pkg::*;
     assign tc_enc_disabled = enc_disabled_q;
     assign tc_opmode_change = opmode_change_q;
     //assign tc_packets_lost = packets_lost_q; // non mandatory
-    assign tc_cause = cause0_q;
-    assign tc_tval = tval0_q;
-    assign tc_interrupt = interrupt0_q;
     assign trace_valid = tc_valid && trace_activated;
 
     /* next cycle */
-    assign nc_exception = exception0_d;
+    assign nc_retired = iretired0_q;
+    assign nc_exception = exception0_q;
+    assign nc_iaddr = iaddr0_q;
+
     assign nc_privchange = privchange_d;
     //assign nc_precise_context_report = precise_context_report_d; // same as tc version
     //assign nc_context_report_as_disc = context_report_as_disc_d; // same as tc version
     assign nc_branch_map_empty = branch_map_empty_d;
     assign nc_qualified = qualified0_d;
-    assign nc_retired = retired_d;
-    assign nc_iaddr = pc_d;
+
 
     /* MODULES INSTANTIATION */
     /* MAPPED REGISTERS */
@@ -463,6 +502,7 @@ module trace_debugger import trdb_pkg::*;
         .compressed_i(compressed), // non supported on snitch
         .tc_iaddr_i(tc_iaddr),
         .nc_iaddr_i(nc_iaddr),
+        .tc_exception_i(),
         .is_branch_o(is_branch),
         .is_branch_taken_o(is_branch_taken),
         .updiscon_o(tc_updiscon)
