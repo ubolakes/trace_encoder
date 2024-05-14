@@ -108,7 +108,6 @@ module trace_debugger import trdb_pkg::*;
     //logic                   tc_branch_misprediction; // non mandatory
     logic                   tc_enc_enabled;
     logic                   tc_enc_disabled;
-    logic                   tc_opmode_change;
     logic                   tc_final_qualified;
     //logic                   tc_packets_lost; // non mandatory
     logic [CAUSE_LEN-1:0]   tc_cause;
@@ -198,7 +197,6 @@ module trace_debugger import trdb_pkg::*;
     logic                   trace_enable_d, trace_enabled_q;
     logic                   enc_enabled_d, enc_enabled_q;
     logic                   enc_disabled_d, enc_disabled_q;
-    logic                   opmode_change_d, opmode_change_q;
     //logic                   packets_lost_d, packets_lost_q; // non mandatory
     logic [MODES:0]         enc_config_d, enc_config_q;
     logic                   enc_config_change_d, enc_config_change_q;
@@ -319,7 +317,6 @@ module trace_debugger import trdb_pkg::*;
     //assign tc_branch_misprediction = branch_misprediction_q; // non mandatory
     assign tc_enc_enabled = enc_enabled_q;
     assign tc_enc_disabled = enc_disabled_q;
-    assign tc_opmode_change = opmode_change_q;
     //assign tc_packets_lost = packets_lost_q; // non mandatory
     assign trace_valid = tc_valid && trace_activated;
     assign tc_enc_config_change = enc_config_change_q;
@@ -386,7 +383,7 @@ module trace_debugger import trdb_pkg::*;
         //.tc_pbc_i(), // non mandatory
         .tc_enc_enabled_i(tc_enc_enabled),
         .tc_enc_disabled_i(tc_enc_enabled),
-        .tc_opmode_change_i(tc_opmode_change),
+        .tc_opmode_change_i(tc_enc_config_change),
         .lc_final_qualified_i(lc_final_qualified),
         //.tc_packets_lost_i(), // non mandatory
         .nc_exception_i(nc_exception),
@@ -540,7 +537,6 @@ module trace_debugger import trdb_pkg::*;
             trace_enable_q <= '0;
             enc_enabled_q <= '0;
             enc_disabled_q <= '0;
-            opmode_change_q <= '0;
             final_qualified_q <= '0;
             //packets_lost_q <= '0; // non mandatory
             priv_lvl_q <= '0;
@@ -577,7 +573,6 @@ module trace_debugger import trdb_pkg::*;
             trace_enable_q <= trace_enable_d;
             enc_enabled_q <= enc_enabled_d;
             enc_disabled_q <= enc_disabled_d;
-            opmode_change_q <= opmode_change_d;
             final_qualified_q <= final_qualified_d;
             //packets_lost_q <= packets_lost_d; // non mandatory
             priv_lvl_q <= priv_lvl_d;
