@@ -457,7 +457,7 @@ module trace_debugger import trdb_pkg::*;
         .thaddr_i(thaddr),
         .tvec_i(tc_tvec), // tc -> delay from input
         .epc_i(tc_epc),  // tc -> delay from input
-        .ienable_i(),
+        .ienable_i(trace_enable),
         .encoder_mode_i(encoder_mode),
         .qual_status_i(qual_status),
         .delta_address_i(delta_address),
@@ -475,7 +475,6 @@ module trace_debugger import trdb_pkg::*;
         //.irdepth_i(), // non mandatory
         .branches_i(branch_count),
         .branch_map_i(branch_map),
-        
         .packet_payload_o(packet_payload_o),
         .payload_length_o(packet_length_o),
         .packet_valid_o(packet_emitted),
