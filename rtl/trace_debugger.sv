@@ -271,7 +271,7 @@ module trace_debugger import trdb_pkg::*;
     assign interrupt0_d = interrupt_i;
     assign cause0_d = cause_i;
     assign tvec0_d = tvec_i;
-    assign tval0_d = tval_i;
+    assign tval0_d = '0; // not supported by snitch - hardwired to 0//tval_i;
     assign priv_lvl0_d = priv_lvl_i;
     assign inst_data0_d = inst_data_i;
     assign iaddr0_d = pc_i;
@@ -340,12 +340,13 @@ module trace_debugger import trdb_pkg::*;
 
     /* MODULES INSTANTIATION */
     /* MAPPED REGISTERS */
-    // TODO: recheck for correctness
     trdb_reg i_trdb_reg(
         .clk_i(),
         .rst_ni(rst_ni),
-        .trace_activated_o(trace_activated),
+        .trace_req_off_i(trace_req_deactivate), // from filter
+        .trace_req_on_i(trigger_trace_on),      // from trigger unit
         .trace_enable_o(trace_enable),
+        .trace_activated_o(trace_activated),
         .nocontext_o(nocontext),
         .notime_o(notime),
         .encoder_mode_o(encoder_mode),
@@ -354,13 +355,11 @@ module trace_debugger import trdb_pkg::*;
     );
 
     /* FILTER */
-    // TODO: recheck for correctness
     trdb_filter i_trdb_filter(
-        .trace_activated_i(trace_activated),
-        .trigger_trace_on_i(trigger_trace_on),
+        .trace_enable_i(trace_enable),
         .trigger_trace_off_i(trigger_trace_off),
         .trace_req_deactivate_o(trace_req_deactivate),
-        .trace_qualified_o(qualified0_d)
+        .trace_qualified_o(qualified0_d) // considered nc
     );
 
     /* PRIORITY */
@@ -488,7 +487,7 @@ module trace_debugger import trdb_pkg::*;
     trdb_resync_counter i_trdb_resync_counter( // for testing we keep the def settings
         .clk_i(),
         .rst_ni(rst_ni),
-        .trace_enabled_i(),
+        .trace_enabled_i(trace_enable),
         .packet_emitted_i(packet_emitted),
         .resync_rst_i(resync_rst),
         .gt_resync_max_o(gt_max_resync_d),
