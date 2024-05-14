@@ -57,7 +57,7 @@ module trdb_packet_emitter
     
     // format 3 subformat 3 specific signals
     input logic ienable_i, // trace encoder enabled
-    input logic encoder_mode_i, // implementation specific, right now only branch trace supported (value==0). Hardwire to 0?
+    input logic encoder_mode_i, // implementation specific, right now only branch trace supported (value==0). Hardwire to 0
     input qual_status_e qual_status_i,
 
     /*  used for ioptions value
@@ -146,6 +146,7 @@ module trdb_packet_emitter
     assign tval = lc_tc_mux_i ? tc_tval_i : lc_tval_i;
     assign interrupt = lc_tc_mux_i ? tc_interrupt_i : lc_interrupt_i;
     assign time_and_context = {notime_i, nocontext_i};
+    assign branch_map_flush_o = branch_map_flush_q;
 
     // register to store the last address emitted in a packet
     always_ff @(posedge clk_i, negedge rst_ni) begin
@@ -159,7 +160,7 @@ module trdb_packet_emitter
     end
 
     // combinatorial network to output packets
-    always_comb begin : set_packet_bits
+    always_comb begin
         // init values
         payload_length_o = '0; // in bytes, computed as the length in bit of (type+payload)/8
         packet_payload_o = '0;
@@ -169,7 +170,7 @@ module trdb_packet_emitter
         
         if(valid_i) begin
             // flush the branch map
-        /*  branch map flushing is done in the next cycle.
+        /*  branch map flushing is done in the following cycle.
             Because we don't want it to be instantly deleted
             since we need to read from it to populate the 
             packet payload.    
