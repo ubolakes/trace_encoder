@@ -42,6 +42,7 @@ module trdb_reg
     logic trace_enable_d, trace_enable_q;
 
     // assignment
+    assign delta_address_o = '1;
     assign full_address = '0;
     assign implicit_exception = '0;
     assign sijump = '0;
