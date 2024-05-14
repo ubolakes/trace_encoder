@@ -56,7 +56,6 @@ module trdb_branch_map
         end
     end
 
-    // synchronous outputs
     always_ff @(posedge clk_i, negedge rst_ni) begin
         if(~rst_ni) begin
             map_q <= '0;
