@@ -11,18 +11,12 @@ module trdb_reg
     input logic clk_i,
     input logic rst_ni,
 
-    input logic trace_req_deactivate_i,
+    // tracing management
+    input logic trace_req_off_i, // from filter
+    input logic trace_req_on_i, // directly from trigger unit
 
-    // registers are divided according to the module
-    // common ones are under the first label
-
-    // common settings and control
-    output logic trace_enable_o,
-    output logic trace_activated_o,
-    // priority settings and control
-
-    // resync_counter settings and control
-
+    output logic trace_enable_o,    // turned off by filter
+    output logic trace_activated_o, // managed by user
     // packet_emitter settings and control
     output logic nocontext_o,
     output logic notime_o,
@@ -44,6 +38,8 @@ module trdb_reg
     logic implicit_return;
     logic branch_prediction;
     logic jump_target_cache;
+    // FFs I/Os
+    logic trace_enable_d, trace_enable_q;
 
     // assignment
     assign full_address = '0;
@@ -53,6 +49,21 @@ module trdb_reg
     assign branch_prediction = '0;
     assign jump_target_cache = '0;
     assign configuration_o = {delta_address_o, full_address, implicit_address, sijump, implicit_return, branch_prediction, jump_target_cache};
-    assign trace_activated_o = trace_req_deactivate_i ? 0 : 1;
+    
+    assign trace_enable_d = trace_req_off_i ? 0 : 1;
+    assign trace_enable_d = trace_req_on_i ? 1 : 0;
+    assign trace_enable_o = trace_enable_q;
 
+    assign nocontext_o = '1;
+    assign notime_o = '1;
+    assign encoder_mode_o = '0;
+    assign trace_activated_o = '1;
+
+    always_ff @(posedge clk_i, negedge rst_ni) begin
+        if(~rst_ni) begin
+            trace_enable_q <= '0;
+        end else begin
+            trace_enable_q <= trace_enable_d;
+        end
+    end
 endmodule
