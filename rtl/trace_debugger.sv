@@ -44,6 +44,7 @@ module trace_debugger import trdb_pkg::*;
     /* signals for management */
     // registers
     logic                           trace_activated;
+    logic                           trace_enable;
     logic                           nocontext;
     logic                           notime;
     logic                           encoder_mode;
@@ -113,6 +114,7 @@ module trace_debugger import trdb_pkg::*;
     logic [CAUSE_LEN-1:0]   tc_cause;
     logic [TVAL_LEN-1:0]    tc_tval;
     logic                   tc_interrupt;
+    logic                   tc_enc_config_change;
     /* next cycle signals */
     logic                   nc_exception;
     logic                   nc_privchange;
@@ -193,10 +195,13 @@ module trace_debugger import trdb_pkg::*;
     logic                   branch_map_empty_d, branch_map_empty_q;
     logic                   branch_map_full_d, branch_map_full_q;
     //logic                   branch_misprediction_d, branch_misprediction_q; // non mandatory
+    logic                   trace_enable_d, trace_enabled_q;
     logic                   enc_enabled_d, enc_enabled_q;
     logic                   enc_disabled_d, enc_disabled_q;
     logic                   opmode_change_d, opmode_change_q;
     //logic                   packets_lost_d, packets_lost_q; // non mandatory
+    logic [MODES:0]         enc_config_d, enc_config_q;
+    logic                   enc_config_change_d, enc_config_change_q;
 
     /*  the following commented section has non mandatory signals
         for now it's commented
@@ -273,8 +278,10 @@ module trace_debugger import trdb_pkg::*;
     assign updiscon_d = tc_updiscon;
     assign final_qualified_d = tc_qualified && ~nc_qualified; // == tc_final_qualified
     assign privchange_d = (priv_lvl0_q != priv_lvl1_q) && tc_valid;
-    assign enc_enabled_d =; // TODO
-    assign enc_disabled_d =; // TODO
+    assign trace_enable_d = trace_enable;
+    assign enc_enabled_d = trace_enable_d && ~trace_enable_q; // == nc_enc_enabled
+    assign enc_disabled_d = ~trace_enable_d && trace_enable_q; // == nc_enc_disabled
+    assign enc_config_change_d = enc_config_d != enc_config_q; // == nc_enc_config_change
 
     /* last cycle */
     assign lc_exception = exception2_q;
@@ -315,6 +322,7 @@ module trace_debugger import trdb_pkg::*;
     assign tc_opmode_change = opmode_change_q;
     //assign tc_packets_lost = packets_lost_q; // non mandatory
     assign trace_valid = tc_valid && trace_activated;
+    assign tc_enc_config_change = enc_config_change_q;
 
     /* next cycle */
     assign nc_retired = iretired0_q;
@@ -335,10 +343,12 @@ module trace_debugger import trdb_pkg::*;
         .clk_i(),
         .rst_ni(rst_ni),
         .trace_activated_o(trace_activated),
+        .trace_enable_o(trace_enable),
         .nocontext_o(nocontext),
         .notime_o(notime),
         .encoder_mode_o(encoder_mode),
-        .delta_address_o(delta_address)
+        .delta_address_o(delta_address),
+        .configuration_o(enc_config_d)
     );
 
     /* FILTER */
@@ -527,6 +537,7 @@ module trace_debugger import trdb_pkg::*;
             branch_map_empty_q <= '0;
             branch_map_full_q <= '0;
             //branch_misprediction_q <= '0; // non mandatory
+            trace_enable_q <= '0;
             enc_enabled_q <= '0;
             enc_disabled_q <= '0;
             opmode_change_q <= '0;
@@ -534,6 +545,8 @@ module trace_debugger import trdb_pkg::*;
             //packets_lost_q <= '0; // non mandatory
             priv_lvl_q <= '0;
             pc_q <= '0;
+            enc_config_q <= '0;
+            enc_config_change_q <= '0;
         end else begin
             exception0_q <= exception0_d;
             exception1_q <= exception1_d;
@@ -561,6 +574,7 @@ module trace_debugger import trdb_pkg::*;
             branch_map_empty_q <= branch_map_empty_d;
             branch_map_full_q <= branch_map_full_d;
             //branch_misprediction_q <= branch_misprediction_d; // non mandatory
+            trace_enable_q <= trace_enable_d;
             enc_enabled_q <= enc_enabled_d;
             enc_disabled_q <= enc_disabled_d;
             opmode_change_q <= opmode_change_d;
@@ -568,6 +582,8 @@ module trace_debugger import trdb_pkg::*;
             //packets_lost_q <= packets_lost_d; // non mandatory
             priv_lvl_q <= priv_lvl_d;
             pc_q <= pc_d;
+            enc_config_q <= enc_config_d;
+            enc_config_change_q <= enc_config_change_d;
         end
     end
     
