@@ -11,6 +11,8 @@ module trdb_reg
     input logic clk_i,
     input logic rst_ni,
 
+    input logic trace_req_deactivate_i,
+
     // registers are divided according to the module
     // common ones are under the first label
 
@@ -51,6 +53,6 @@ module trdb_reg
     assign branch_prediction = '0;
     assign jump_target_cache = '0;
     assign configuration_o = {delta_address_o, full_address, implicit_address, sijump, implicit_return, branch_prediction, jump_target_cache};
-
+    assign trace_activated_o = trace_req_deactivate_i ? 0 : 1;
 
 endmodule
