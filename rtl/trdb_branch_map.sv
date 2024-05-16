@@ -1,3 +1,7 @@
+// Author:  Umberto Laghi
+// Contact: umberto.laghi@studio.unibo.it
+// Github:  @ubolakes
+
 /* BRANCH MAP */
 /*
 It keeps track of taken and non taken branches.

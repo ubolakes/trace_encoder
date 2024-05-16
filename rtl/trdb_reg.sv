@@ -1,3 +1,7 @@
+// Author:  Umberto Laghi
+// Contact: umberto.laghi@studio.unibo.it
+// Github:  @ubolakes
+
 /*REG*/
 /*
 it stores values for the encoder in memory mapped registers

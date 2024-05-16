@@ -1,3 +1,7 @@
+// Author:  Umberto Laghi
+// Contact: umberto.laghi@studio.unibo.it
+// Github:  @ubolakes
+
 /* TOP LEVEL MODULE */
 
 module trace_debugger import trdb_pkg::*;

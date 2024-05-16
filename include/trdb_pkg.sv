@@ -1,3 +1,7 @@
+// Author:  Umberto Laghi
+// Contact: umberto.laghi@studio.unibo.it
+// Github:  @ubolakes
+
 package trdb_pkg;
     // TODO: add correct length value
     localparam CAUSE_LEN = 5;

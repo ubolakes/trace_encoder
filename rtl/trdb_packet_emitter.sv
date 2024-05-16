@@ -1,3 +1,7 @@
+// Author:  Umberto Laghi
+// Contact: umberto.laghi@studio.unibo.it
+// Github:  @ubolakes
+
 /* PACKET EMITTER */
 /*
 it produces the packets for the output interface

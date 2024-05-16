@@ -1,3 +1,7 @@
+// Author:  Umberto Laghi
+// Contact: umberto.laghi@studio.unibo.it
+// Github:  @ubolakes
+
 /* RESYNC COUNTER */
 /*
 It keeps track of the emitted packets or cycles elapsed,

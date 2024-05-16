@@ -1,3 +1,7 @@
+// Author:  Umberto Laghi
+// Contact: umberto.laghi@studio.unibo.it
+// Github:  @ubolakes
+
 /* ITYPE DETECTOR */
 /*
 it produces the type of the instruction and gives other infos about it
