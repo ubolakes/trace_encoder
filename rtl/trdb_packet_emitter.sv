@@ -118,10 +118,9 @@ module trdb_packet_emitter
     /* this module produces only the packet payload
     that is the forwarded to the encapsulator that
     takes care of the type and length.*/
+    output logic packet_valid_o, // asserted when a packet is generated
     output logic [PAYLOAD_LEN:0] packet_payload_o,
     output logic [P_LEN:0] payload_length_o, // in bytes
-    output logic packet_valid_o, // asserted when a packet is generated
-
     output logic branch_map_flush_o, // branch map flushed after each request
 );
     
