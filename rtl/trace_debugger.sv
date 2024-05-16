@@ -84,6 +84,8 @@ module trace_debugger import trdb_pkg::*;
     logic                           first_qualified;
     logic [PC_LEN-1:0]              nc_iaddr;
     logic                           tc_branch_map_empty;
+    logic                           tc_branch;
+    logic                           tc_branch_taken;
 
     
     /* MANAGING LC, TC, NC SIGNALS */
@@ -412,13 +414,13 @@ module trace_debugger import trdb_pkg::*;
     /* INST TYPE DETECTOR */
     trdb_itype_detector i_trdb_itype_detector(
         .valid_i(),
-        .tc_inst_data_i(inst_data0_q),
-        .compressed_i(compressed), // not supported on snitch
-        .tc_iaddr_i(), // TODO: change
-        .nc_iaddr_i(), // TODO: change
+        .nc_inst_data_i(inst_data0_q),
+        .tc_compressed_i(compressed), // not supported on snitch
+        .tc_iaddr_i(iaddr1_q),
+        .nc_iaddr_i(iaddr0_q),
         .nc_exception_i(exception0_q),
         .nc_branch_o(branch_d),
-        .nc_branch_taken_o(branch_taken_d),
+        .tc_branch_taken_o(branch_taken_d),
         .nc_updiscon_o(updiscon0_d)
     );
 

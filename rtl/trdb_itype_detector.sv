@@ -13,15 +13,14 @@ module trdb_itype_detector
 (
     input logic             valid_i, // TODO: is it really necessary?
     input logic [XLEN-1:0]  nc_inst_data_i,
-    input logic             nc_compressed_i,
+    input logic             tc_compressed_i,
     input logic [PC_LEN:0]  tc_iaddr_i, // nc
     input logic [PC_LEN:0]  nc_iaddr_i, // before nc - theoretically input 
     //input logic             implicit_return_i, // non mandatory
     input logic             nc_exception_i,
-
     // outputs
     output logic            nc_branch_o,
-    output logic            nc_branch_taken_o,
+    output logic            tc_branch_taken_o,
     output logic            nc_updiscon_o
 );
 
@@ -39,7 +38,7 @@ module trdb_itype_detector
                             ((nc_inst_data_i & MASK_P_BEQIMM) == MATCH_P_BEQIMM) ||
                             ((nc_inst_data_i & MASK_C_BEQZ)   == MATCH_C_BEQZ) ||
                             ((nc_inst_data_i & MASK_C_BNEZ)   == MATCH_C_BNEZ);
-    assign nc_branch_taken_o = nc_compressed_i ?    !(tc_iaddr_i + 2 == nc_iaddr_i):
+    assign tc_branch_taken_o = tc_compressed_i ?    !(tc_iaddr_i + 2 == nc_iaddr_i):
                                                     !(tc_iaddr_i + 4 == nc_iaddr_i);
 
     // compressed inst - not supported by snitch
@@ -50,7 +49,7 @@ module trdb_itype_detector
                       && ((nc_inst_data_i & MASK_RD) != 0);*/
     // non compressed inst
     assign nc_is_jump = ((nc_inst_data_i & MASK_JALR) == MATCH_JALR)/* || is_c_jalr || is_c_jr*/;
-    assign nc_updiscon_o = nc_is_jump || nc_exception_i; // || tc_interrupt - not necessary in snitch since it's coupled w/exception
+    assign nc_updiscon_o = nc_is_jump || nc_exception_i; // || nc_interrupt - not necessary in snitch since it's coupled w/exception
     
 
 endmodule
