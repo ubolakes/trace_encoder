@@ -76,51 +76,8 @@ module trace_debugger import trdb_pkg::*;
     // we have three phases, called last cycle (lc), this cycle (tc) and next
     // cycle (nc), based on which we make decision whether we need to emit a
     // packet or not.
-    /* last cycle signals */
-    logic                           lc_exception;
-    logic                           lc_updiscon;
-    logic [CAUSE_LEN-1:0]           lc_cause;
-    logic [TVAL_LEN-1:0]            lc_tval;
-    logic                           lc_interrupt;
-    logic                           lc_qualified;
-    /* this cycle signals */
-    logic                           tc_valid;
-    logic                           tc_qualified;
-    logic [PC_LEN-1:0]              tc_iaddr;
-    logic                           tc_exception;
-    logic                           tc_retired;
-    logic [TVEC_LEN-1:0]            tc_tvec;
-    logic [EPC_LEN-1:0]             tc_epc;
     logic                           tc_first_qualified;
-    logic                           tc_privchange;
-    logic                           tc_context_change; // non mandatory
-    //logic                   tc_precise_context_report; // requires ctype signal CPU side
-    //logic                   tc_context_report_as_disc; // ibidem
-    //logic                   tc_no_context_report;      // ibidem
-    //logic                   tc_imprecise_context_report; // ibidem
-    logic                           tc_gt_max_resync;
-    logic                           tc_et_max_resync;
-    logic                           tc_branch_map_empty;
-    logic                           tc_branch_map_full;
-    //logic                   tc_branch_misprediction; // non mandatory
-    logic                           tc_enc_enabled;
-    logic                           tc_enc_disabled;
-    logic                           tc_final_qualified;
-    //logic                   tc_packets_lost; // non mandatory
-    logic [CAUSE_LEN-1:0]           tc_cause;
-    logic [TVAL_LEN-1:0]            tc_tval;
-    logic                           tc_interrupt;
-    logic                           tc_enc_config_change;
-    logic                           tc_branch;
-    logic                           tc_branch_taken;
-    /* next cycle signals */
-    logic                           nc_exception;
-    logic                           nc_privchange;
-    //logic                           nc_precise_context_report; // same as tc version
-    //logic                           nc_context_report_as_disc; // same as tc version
     logic                           nc_branch_map_empty;
-    logic                           nc_qualified;
-    logic                           nc_retired;
     logic [PC_LEN-1:0]              nc_iaddr;
 
     
@@ -276,65 +233,19 @@ module trace_debugger import trdb_pkg::*;
     assign iaddr0_d = pc_i;
     assign epc0_d = epc_i;
 
-    assign final_qualified_d = tc_qualified && ~nc_qualified; // == tc_final_qualified
+    assign final_qualified_d = qualified0_q && ~qualified0_d; // == tc_final_qualified
     assign privchange_d = (priv_lvl0_q != priv_lvl1_q) && tc_valid;
     assign trace_enable_d = trace_enable;
     assign enc_enabled_d = trace_enable_d && ~trace_enable_q; // == nc_enc_enabled
     assign enc_disabled_d = ~trace_enable_d && trace_enable_q; // == nc_enc_disabled
     assign enc_config_change_d = enc_config_d != enc_config_q; // == nc_enc_config_change
 
-    /* last cycle */
-    assign lc_exception = exception2_q;
-    assign lc_updiscon = updiscon1_q;
-    assign lc_cause = cause2_q;
-    assign lc_tval = tval2_q;
-    assign lc_interrupt = interrupt2_q;
-    assign lc_qualified = qualified1_q;
-    assign lc_final_qualified = final_qualified_q;
-
-    /* this cycle */
-    assign tc_valid = inst_valid1_q;
-    assign tc_retired = iretired1_q;
-    assign tc_exception = exception1_q;
-    assign tc_interrupt = interrupt1_q;
-    assign tc_cause = cause1_q;
-    assign tc_tvec = tvec1_q;
-    assign tc_tval = tval1_q;
-    assign tc_inst_data = inst_data1_q;
-    assign tc_iaddr = iaddr1_q;
-    assign tc_epc = epc1_q;
-
-    assign tc_qualified = qualified0_q;
-    assign tc_first_qualified = !lc_qualified && tc_qualified;
-    assign tc_privchange = privchange_q;
-    assign tc_context_change = context_change_q; // non mandatory
-    //assign tc_precise_context_report = precise_context_report_q; // requires ctype signal CPU side
-    //assign tc_context_report_as_disc = context_report_as_disc_q; // ibidem
-    //assign tc_no_context_report = no_context_report_q; // ibidem
-    //assign tc_imprecise_context_report = imprecise_context_report_q; // ibidem
-    assign tc_gt_max_resync = gt_max_resync_q;
-    assign tc_et_max_resync = et_max_resync_q;
-    assign tc_branch_map_empty = branch_map_empty_q;
-    assign tc_branch_map_full = branch_map_full_q;
-    //assign tc_branch_misprediction = branch_misprediction_q; // non mandatory
-    assign tc_enc_enabled = enc_enabled_q;
-    assign tc_enc_disabled = enc_disabled_q;
-    //assign tc_packets_lost = packets_lost_q; // non mandatory
-    assign trace_valid = tc_valid && trace_activated;
-    assign tc_enc_config_change = enc_config_change_q;
-    assign tc_branch = branch_q;
-    assign tc_branch_taken = branch_taken_q;
+    assign tc_first_qualified = !qualified1_q && qualified0_q; // idea: put it directly in the module port
+    assign trace_valid = inst_valid1_q && trace_activated;
 
     /* next cycle */
-    assign nc_retired = iretired0_q;
-    assign nc_exception = exception0_q;
-    assign nc_iaddr = iaddr0_q;
-
-    assign nc_privchange = privchange_d;
-    //assign nc_precise_context_report = precise_context_report_d; // same as tc version
-    //assign nc_context_report_as_disc = context_report_as_disc_d; // same as tc version
-    assign nc_branch_map_empty = branch_map_empty_d;
-    assign nc_qualified = qualified0_d;
+    assign nc_iaddr = iaddr0_q; // wait - understand
+    assign nc_branch_map_empty = branch_map_empty_d; // wait - understand
 
 
     /* MODULES INSTANTIATION */
@@ -366,37 +277,37 @@ module trace_debugger import trdb_pkg::*;
     trdb_priority i_trdb_priority(
         .clk_i(),
         .rst_ni(rst_ni),
-        .valid_i(tc_valid),
-        .lc_exception_i(lc_exception),
-        .lc_updiscon_i(lc_updiscon),
-        .tc_qualified_i(tc_qualified),
-        .tc_exception_i(tc_exception),
-        .tc_retired_i(tc_retired),
+        .valid_i(inst_valid1_q),
+        .lc_exception_i(exception2_q),
+        .lc_updiscon_i(updiscon1_q),
+        .tc_qualified_i(qualified0_q),
+        .tc_exception_i(exception1_q),
+        .tc_retired_i(iretired1_q),
         .tc_first_qualified_i(tc_first_qualified),
-        .tc_privchange_i(tc_privchange),
+        .tc_privchange_i(privchange_q),
         //.tc_context_change_i(), // non mandatory
         //.tc_precise_context_report_i(), // requires ctype signal CPU side
         //.tc_context_report_as_disc_i(), // ibidem
         //.tc_imprecise_context_report_i(), // ibidem
-        .tc_gt_max_resync_i(tc_gt_max_resync),
-        .tc_et_max_resync_i(tc_et_max_resync),
-        .tc_branch_map_empty_i(tc_branch_map_empty),
-        .tc_branch_map_full_i(tc_branch_map_full),
+        .tc_gt_max_resync_i(gt_max_resync_q),
+        .tc_et_max_resync_i(et_max_resync_q),
+        .tc_branch_map_empty_i(branch_map_empty_q),
+        .tc_branch_map_full_i(branch_map_full_q),
         //.tc_branch_misprediction_i(), // non mandatory
         //.tc_pbc_i(), // non mandatory
-        .tc_enc_enabled_i(tc_enc_enabled),
-        .tc_enc_disabled_i(tc_enc_enabled),
-        .tc_opmode_change_i(tc_enc_config_change),
-        .lc_final_qualified_i(lc_final_qualified),
+        .tc_enc_enabled_i(enc_enabled_q),
+        .tc_enc_disabled_i(enc_disabled_q),
+        .tc_opmode_change_i(enc_config_change_q),
+        .lc_final_qualified_i(final_qualified_q),
         //.tc_packets_lost_i(), // non mandatory
-        .nc_exception_i(nc_exception),
-        .nc_privchange_i(nc_privchange),
+        .nc_exception_i(exception0_q),
+        .nc_privchange_i(privchange_d),
         //.nc_context_change_i(),
         //.nc_precise_context_report_i(), // requires ctype signal CPU side
         //.nc_context_report_as_disc_i(), // ibidem
-        .nc_branch_map_empty_i(nc_branch_map_empty),
-        .nc_qualified_i(nc_qualified),
-        .nc_retired_i(nc_retired),
+        .nc_branch_map_empty_i(),
+        .nc_qualified_i(qualified0_d),
+        .nc_retired_i(iretired0_q),
         //.halted_i(), // non mandatory side band signal
         //.reset_i(), // ibidem
         //.implicit_return_i(), // non mandatory
@@ -438,24 +349,24 @@ module trace_debugger import trdb_pkg::*;
         .packet_format_i(packet_format),
         .packet_f_sync_subformat_i(packet_f_sync_subformat),
         //.packet_f_opt_ext_subformat_i(), // non mandatory
-        .lc_cause_i(lc_cause),
-        .lc_tval_i(lc_tval),
-        .lc_interrupt_i(lc_interrupt),
-        .tc_cause_i(tc_cause),
-        .tc_tval_i(tc_tval),
-        .tc_interrupt_i(tc_interrupt),
+        .lc_cause_i(cause2_q),
+        .lc_tval_i(tval2_q),
+        .lc_interrupt_i(interrupt2_q),
+        .tc_cause_i(cause1_q),
+        .tc_tval_i(tval1_q),
+        .tc_interrupt_i(interrupt1_q),
         .nocontext_i(nocontext),
         .notime_i(notime),
-        .tc_branch_i(tc_branch),         // tc
-        .tc_branch_taken_i(tc_branch_taken),   // tc
+        .tc_branch_i(branch_q),         // tc
+        .tc_branch_taken_i(branch_taken_q),   // tc
         .priv_i(priv_lvl_q),    // tc -> delay from input
         //.time_i(), // non mandatory
         //.context_i(), // non mandatory
-        .iaddr_i(tc_iaddr), // tc -> delay from input
+        .iaddr_i(iaddr1_q), // tc -> delay from input
         .lc_tc_mux_i(lc_tc_mux),
         .thaddr_i(thaddr),
-        .tvec_i(tc_tvec), // tc -> delay from input
-        .lc_epc_i(tc_epc),
+        .tvec_i(tvec1_q), // tc -> delay from input
+        .lc_epc_i(), // TODO: update with lc_epc
         .ienable_i(trace_enable),
         .encoder_mode_i(encoder_mode),
         .qual_status_i(qual_status),
@@ -469,7 +380,7 @@ module trace_debugger import trdb_pkg::*;
         //.denable_i(), // stand-by
         //.dloss_i(), //stand-by
         //.notify_i(), // non mandatory
-        .lc_updiscon_i(lc_updiscon),
+        .lc_updiscon_i(updiscon1_q),
         //.irreport_i(), // non mandatory
         //.irdepth_i(), // non mandatory
         .branches_i(branch_count),
@@ -497,9 +408,9 @@ module trace_debugger import trdb_pkg::*;
         .valid_i(),
         .tc_inst_data_i(inst_data0_q),
         .compressed_i(), // not supported on snitch
-        .tc_iaddr_i(tc_iaddr), // TODO: change
-        .nc_iaddr_i(nc_iaddr), // TODO: change
-        .nc_exception_i(nc_exception),
+        .tc_iaddr_i(), // TODO: change
+        .nc_iaddr_i(), // TODO: change
+        .nc_exception_i(exception0_q),
         .nc_branch_o(branch_d),
         .nc_branch_taken_o(branch_taken_d),
         .nc_updiscon_o(updiscon0_d)
