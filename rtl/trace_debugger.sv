@@ -80,7 +80,7 @@ module trace_debugger import trdb_pkg::*;
     // we have three phases, called last cycle (lc), this cycle (tc) and next
     // cycle (nc), based on which we make decision whether we need to emit a
     // packet or not.
-    logic                           tc_first_qualified;
+    logic                           first_qualified;
     logic                           nc_branch_map_empty;
     logic [PC_LEN-1:0]              nc_iaddr;
 
@@ -135,6 +135,7 @@ module trace_debugger import trdb_pkg::*;
     logic [PC_LEN-1:0]              iaddr1_d, iaddr1_q;
     logic [EPC_LEN-1:0]             epc0_d, epc0_q;
     logic [EPC_LEN-1:0]             epc1_d, epc1_q;
+    logic [EPC_LEN-1:0]             epc2_d, epc2_q;
     
     /* last cycle - temporary classification*/
     logic                           updiscon0_d, updiscon0_q;
@@ -220,8 +221,9 @@ module trace_debugger import trdb_pkg::*;
     assign inst_data1_d = inst_data0_q;
     assign iaddr1_d = iaddr0_q;
     assign epc1_d = epc0_q;
+    assign epc2_d = epc1_q;
 
-    assign qualified1_d = qualified0_q; // TODO: check if it makes sense
+    assign qualified1_d = qualified0_q;
     assign updiscon1_d = updiscon0_q;
 
     /* FFs inputs */
@@ -231,7 +233,7 @@ module trace_debugger import trdb_pkg::*;
     assign interrupt0_d = interrupt_i;
     assign cause0_d = cause_i;
     assign tvec0_d = tvec_i;
-    assign tval0_d = '0; // not supported by snitch - hardwired to 0//tval_i;
+    assign tval0_d = '0; // not supported by snitch - hardwired to 0 //tval_i;
     assign priv_lvl0_d = priv_lvl_i;
     assign inst_data0_d = inst_data_i;
     assign iaddr0_d = pc_i;
@@ -244,7 +246,7 @@ module trace_debugger import trdb_pkg::*;
     assign enc_disabled_d = ~trace_enable_d && trace_enable_q; // == nc_enc_disabled
     assign enc_config_change_d = enc_config_d != enc_config_q; // == nc_enc_config_change
 
-    assign tc_first_qualified = !qualified1_q && qualified0_q; // idea: put it directly in the module port
+    assign first_qualified = !qualified1_q && qualified0_q; // idea: put it directly in the module port
     assign trace_valid = inst_valid1_q && trace_activated;
 
     /* next cycle */
@@ -287,7 +289,7 @@ module trace_debugger import trdb_pkg::*;
         .tc_qualified_i(qualified0_q),
         .tc_exception_i(exception1_q),
         .tc_retired_i(iretired1_q),
-        .tc_first_qualified_i(tc_first_qualified),
+        .tc_first_qualified_i(first_qualified),
         .tc_privchange_i(privchange_q),
         //.tc_context_change_i(), // non mandatory
         //.tc_precise_context_report_i(), // requires ctype signal CPU side
@@ -370,7 +372,7 @@ module trace_debugger import trdb_pkg::*;
         .lc_tc_mux_i(lc_tc_mux),
         .thaddr_i(thaddr),
         .tvec_i(tvec1_q), // tc -> delay from input
-        .lc_epc_i(), // TODO: update with lc_epc
+        .lc_epc_i(epc2_q),
         .ienable_i(trace_enable),
         .encoder_mode_i(encoder_mode),
         .qual_status_i(qual_status),
@@ -411,7 +413,7 @@ module trace_debugger import trdb_pkg::*;
     trdb_itype_detector i_trdb_itype_detector(
         .valid_i(),
         .tc_inst_data_i(inst_data0_q),
-        .compressed_i(), // not supported on snitch
+        .compressed_i(compressed), // not supported on snitch
         .tc_iaddr_i(), // TODO: change
         .nc_iaddr_i(), // TODO: change
         .nc_exception_i(exception0_q),
@@ -438,8 +440,11 @@ module trace_debugger import trdb_pkg::*;
             inst_valid_q <= '0;
             retired_q <= '0;
             inst_data_q <= '0;
-            tvec_q <= '0;
-            epc_q <= '0;
+            tvec0_q <= '0;
+            tvec1_q <= '0;
+            epc0_q <= '0;
+            epc1_q <= '0;
+            epc2_q <= '0;
             privchange_q <= '0;
             context_change_q <= '0;
             //precise_context_report_q <= '0; // requires ctype signal CPU side
@@ -476,8 +481,11 @@ module trace_debugger import trdb_pkg::*;
             inst_valid_q <= inst_valid_d;
             retired_q <= retired_d;
             inst_data_q <= inst_data_d;
-            tvec_q <= tvec_d;
-            epc_q <= epc_d;
+            tvec0_q <= tvec0_d;
+            tvec1_q <= tvec1_d;
+            epc0_q <= epc0_d;
+            epc1_q <= epc1_d;
+            epc2_q <= epc2_d;
             privchange_q <= privchange_d;
             context_change_q <= context_change_d;
             //precise_context_report_q <= precise_context_report_d; // requires ctype signal CPU side
