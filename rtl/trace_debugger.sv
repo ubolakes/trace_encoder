@@ -64,7 +64,7 @@ module trace_debugger import trdb_pkg::*;
     logic                           thaddr;
     logic                           lc_tc_mux;
     qual_status_e                   qual_status;
-    logic                           branch_map_flush;
+    logic                           nc_branch_map_flush;
     logic [BRANCH_MAP_LEN-1:0]      branch_map;
     logic [BRANCH_COUNT_LEN-1:0]    branch_count;
     logic                           resync_rst;
@@ -76,13 +76,14 @@ module trace_debugger import trdb_pkg::*;
     logic                           compressed;
     // not classified
     logic                           tc_updiscon;
+    logic                           nc_branch_map_empty;
 
     // we have three phases, called last cycle (lc), this cycle (tc) and next
     // cycle (nc), based on which we make decision whether we need to emit a
     // packet or not.
     logic                           first_qualified;
-    logic                           nc_branch_map_empty;
     logic [PC_LEN-1:0]              nc_iaddr;
+    logic                           tc_branch_map_empty;
 
     
     /* MANAGING LC, TC, NC SIGNALS */
@@ -153,7 +154,6 @@ module trace_debugger import trdb_pkg::*;
     //logic                           imprecise_context_report_d, imprecise_context_report_q; // ibidem
     logic                           gt_max_resync_d, gt_max_resync_q;
     logic                           et_max_resync_d, et_max_resync_q;
-    logic                           branch_map_empty_d, branch_map_empty_q;
     logic                           branch_map_full_d, branch_map_full_q;
     //logic                           branch_misprediction_d, branch_misprediction_q; // non mandatory
     logic                           trace_enable_d, trace_enabled_q;
@@ -251,7 +251,7 @@ module trace_debugger import trdb_pkg::*;
 
     /* next cycle */
     assign nc_iaddr = iaddr0_q; // wait - understand
-    assign nc_branch_map_empty = branch_map_empty_d; // wait - understand
+    assign nc_branch_map_empty = nc_branch_map_flush || (tc_branch_map_empty && ~branch_d);
 
 
     /* MODULES INSTANTIATION */
@@ -297,7 +297,7 @@ module trace_debugger import trdb_pkg::*;
         //.tc_imprecise_context_report_i(), // ibidem
         .tc_gt_max_resync_i(gt_max_resync_q),
         .tc_et_max_resync_i(et_max_resync_q),
-        .tc_branch_map_empty_i(branch_map_empty_q),
+        .tc_branch_map_empty_i(tc_branch_map_empty),
         .tc_branch_map_full_i(branch_map_full_q),
         //.tc_branch_misprediction_i(), // non mandatory
         //.tc_pbc_i(), // non mandatory
@@ -311,7 +311,7 @@ module trace_debugger import trdb_pkg::*;
         //.nc_context_change_i(),
         //.nc_precise_context_report_i(), // requires ctype signal CPU side
         //.nc_context_report_as_disc_i(), // ibidem
-        .nc_branch_map_empty_i(),
+        .nc_branch_map_empty_i(nc_branch_map_empty),
         .nc_qualified_i(qualified0_d),
         .nc_retired_i(iretired0_q),
         //.halted_i(), // non mandatory side band signal
@@ -336,14 +336,14 @@ module trace_debugger import trdb_pkg::*;
         .rst_ni(rst_ni),
         .valid_i(),
         .branch_taken_i(branch_taken_d),
-        .flush_i(branch_map_flush),
+        .flush_i(nc_branch_map_flush),
         //.branch_taken_prediction_i(), // non mandatory
         .map_o(branch_map),
         .branches_o(branch_count),
         //.pbc_o(), // non mandatory - branch prediction mode
         //.misprediction_o(), // non mandatory - ibidem
         .is_full_o(branch_map_full_d),
-        .is_empty_o(branch_map_empty_d)
+        .is_empty_o(tc_branch_map_empty)
     );
 
     /* PACKET EMITTER */
@@ -394,7 +394,7 @@ module trace_debugger import trdb_pkg::*;
         .packet_payload_o(packet_payload_o),
         .payload_length_o(packet_length_o),
         .packet_valid_o(packet_emitted),
-        .branch_map_flush_o(branch_map_flush)
+        .branch_map_flush_o(nc_branch_map_flush)
     );
 
     /* RESYNC COUNTER */
@@ -453,7 +453,6 @@ module trace_debugger import trdb_pkg::*;
             //imprecise_context_report_q <= '0; // ibidem
             gt_max_resync_q <= '0;
             et_max_resync_q <= '0;
-            branch_map_empty_q <= '0;
             branch_map_full_q <= '0;
             //branch_misprediction_q <= '0; // non mandatory
             trace_enable_q <= '0;
@@ -494,7 +493,6 @@ module trace_debugger import trdb_pkg::*;
             //imprecise_context_report_q <= imprecise_context_report_d; // ibidem
             gt_max_resync_q <= gt_max_resync_d;
             et_max_resync_q <= et_max_resync_d;
-            branch_map_empty_q <= branch_map_empty_d;
             branch_map_full_q <= branch_map_full_d;
             //branch_misprediction_q <= branch_misprediction_d; // non mandatory
             trace_enable_q <= trace_enable_d;

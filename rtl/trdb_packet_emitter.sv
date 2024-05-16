@@ -133,7 +133,6 @@ module trdb_packet_emitter
     logic [XLEN-2:0] diff_addr;
     logic [XLEN-1:0] latest_addr_d;
     logic [XLEN-1:0] latest_addr_q;
-    logic branch_map_flush_d, branch_map_flush_q;
     logic tval;
     logic time_and_context; // determines if the payload requires time and/or context
     ioptions_e ioptions;
@@ -150,7 +149,6 @@ module trdb_packet_emitter
     assign tval = lc_tc_mux_i ? tc_tval_i : lc_tval_i;
     assign interrupt = lc_tc_mux_i ? tc_interrupt_i : lc_interrupt_i;
     assign time_and_context = {notime_i, nocontext_i};
-    assign branch_map_flush_o = branch_map_flush_q;
 
     // register to store the last address emitted in a packet
     always_ff @(posedge clk_i, negedge rst_ni) begin
@@ -171,15 +169,15 @@ module trdb_packet_emitter
         packet_valid_o = '0;
         diff_addr = '0;
         update_latest_address = '0;
+        branch_map_flush_o = '0;
         
         if(valid_i) begin
             // flush the branch map
-        /*  branch map flushing is done in the following cycle.
-            Because we don't want it to be instantly deleted
-            since we need to read from it to populate the 
-            packet payload.    
+        /*  the signal is output in this cycle, but the branch map does
+            the flush in the next cycle to leave time to the packet
+            emitter to read values and put them in the payload 
         */
-            branch_map_flush_d = '1;
+            branch_map_flush_o = '1;
 
 
             case(packet_format_i)
