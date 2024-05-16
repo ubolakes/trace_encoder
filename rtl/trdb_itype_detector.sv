@@ -43,6 +43,7 @@ module trdb_itype_detector
                                                     !(tc_iaddr_i + 4 == nc_iaddr_i);
 
     // compressed inst - not supported by snitch
+    /* c.jalr and c.jr are both decompressed in order to use an uncompressed jalr */
     /*assign is_c_jalr = ((nc_inst_data_i & MASK_C_JALR) == MATCH_C_JALR)
                         && ((nc_inst_data_i & MASK_RD) != 0);
     assign is_c_jr = ((nc_inst_data_i & MASK_C_JR) == MATCH_C_JR)
