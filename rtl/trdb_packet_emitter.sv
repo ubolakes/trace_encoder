@@ -39,8 +39,8 @@ module trdb_packet_emitter
     // in this implementation both hardwired to 0
 
     // format 3 subformat 0 specific signals
-    input logic is_branch_i,
-    input logic is_branch_taken_i,
+    input logic tc_branch_i,
+    input logic tc_branch_taken_i,
     input logic [PRIV_LEN:0] priv_i,
     //input logic [:0] time_i,    // optional
     //input logic [:0] context_i, // optional
@@ -53,7 +53,7 @@ module trdb_packet_emitter
 
     input logic thaddr_i,
     input logic [XLEN-1:0] tvec_i, // trap handler address
-    input logic [XLEN-1:0] epc_i,
+    input logic [XLEN-1:0] lc_epc_i,
     
     // format 3 subformat 3 specific signals
     input logic ienable_i, // trace encoder enabled
@@ -140,8 +140,8 @@ module trdb_packet_emitter
     logic update_latest_address;
 
     // assigning values
-    assign branch = ~(is_branch_i && is_branch_taken_i);
-    assign address = thaddr_i ? tvec_i : epc_i;
+    assign branch = ~(tc_branch_i && tc_branch_taken_i);
+    assign address = thaddr_i ? tvec_i : lc_epc_i;
     assign ecause = lc_tc_mux_i ? tc_cause_i : lc_cause_i;
     assign tval = lc_tc_mux_i ? tc_tval_i : lc_tval_i;
     assign interrupt = lc_tc_mux_i ? tc_interrupt_i : lc_interrupt_i;

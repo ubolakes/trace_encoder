@@ -16,27 +16,26 @@ module trace_debugger import trdb_pkg::*;
     - instr address
     */
     // mandatory inputs
-    input logic                 inst_valid_i, // inst_valid_o
-    input logic                 iretired_i, // core_events_o.retired_i 
-    input logic                 exception_i, // exception
-    input logic                 interrupt_i, // cause_irq_q - used with the previous one to discriminate interrupt from exception
-    input logic [CAUSE_LEN:0]   cause_i, // cause_q
-    input logic [TVEC_LEN:0]    tvec_i, // tvec_q, contains trap handler address
-    input logic [TVAL_LEN:0]    tval_i, // not implemented in snitch, mandatory according to the spec
-    input logic [PRIV_LEN:0]    priv_lvl_i, // priv_lvl_q
-    input logic [INST_LEN:0]    inst_data_i, // inst_data
-    //input logic                 compressed, // to discriminate compressed instructions from the others - in case the CPU supports C extension
-    input logic [PC_LEN:0]      pc_i, //pc_q - instruction address
-    input logic [EPC_LEN:0]     epc_i, // epc_q, required for format 3 subformat 1
-    //input logic [TRIGGER_LEN:0] trigger_i, // must be supported CPU side
-    //input logic [CTYPE_LEN:0]   ctype_i, // according to the spec it's 1 or 2 bit wide, supported by CPU
-    // here it's 2 bit for better future compatibility
+    input logic                     inst_valid_i, // inst_valid_o
+    input logic                     iretired_i, // core_events_o.retired_i 
+    input logic                     exception_i, // exception
+    input logic                     interrupt_i, // cause_irq_q - used with the previous one to discriminate interrupt from exception
+    input logic [CAUSE_LEN-1:0]     cause_i, // cause_q
+    input logic [TVEC_LEN-1:0]      tvec_i, // tvec_q, contains trap handler address
+    input logic [TVAL_LEN-1:0]      tval_i, // not implemented in snitch, mandatory according to the spec
+    input logic [PRIV_LEN-1:0]      priv_lvl_i, // priv_lvl_q
+    input logic [INST_LEN-1:0]      inst_data_i, // inst_data
+    //input logic                     compressed, // to discriminate compressed instructions from the others - in case the CPU supports C extension
+    input logic [PC_LEN-1:0]        pc_i, //pc_q - instruction address
+    input logic [EPC_LEN-1:0]       epc_i, // epc_q, required for format 3 subformat 1
+    //input logic [TRIGGER_LEN-1:0]   trigger_i, // must be supported CPU side
+    //input logic [CTYPE_LEN-1:0]     ctype_i, // according to the spec it's 1 or 2 bit wide. Used 2 for future compatibility
 
     // outputs
     // info needed for the encapsulator
-    output logic [PTYPE_LEN:0] packet_type_o,
-    output logic [P_LEN:0] packet_length_o, // in bytes
-    output logic [PAYLOAD_LEN:0] packet_payload_o
+    output logic [PTYPE_LEN-1:0]    packet_type_o,
+    output logic [P_LEN-1:0]        packet_length_o, // in bytes
+    output logic [PAYLOAD_LEN-1:0]  packet_payload_o
 
     // TODO: add constants to trdb_pkg file
 );
@@ -78,51 +77,51 @@ module trace_debugger import trdb_pkg::*;
     // cycle (nc), based on which we make decision whether we need to emit a
     // packet or not.
     /* last cycle signals */
-    logic                   lc_exception;
-    logic                   lc_updiscon;
-    logic [CAUSE_LEN-1:0]   lc_cause;
-    logic [TVAL_LEN-1:0]    lc_tval;
-    logic                   lc_interrupt;
-    logic                   lc_qualified;
+    logic                           lc_exception;
+    logic                           lc_updiscon;
+    logic [CAUSE_LEN-1:0]           lc_cause;
+    logic [TVAL_LEN-1:0]            lc_tval;
+    logic                           lc_interrupt;
+    logic                           lc_qualified;
     /* this cycle signals */
-    logic                   tc_valid;
-    logic                   tc_qualified;
-    logic [PC_LEN:0]        tc_iaddr;
-    logic                   tc_exception;
-    logic                   tc_retired;
-    logic [TVEC_LEN:0]      tc_tvec;
-    logic [EPC_LEN:0]       tc_epc;
-    logic                   tc_first_qualified;
-    logic                   tc_privchange;
-    logic                   tc_context_change; // non mandatory
+    logic                           tc_valid;
+    logic                           tc_qualified;
+    logic [PC_LEN-1:0]              tc_iaddr;
+    logic                           tc_exception;
+    logic                           tc_retired;
+    logic [TVEC_LEN-1:0]            tc_tvec;
+    logic [EPC_LEN-1:0]             tc_epc;
+    logic                           tc_first_qualified;
+    logic                           tc_privchange;
+    logic                           tc_context_change; // non mandatory
     //logic                   tc_precise_context_report; // requires ctype signal CPU side
     //logic                   tc_context_report_as_disc; // ibidem
     //logic                   tc_no_context_report;      // ibidem
     //logic                   tc_imprecise_context_report; // ibidem
-    logic                   tc_gt_max_resync;
-    logic                   tc_et_max_resync;
-    logic                   tc_branch_map_empty;
-    logic                   tc_branch_map_full;
+    logic                           tc_gt_max_resync;
+    logic                           tc_et_max_resync;
+    logic                           tc_branch_map_empty;
+    logic                           tc_branch_map_full;
     //logic                   tc_branch_misprediction; // non mandatory
-    logic                   tc_enc_enabled;
-    logic                   tc_enc_disabled;
-    logic                   tc_final_qualified;
+    logic                           tc_enc_enabled;
+    logic                           tc_enc_disabled;
+    logic                           tc_final_qualified;
     //logic                   tc_packets_lost; // non mandatory
-    logic [CAUSE_LEN-1:0]   tc_cause;
-    logic [TVAL_LEN-1:0]    tc_tval;
-    logic                   tc_interrupt;
-    logic                   tc_enc_config_change;
-    logic                   tc_branch;
-    logic                   tc_branch_taken;
+    logic [CAUSE_LEN-1:0]           tc_cause;
+    logic [TVAL_LEN-1:0]            tc_tval;
+    logic                           tc_interrupt;
+    logic                           tc_enc_config_change;
+    logic                           tc_branch;
+    logic                           tc_branch_taken;
     /* next cycle signals */
-    logic                   nc_exception;
-    logic                   nc_privchange;
-    //logic                   nc_precise_context_report; // same as tc version
-    //logic                   nc_context_report_as_disc; // same as tc version
-    logic                   nc_branch_map_empty;
-    logic                   nc_qualified;
-    logic                   nc_retired;
-    logic [PC_LEN:0]        nc_iaddr;
+    logic                           nc_exception;
+    logic                           nc_privchange;
+    //logic                           nc_precise_context_report; // same as tc version
+    //logic                           nc_context_report_as_disc; // same as tc version
+    logic                           nc_branch_map_empty;
+    logic                           nc_qualified;
+    logic                           nc_retired;
+    logic [PC_LEN-1:0]              nc_iaddr;
 
     
     /* MANAGING LC, TC, NC SIGNALS */
@@ -149,60 +148,60 @@ module trace_debugger import trdb_pkg::*;
     /* signals for FFs */
     //TODO: split signals into: next cycles, this cycle, last cycle
     // inputs - temporary classification
-    logic                   inst_valid0_d, inst_valid0_q;
-    logic                   inst_valid1_d, inst_valid1_q;
-    logic                   iretired0_d, iretired0_q;
-    logic                   iretired1_d, iretired1_q;
-    logic                   exception0_d, exception0_q;
-    logic                   exception1_d, exception1_q;
-    logic                   exception2_d, exception2_q;
-    logic                   interrupt0_d, interrupt0_q;
-    logic                   interrupt1_d, interrupt1_q;
-    logic                   interrupt2_d, interrupt2_q;           
-    logic [CAUSE_LEN-1:0]   cause0_d, cause0_q;
-    logic [CAUSE_LEN-1:0]   cause1_d, cause1_q;
-    logic [CAUSE_LEN-1:0]   cause2_d, cause2_q;
-    logic [TVEC_LEN-1:0]    tvec0_d, tvec0_q;
-    logic [TVEC_LEN-1:0]    tvec1_d, tvec1_q;
-    logic [TVAL_LEN-1:0]    tval0_d, tval0_q;
-    logic [TVAL_LEN-1:0]    tval1_d, tval1_q;
-    logic [TVAL_LEN-1:0]    tval2_d, tval2_q;
-    logic [PRIV_LEN-1:0]    priv_lvl0_d, priv_lvl0_q;
-    logic [PRIV_LEN-1:0]    priv_lvl1_d, priv_lvl1_q;
-    logic [INST_LEN-1:0]    inst_data0_d, inst_data0_q;
-    logic [INST_LEN-1:0]    inst_data1_d, inst_data1_q;
-    logic [PC_LEN-1:0]      iaddr0_d, iaddr0_q;
-    logic [PC_LEN-1:0]      iaddr1_d, iaddr1_q;
-    logic [EPC_LEN-1:0]     epc0_d, epc0_q;
-    logic [EPC_LEN-1:0]     epc1_d, epc1_q;
+    logic                           inst_valid0_d, inst_valid0_q;
+    logic                           inst_valid1_d, inst_valid1_q;
+    logic                           iretired0_d, iretired0_q;
+    logic                           iretired1_d, iretired1_q;
+    logic                           exception0_d, exception0_q;
+    logic                           exception1_d, exception1_q;
+    logic                           exception2_d, exception2_q;
+    logic                           interrupt0_d, interrupt0_q;
+    logic                           interrupt1_d, interrupt1_q;
+    logic                           interrupt2_d, interrupt2_q;           
+    logic [CAUSE_LEN-1:0]           cause0_d, cause0_q;
+    logic [CAUSE_LEN-1:0]           cause1_d, cause1_q;
+    logic [CAUSE_LEN-1:0]           cause2_d, cause2_q;
+    logic [TVEC_LEN-1:0]            tvec0_d, tvec0_q;
+    logic [TVEC_LEN-1:0]            tvec1_d, tvec1_q;
+    logic [TVAL_LEN-1:0]            tval0_d, tval0_q;
+    logic [TVAL_LEN-1:0]            tval1_d, tval1_q;
+    logic [TVAL_LEN-1:0]            tval2_d, tval2_q;
+    logic [PRIV_LEN-1:0]            priv_lvl0_d, priv_lvl0_q;
+    logic [PRIV_LEN-1:0]            priv_lvl1_d, priv_lvl1_q;
+    logic [INST_LEN-1:0]            inst_data0_d, inst_data0_q;
+    logic [INST_LEN-1:0]            inst_data1_d, inst_data1_q;
+    logic [PC_LEN-1:0]              iaddr0_d, iaddr0_q;
+    logic [PC_LEN-1:0]              iaddr1_d, iaddr1_q;
+    logic [EPC_LEN-1:0]             epc0_d, epc0_q;
+    logic [EPC_LEN-1:0]             epc1_d, epc1_q;
     
     /* last cycle - temporary classification*/
-    logic                   updiscon0_d, updiscon0_q;
-    logic                   updiscon1_d, updiscon1_q;
-    logic                   qualified0_d, qualified0_q;
-    logic                   qualified1_d, qualified1_q;
-    logic                   final_qualified_d, final_qualified_q;
+    logic                           updiscon0_d, updiscon0_q;
+    logic                           updiscon1_d, updiscon1_q;
+    logic                           qualified0_d, qualified0_q;
+    logic                           qualified1_d, qualified1_q;
+    logic                           final_qualified_d, final_qualified_q;
 
     /* this cycle - temporary classification */
-    logic                   privchange_d, privchange_q;
-    logic                   context_change_d, context_change_q; // non mandatory
-    //logic                   precise_context_report_d, precise_context_report_q; // requires ctype signal CPU side
-    //logic                   context_report_as_disc_d, context_report_as_disc_q; // ibidem
-    //logic                   no_context_report_d, no_context_report_q; // ibidem
-    //logic                   imprecise_context_report_d, imprecise_context_report_q; // ibidem
-    logic                   gt_max_resync_d, gt_max_resync_q;
-    logic                   et_max_resync_d, et_max_resync_q;
-    logic                   branch_map_empty_d, branch_map_empty_q;
-    logic                   branch_map_full_d, branch_map_full_q;
-    //logic                   branch_misprediction_d, branch_misprediction_q; // non mandatory
-    logic                   trace_enable_d, trace_enabled_q;
-    logic                   enc_enabled_d, enc_enabled_q;
-    logic                   enc_disabled_d, enc_disabled_q;
-    //logic                   packets_lost_d, packets_lost_q; // non mandatory
-    logic [MODES:0]         enc_config_d, enc_config_q;
-    logic                   enc_config_change_d, enc_config_change_q;
-    logic                   branch_d, branch_q;
-    logic                   branch_taken_d, branch_taken_q;
+    logic                           privchange_d, privchange_q;
+    logic                           context_change_d, context_change_q; // non mandatory
+    //logic                           precise_context_report_d, precise_context_report_q; // requires ctype signal CPU side
+    //logic                           context_report_as_disc_d, context_report_as_disc_q; // ibidem
+    //logic                           no_context_report_d, no_context_report_q; // ibidem
+    //logic                           imprecise_context_report_d, imprecise_context_report_q; // ibidem
+    logic                           gt_max_resync_d, gt_max_resync_q;
+    logic                           et_max_resync_d, et_max_resync_q;
+    logic                           branch_map_empty_d, branch_map_empty_q;
+    logic                           branch_map_full_d, branch_map_full_q;
+    //logic                           branch_misprediction_d, branch_misprediction_q; // non mandatory
+    logic                           trace_enable_d, trace_enabled_q;
+    logic                           enc_enabled_d, enc_enabled_q;
+    logic                           enc_disabled_d, enc_disabled_q;
+    //logic                           packets_lost_d, packets_lost_q; // non mandatory
+    logic [MODES-1:0]               enc_config_d, enc_config_q;
+    logic                           enc_config_change_d, enc_config_change_q;
+    logic                           branch_d, branch_q;
+    logic                           branch_taken_d, branch_taken_q;
 
     /*  the following commented section has non mandatory signals
         for now it's commented
@@ -447,8 +446,8 @@ module trace_debugger import trdb_pkg::*;
         .tc_interrupt_i(tc_interrupt),
         .nocontext_i(nocontext),
         .notime_i(notime),
-        .is_branch_i(tc_branch),         // tc
-        .is_branch_taken_i(tc_branch_taken),   // tc
+        .tc_branch_i(tc_branch),         // tc
+        .tc_branch_taken_i(tc_branch_taken),   // tc
         .priv_i(priv_lvl_q),    // tc -> delay from input
         //.time_i(), // non mandatory
         //.context_i(), // non mandatory
@@ -456,7 +455,7 @@ module trace_debugger import trdb_pkg::*;
         .lc_tc_mux_i(lc_tc_mux),
         .thaddr_i(thaddr),
         .tvec_i(tc_tvec), // tc -> delay from input
-        .epc_i(tc_epc),  // tc -> delay from input
+        .lc_epc_i(tc_epc),
         .ienable_i(trace_enable),
         .encoder_mode_i(encoder_mode),
         .qual_status_i(qual_status),
