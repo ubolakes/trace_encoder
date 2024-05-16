@@ -75,18 +75,13 @@ module trace_debugger import trdb_pkg::*;
     // hardwired
     logic                           compressed;
     // not classified
-    logic                           tc_updiscon;
     logic                           nc_branch_map_empty;
 
     // we have three phases, called last cycle (lc), this cycle (tc) and next
     // cycle (nc), based on which we make decision whether we need to emit a
     // packet or not.
     logic                           first_qualified;
-    logic [PC_LEN-1:0]              nc_iaddr;
     logic                           tc_branch_map_empty;
-    logic                           tc_branch;
-    logic                           tc_branch_taken;
-
     
     /* MANAGING LC, TC, NC SIGNALS */
     /*
@@ -252,7 +247,6 @@ module trace_debugger import trdb_pkg::*;
     assign trace_valid = inst_valid1_q && trace_activated;
 
     /* next cycle */
-    assign nc_iaddr = iaddr0_q; // wait - understand
     assign nc_branch_map_empty = nc_branch_map_flush || (tc_branch_map_empty && ~branch_d);
 
 
@@ -365,9 +359,9 @@ module trace_debugger import trdb_pkg::*;
         .tc_interrupt_i(interrupt1_q),
         .nocontext_i(nocontext),
         .notime_i(notime),
-        .tc_branch_i(branch_q),         // tc
-        .tc_branch_taken_i(branch_taken_q),   // tc
-        .priv_i(priv_lvl_q),    // tc -> delay from input
+        .tc_branch_i(branch_q),
+        .tc_branch_taken_i(branch_taken_q),
+        .priv_i(priv_lvl1_q),    // tc -> delay from input
         //.time_i(), // non mandatory
         //.context_i(), // non mandatory
         .iaddr_i(iaddr1_q), // tc -> delay from input
@@ -437,6 +431,8 @@ module trace_debugger import trdb_pkg::*;
             cause1_q <= '0;
             tval0_q <= '0;
             tval1_q <= '0;
+            priv_lvl0_q <= '0;
+            priv_lvl1_q <= '0;
             qualified0_q <= '0;
             qualified1_q <= '0;
             inst_valid_q <= '0;
@@ -462,7 +458,6 @@ module trace_debugger import trdb_pkg::*;
             enc_disabled_q <= '0;
             final_qualified_q <= '0;
             //packets_lost_q <= '0; // non mandatory
-            priv_lvl_q <= '0;
             pc_q <= '0;
             enc_config_q <= '0;
             enc_config_change_q <= '0;
@@ -477,6 +472,8 @@ module trace_debugger import trdb_pkg::*;
             cause1_q <= cause1_d;
             tval0_q <= tval0_d;
             tval1_q <= tval1_d;
+            priv_lvl0_q <= priv_lvl0_d;
+            priv_lvl1_q <= priv_lvl1_d;
             qualified0_q <= qualified0_d;
             qualified1_q <= qualified1_d;
             inst_valid_q <= inst_valid_d;
@@ -502,7 +499,6 @@ module trace_debugger import trdb_pkg::*;
             enc_disabled_q <= enc_disabled_d;
             final_qualified_q <= final_qualified_d;
             //packets_lost_q <= packets_lost_d; // non mandatory
-            priv_lvl_q <= priv_lvl_d;
             pc_q <= pc_d;
             enc_config_q <= enc_config_d;
             enc_config_change_q <= enc_config_change_d;
