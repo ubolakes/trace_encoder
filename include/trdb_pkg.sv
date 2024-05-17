@@ -5,34 +5,31 @@
 package trdb_pkg;
     // TODO: add correct length value
     localparam CAUSE_LEN = 5;
-    localparam TVEC_LEN = 30;
-    localparam TVAL_LEN = ;
-    localparam PRIV_LEN = 2;
-    localparam INST_LEN = 31;
-    localparam PC_LEN = 31;
-    localparam PTYPE_LEN = 4;
-    localparam P_LEN = 4;
-    localparam PAYLOAD_LEN = 31;
-    localparam EPC_LEN = 31; // same as PC, does it make sense to have it?
+    localparam PRIV_LEN = 2; // depends on CPU implementation
+    localparam INST_LEN = 32;
+    localparam PTYPE_LEN = 4; // is it F + SF? spec not clear
+    localparam P_LEN = 5;
+    localparam PAYLOAD_LEN = 256;
     localparam TRIGGER_LEN = 4;
+    localparam CTYPE_LEN = 2;
 `ifdef TRDB_ARCH64 // 64bit arch specific parameters
     localparam XLEN = 64;
 `else // 32bit arch
     localparam XLEN = 32;
-`endif // common parameters
-    
-    // parameters for resync counter
+`endif
+    /* both archs parameters */
+    // localparams for resync counter
     localparam CYCLE_MODE = 0;
     localparam PACKET_MODE = 1;
-
-    // parameters for irreport and irdepth
-    // ask if they make sense
+    // localparams for irreport and irdepth
     localparam CALL_COUNTER_SIZE = '0;
     localparam RETURN_STACK_SIZE = '0;
+    // localparams for branch map - defined by spec
+    localparam BRANCH_MAP_LEN = 31;
+    localparam BRANCH_COUNT_LEN = 5;
+    // localparam for configuration parameter
+    
 
-    // parameter for branch map - defined by spec
-    localparam BRANCH_MAP_LEN = 30;
-    localparam BRANCH_COUNT_LEN = 4;
 
 // packet types
 typedef enum logic[1:0] { 

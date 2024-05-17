@@ -24,12 +24,12 @@ module trdb_packet_emitter
 
     // lc (last cycle) signals
     input logic [CAUSE_LEN-1:0]         lc_cause_i,
-    input logic [TVAL_LEN-1:0]          lc_tval_i,
+    input logic [XLEN-1:0]              lc_tval_i,
     input logic                         lc_interrupt_i;
 
     // tc (this cycle) signals
     input logic [CAUSE_LEN-1:0]         tc_cause_i,
-    input logic [TVAL_LEN-1:0]          tc_tval_i,
+    input logic [XLEN-1:0]              tc_tval_i,
     input logic                         tc_interrupt_i;
 
     // nc (next cycle) signals
@@ -62,21 +62,11 @@ module trdb_packet_emitter
     input logic                         ienable_i, // trace encoder enabled
     input logic                         encoder_mode_i, // only branch trace supported (value==0)
     input qual_status_e                 qual_status_i,
-
-    /*  used for ioptions value
-        determine if a certain mode is enabled  */
-    input logic                         delta_address_i, // mandatory
-    //input logic full_address_i, // non mandatory
-    //input logic implicit_exception_i, // non mandatory
-    //input logic sijump_i, // non mandatory
-    //input logic implicit_return_i, // non mandatory
-    //input logic branch_prediction_i, // non mandatory
-    //input logic jump_target_cache_i, // non mandatory
-    
+    input ioptions_e                    ioptions_i,
     // about DATA trace, in stand-by at the moment
-    //input logic denable_i, // DATA trace enabled, if supported
-    //input logic dloss_i, // one or more DATA trace packets lost, if supported
-    //input logic [:0] doptions_i, // it's like ioptions, but for DATA trace
+    //input logic                         denable_i, // DATA trace enabled, if supported
+    //input logic                         dloss_i, // one or more DATA trace packets lost, if supported
+    //input logic [:0]                    doptions_i, // it's like ioptions, but for DATA trace
 
 
     // format 2 specific signals
@@ -122,7 +112,6 @@ module trdb_packet_emitter
 );
     
     // internal signals
-    //TODO: check signals length
     logic                               branch;
     logic [XLEN-1:0]                    address;
     logic [CAUSE_LEN-1:0]               ecause;
@@ -239,30 +228,13 @@ module trdb_packet_emitter
                 end
                 
                 SF_SUPPORT: begin // subformat 3
-                    // computing ioptions mode
-                    if(delta_address_i) begin
-                        ioptions = DELTA_ADDRESS;
-                    end /*else if(full_address_i) begin // non mandatory
-                        ioptions = FULL_ADDRESS;
-                    end else if(implicit_exception_i) begin
-                        ioptions = IMPLICIT_EXCEPTION;
-                    end else if(sijump_i) begin
-                        ioptions = SIJUMP;
-                    end else if(implicit_return_i) begin
-                        ioptions = IMPLICIT_RETURN;
-                    end else if(branch_prediction_i) begin
-                        ioptions = BRANCH_PREDICTION;
-                    end else if(jump_target_cache_i) begin
-                        ioptions = JUMP_TARGET_CACHE;
-                    end*/
-
                     packet_payload_o = {
                         F_SYNC,
                         SF_SUPPORT,
                         ienable_i,
                         encoder_mode_i,
                         qual_status_i,
-                        ioptions/*,
+                        ioptions_i/*,
                         denable_i,
                         dloss_i,
                         doptions_i*/

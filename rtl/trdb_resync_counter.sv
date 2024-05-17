@@ -13,10 +13,10 @@ threshold and it remains to 1 until it receives a reset signal.
 
 import trdb_pkg::*;
 
-module trdb_resync_counter
-#(  parameter MODE = CYCLE_MODE, // counts cycles as default
-    parameter MAX_VALUE = 2'hFFFF ) // default max value, can be personalized
-    (
+module trdb_resync_counter #(
+    parameter MODE = CYCLE_MODE, // counts cycles as default
+    parameter MAX_VALUE = 2'hFFFF, // default max value, can be personalized
+    ) (
     input logic clk_i,
     input logic rst_ni,
 
@@ -32,11 +32,11 @@ module trdb_resync_counter
 
     logic [COUNTER_LEN-1:0] counter_q;
     logic [COUNTER_LEN-1:0] counter_d;
-    logic enabled_d, enabled_q;  // operates the counter
-    logic count_enabled;
-    logic gt_resync_max_d, gt_resync_max_q;
-    logic packet_count_enabled;
-    logic cycle_count_enabled;
+    logic                   enabled_d, enabled_q;  // operates the counter
+    logic                   count_enabled;
+    logic                   gt_resync_max_d, gt_resync_max_q;
+    logic                   packet_count_enabled;
+    logic                   cycle_count_enabled;
 
 
     assign count_enabled = trace_enabled_i && enabled_q;

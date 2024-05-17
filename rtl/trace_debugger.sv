@@ -20,28 +20,26 @@ module trace_debugger import trdb_pkg::*;
     - instr address
     */
     // mandatory inputs
-    input logic                     inst_valid_i, // inst_valid_o
-    input logic                     iretired_i, // core_events_o.retired_i 
-    input logic                     exception_i, // exception
-    input logic                     interrupt_i, // cause_irq_q - used with the previous one to discriminate interrupt from exception
-    input logic [CAUSE_LEN-1:0]     cause_i, // cause_q
-    input logic [TVEC_LEN-1:0]      tvec_i, // tvec_q, contains trap handler address
-    input logic [TVAL_LEN-1:0]      tval_i, // not implemented in snitch, mandatory according to the spec
-    input logic [PRIV_LEN-1:0]      priv_lvl_i, // priv_lvl_q
-    input logic [INST_LEN-1:0]      inst_data_i, // inst_data
+    input logic                 inst_valid_i, // inst_valid_o
+    input logic                 iretired_i, // core_events_o.retired_i 
+    input logic                 exception_i, // exception
+    input logic                 interrupt_i, // cause_irq_q - used with the previous one to discriminate interrupt from exception
+    input logic [CAUSE_LEN-1:0] cause_i, // cause_q
+    input logic [XLEN-1:2]      tvec_i, // tvec_q, contains trap handler address
+    input logic [XLEN-1:0]      tval_i, // not implemented in snitch, mandatory according to the spec
+    input logic [PRIV_LEN-1:0]  priv_lvl_i, // priv_lvl_q
+    input logic [INST_LEN-1:0]  inst_data_i, // inst_data
     //input logic                     compressed, // to discriminate compressed instructions from the others - in case the CPU supports C extension
-    input logic [PC_LEN-1:0]        pc_i, //pc_q - instruction address
-    input logic [EPC_LEN-1:0]       epc_i, // epc_q, required for format 3 subformat 1
+    input logic [XLEN-1:0]      pc_i, //pc_q - instruction address
+    input logic [XLEN-1:0]      epc_i, // epc_q, required for format 3 subformat 1
     //input logic [TRIGGER_LEN-1:0]   trigger_i, // must be supported CPU side
-    //input logic [CTYPE_LEN-1:0]     ctype_i, // according to the spec it's 1 or 2 bit wide. Used 2 for future compatibility
+    //input logic [CTYPE_LEN-1:0]     ctype_i, // spec says it's 1 or 2 bit wide
 
     // outputs
     // info needed for the encapsulator
     output logic [PTYPE_LEN-1:0]    packet_type_o,
     output logic [P_LEN-1:0]        packet_length_o, // in bytes
     output logic [PAYLOAD_LEN-1:0]  packet_payload_o
-
-    // TODO: add constants to trdb_pkg file
 );
 
     /* signals for management */
@@ -120,20 +118,20 @@ module trace_debugger import trdb_pkg::*;
     logic [CAUSE_LEN-1:0]           cause0_d, cause0_q;
     logic [CAUSE_LEN-1:0]           cause1_d, cause1_q;
     logic [CAUSE_LEN-1:0]           cause2_d, cause2_q;
-    logic [TVEC_LEN-1:0]            tvec0_d, tvec0_q;
-    logic [TVEC_LEN-1:0]            tvec1_d, tvec1_q;
-    logic [TVAL_LEN-1:0]            tval0_d, tval0_q;
-    logic [TVAL_LEN-1:0]            tval1_d, tval1_q;
-    logic [TVAL_LEN-1:0]            tval2_d, tval2_q;
+    logic [XLEN-1:0]            tvec0_d, tvec0_q;
+    logic [XLEN-1:0]            tvec1_d, tvec1_q;
+    logic [XLEN-1:0]            tval0_d, tval0_q;
+    logic [XLEN-1:0]            tval1_d, tval1_q;
+    logic [XLEN-1:0]            tval2_d, tval2_q;
     logic [PRIV_LEN-1:0]            priv_lvl0_d, priv_lvl0_q;
     logic [PRIV_LEN-1:0]            priv_lvl1_d, priv_lvl1_q;
     logic [INST_LEN-1:0]            inst_data0_d, inst_data0_q;
     logic [INST_LEN-1:0]            inst_data1_d, inst_data1_q;
-    logic [PC_LEN-1:0]              iaddr0_d, iaddr0_q;
-    logic [PC_LEN-1:0]              iaddr1_d, iaddr1_q;
-    logic [EPC_LEN-1:0]             epc0_d, epc0_q;
-    logic [EPC_LEN-1:0]             epc1_d, epc1_q;
-    logic [EPC_LEN-1:0]             epc2_d, epc2_q;
+    logic [XLEN-1:0]              iaddr0_d, iaddr0_q;
+    logic [XLEN-1:0]              iaddr1_d, iaddr1_q;
+    logic [XLEN-1:0]             epc0_d, epc0_q;
+    logic [XLEN-1:0]             epc1_d, epc1_q;
+    logic [XLEN-1:0]             epc2_d, epc2_q;
     
     /* last cycle - temporary classification*/
     logic                           updiscon0_d, updiscon0_q;
@@ -157,7 +155,7 @@ module trace_debugger import trdb_pkg::*;
     logic                           enc_enabled_d, enc_enabled_q;
     logic                           enc_disabled_d, enc_disabled_q;
     //logic                           packets_lost_d, packets_lost_q; // non mandatory
-    logic [MODES-1:0]               enc_config_d, enc_config_q;
+    logic ioptions_e                enc_config_d, enc_config_q;
     logic                           enc_config_change_d, enc_config_change_q;
     logic                           branch_d, branch_q;
     logic                           branch_taken_d, branch_taken_q;
@@ -372,13 +370,7 @@ module trace_debugger import trdb_pkg::*;
         .ienable_i(trace_enable),
         .encoder_mode_i(encoder_mode),
         .qual_status_i(qual_status),
-        .delta_address_i(delta_address),
-        //.full_address_i(), // non mandatory
-        //.implicit_exception_i(), // non mandatory
-        //.sijump_i(), // non mandatory
-        //.implicit_return_i(), // non mandatory
-        //.branch_prediction_i(), // non mandatory
-        //.jump_target_cache_i(), // non mandatory
+        .ioptions_i(enc_config_q),
         //.denable_i(), // stand-by
         //.dloss_i(), //stand-by
         //.notify_i(), // non mandatory

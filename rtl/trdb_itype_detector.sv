@@ -14,8 +14,8 @@ module trdb_itype_detector
     input logic             valid_i, // TODO: is it really necessary?
     input logic [XLEN-1:0]  nc_inst_data_i,
     input logic             tc_compressed_i,
-    input logic [PC_LEN:0]  tc_iaddr_i, // nc
-    input logic [PC_LEN:0]  nc_iaddr_i, // before nc - theoretically input 
+    input logic [XLEN-1:0]  tc_iaddr_i, // nc
+    input logic [XLEN-1:0]  nc_iaddr_i, // before nc - theoretically input 
     //input logic             implicit_return_i, // non mandatory
     input logic             nc_exception_i,
     // outputs

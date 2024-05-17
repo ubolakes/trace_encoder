@@ -33,7 +33,7 @@ module trdb_reg
     output logic implicit_return_o,
     output logic branch_prediction_o,
     output logic jump_target_cache_o,*/
-    output logic [MODES:0] configuration_o, //TODO: add MODES to pkg
+    output ioptions_e configuration_o
 );
     // hardwired to 0 signals - not yet implemented
     logic full_address;
@@ -53,10 +53,10 @@ module trdb_reg
     assign implicit_return = '0;
     assign branch_prediction = '0;
     assign jump_target_cache = '0;
-    assign configuration_o = {delta_address_o, full_address, implicit_address, sijump, implicit_return, branch_prediction, jump_target_cache};
+    assign configuration_o = DELTA_ADDRESS; // so far only this supported
     
     assign trace_enable_d = trace_req_off_i ? 0 : 1;
-    assign trace_enable_d = trace_req_on_i ? 1 : 0;
+    assign trace_enable_d = trace_req_on_i  ? 1 : 0;
     assign trace_enable_o = trace_enable_q;
 
     assign nocontext_o = '1;
