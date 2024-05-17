@@ -27,9 +27,6 @@ package trdb_pkg;
     // localparams for branch map - defined by spec
     localparam BRANCH_MAP_LEN = 31;
     localparam BRANCH_COUNT_LEN = 5;
-    // localparam for configuration parameter
-    
-
 
 // packet types
 typedef enum logic[1:0] { 
