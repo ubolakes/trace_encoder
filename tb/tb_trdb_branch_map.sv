@@ -15,16 +15,16 @@ module tb_trdb_branch_map();
     logic flush_i;
 
     // outputs
-    logic [:0] map_o;
-    logic [:0] branches_o;
-    logic is_full_o;
-    logic is_empty_o;
+    logic [30:0]    map_o;
+    logic [4:0]     branches_o;
+    logic           is_full_o;
+    logic           is_empty_o;
 
     // testing only outputs
-    logic [:0]  expected_map;
-    logic [:0]  expected_branches;
-    logic       expected_is_full;
-    logic       expected_is_empty;
+    logic [30:0]    expected_map;
+    logic [4:0]     expected_branches;
+    logic           expected_is_full;
+    logic           expected_is_empty;
 
     // iteration variable
     logic [31:0] i;
@@ -42,11 +42,11 @@ module tb_trdb_branch_map();
         .is_empty_o(is_empty_o)
     );
 
-    logic [:0] test_vector[1000:0];
+    logic [41:0] test_vector[1000:0];
     //    length of line   # of lines
 
     initial begin // reading test vector
-        $readmemb("<filename containing testvectors>", test_vector);
+        $readmemb("testbenchVector2", test_vector);
         i = 0;
         reset = 1;  // set == 1 -> no reset each cycle
                     // set == 0 -> reset each cycle

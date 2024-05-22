@@ -18,12 +18,11 @@ module trdb_branch_map
     input logic clk_i,
     input logic rst_ni,
 
-    input logic valid_i, // == tc_is_branch && trace_valid && tc_qualified
+    input logic valid_i, // == nc_is_branch && trace_valid && nc_qualified
     input logic branch_taken_i,
     input logic flush_i,
-
     //input logic branch_taken_prediction_i, // non mandatory
-
+    
     output logic [BRANCH_MAP_LEN-1:0]   map_o, // array of branch taken and not 
     output logic [BRANCH_COUNT_LEN-1:0] branches_o, // number of branches stored, up to 31
     //output logic [:0] pbc_o, // non mandatory - branch prediction mode
