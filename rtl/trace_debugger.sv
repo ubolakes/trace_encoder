@@ -74,6 +74,7 @@ module trace_debugger import trdb_pkg::*;
     logic                           compressed;
     // not classified
     logic                           nc_branch_map_empty;
+    logic                           clk_gated;
 
     // we have three phases, called last cycle (lc), this cycle (tc) and next
     // cycle (nc), based on which we make decision whether we need to emit a
@@ -261,7 +262,8 @@ module trace_debugger import trdb_pkg::*;
         .notime_o         (notime),
         .encoder_mode_o   (encoder_mode),
         .delta_address_o  (delta_address),
-        .configuration_o  (enc_config_d)
+        .configuration_o  (enc_config_d),
+        .clock_gated_o    (clk_gated)
     );
 
     /* FILTER */
@@ -275,7 +277,7 @@ module trace_debugger import trdb_pkg::*;
     /* PRIORITY */
     // TODO: recheck for correctness
     trdb_priority i_trdb_priority(
-        .clk_i                    (),
+        .clk_i                    (clk_gated),
         .rst_ni                   (rst_ni),
         .valid_i                  (inst_valid1_q),
         .lc_exception_i           (exception2_q),
@@ -326,7 +328,7 @@ module trace_debugger import trdb_pkg::*;
     /* BRANCH MAP */
     // TODO: recheck for correctness
     trdb_branch_map i_trdb_branch_map(
-        .clk_i         (),
+        .clk_i         (clk_gated),
         .rst_ni        (rst_ni),
         .valid_i       (),
         .branch_taken_i(branch_taken_d),
@@ -343,7 +345,7 @@ module trace_debugger import trdb_pkg::*;
     /* PACKET EMITTER */
     // TODO: recheck for correctness
     trdb_packet_emitter i_trdb_packet_emitter(
-        .clk_i                    (),
+        .clk_i                    (clk_gated),
         .rst_ni                   (rst_ni),
         .valid_i                  (packet_valid),
         .packet_format_i          (packet_format),
@@ -388,7 +390,7 @@ module trace_debugger import trdb_pkg::*;
     /* RESYNC COUNTER */
     // TODO: recheck for correctness
     trdb_resync_counter i_trdb_resync_counter( // for testing we keep the def settings
-        .clk_i           (),
+        .clk_i           (clk_gated),
         .rst_ni          (rst_ni),
         .trace_enabled_i (trace_enable),
         .packet_emitted_i(packet_emitted),
@@ -399,7 +401,7 @@ module trace_debugger import trdb_pkg::*;
 
     /* INST TYPE DETECTOR */
     trdb_itype_detector i_trdb_itype_detector(
-        .valid_i          (),
+        .valid_i          (clk_gated),
         .nc_inst_data_i   (inst_data0_q),
         .tc_compressed_i  (compressed), // not supported on snitch
         .tc_iaddr_i       (iaddr1_q),

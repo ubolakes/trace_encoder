@@ -33,7 +33,8 @@ module trdb_reg
     output logic implicit_return_o,
     output logic branch_prediction_o,
     output logic jump_target_cache_o,*/
-    output ioptions_e configuration_o
+    output ioptions_e configuration_o,
+    output logic clk_gated_o
 );
     // hardwired to 0 signals - not yet implemented
     logic full_address;
@@ -44,6 +45,8 @@ module trdb_reg
     logic jump_target_cache;
     // FFs I/Os
     logic trace_enable_d, trace_enable_q;
+
+    logic clk_gated;
 
     // assignment
     assign delta_address_o = '1;
@@ -63,6 +66,16 @@ module trdb_reg
     assign notime_o = '1;
     assign encoder_mode_o = '0;
     assign trace_activated_o = '1;
+
+    assign clk_gated_o = clk_gated;
+    assign enabled = '1;
+
+    // clock gating module
+    trdb_clock_gating i_trdb_clock_gating(
+        .clk_i    (clk_i),
+        .en_i     (trace_activated_o),
+        .clk_o    (clk_gated)
+    )
 
     always_ff @(posedge clk_i, negedge rst_ni) begin
         if(~rst_ni) begin
