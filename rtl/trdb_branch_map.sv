@@ -13,6 +13,8 @@ When flush_i signal is asserted, the branch map is
 cleaned.
 */
 
+import trdb_pkg::*;
+
 module trdb_branch_map
 (
     input logic clk_i,
@@ -36,39 +38,39 @@ module trdb_branch_map
     logic                               flush_d, flush_q;
 
     assign map_o = map_d;
-    assign branches_o = branchcnt_d;
-    assign is_full_o = (branchcnt_d == 31);
-    assign is_empty_o = (branchcnt_d == 0);
+    assign branches_o = branch_cnt_d;
+    assign is_full_o = (branch_cnt_d == 31);
+    assign is_empty_o = (branch_cnt_d == 0);
     assign flush_d = flush_i;
 
     always_ff @(posedge clk_i, negedge rst_ni) begin
         if(~rst_ni) begin
             map_q <= '0;
-            branchcnt_q <= '0;
+            branch_cnt_q <= '0;
             flush_q <= '0;
         end else begin
             map_q <= map_d;
-            branchcnt_q <= branchcnt_d;
+            branch_cnt_q <= branch_cnt_d;
             flush_q <= flush_d;
         end
     end
 
     always_comb begin
         map_d       = map_q;
-        branchcnt_d = branchcnt_q;
+        branch_cnt_d = branch_cnt_q;
         // flush w/out branch in the same cycle
         if(flush_q) begin
             map_d       = '0;
-            branchcnt_d = '0;
+            branch_cnt_d = '0;
         end
         // flush w/branch in the same cycle
         if(valid_i) begin
             if(flush_q) begin
-                map_d[0]    = ~branch_taken_i; // adds branch to map
-                branchcnt_d = 5'b1;
+                map_d[0] = ~branch_taken_i; // adds branch to map
+                branch_cnt_d = 5'b1;
             end else begin
-                map_d[branchcnt_q] = ~branch_taken_i;
-                branchcnt_d        = branchcnt_q + 1;
+                map_d[branch_cnt_q] = ~branch_taken_i;
+                branch_cnt_d        = branch_cnt_q + 1;
             end
         end
     end

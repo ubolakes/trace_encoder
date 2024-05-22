@@ -42,7 +42,7 @@ module tb_trdb_branch_map();
         .is_empty_o(is_empty_o)
     );
 
-    logic [41:0] test_vector[1000:0];
+    logic [40:0] test_vector[1000:0];
     //    length of line   # of lines
 
     initial begin // reading test vector
@@ -53,8 +53,14 @@ module tb_trdb_branch_map();
     end
 
     always @(posedge clk) begin // on posedge we get expected output
-        {valid_i, branch_taken_i, flush_i, expected_map, expected_branches, expected_is_full,
-        expected_is_empty} = test_vector[i]; #10; 
+        {valid_i,
+        branch_taken_i,
+        flush_i,
+        expected_map,
+        expected_branches,
+        expected_is_full,
+        expected_is_empty
+        } = test_vector[i]; #10; 
     end
 
     always @(negedge clk) begin// on negedge we compare the expected result with the actual one
@@ -78,7 +84,10 @@ module tb_trdb_branch_map();
         i = i + 1;
     end
 
-
+    always begin
+        clk <= 1; #5;
+        clk <= 0; #5;
+    end
 
 
 endmodule
