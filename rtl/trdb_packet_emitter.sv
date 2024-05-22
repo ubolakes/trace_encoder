@@ -47,7 +47,7 @@ module trdb_packet_emitter
     input logic [PRIV_LEN-1:0]          priv_i,
     //input logic [:0]                    time_i,    // optional
     //input logic [:0]                    context_i, // optional
-    input logic [XLEN-1:0]              iaddr_i,
+    input logic [XLEN-1:0]              tc_iaddr_i,
 
     // format 3 subformat 1 specific signals
     input logic                         lc_tc_mux_i,
@@ -59,7 +59,7 @@ module trdb_packet_emitter
     input logic [XLEN-1:0]              lc_epc_i,
     
     // format 3 subformat 3 specific signals
-    input logic                         ienable_i, // trace encoder enabled
+    input logic                         tc_ienable_i, // trace encoder enabled
     input logic                         encoder_mode_i, // only branch trace supported (value==0)
     input qual_status_e                 qual_status_i,
     input ioptions_e                    ioptions_i,
@@ -141,7 +141,7 @@ module trdb_packet_emitter
             latest_addr_q <= '0;
         end else begin
             if(update_latest_address) begin
-                latest_addr_q <= iaddr_i;
+                latest_addr_q <= tc_iaddr_i;
             end
         end
     end
@@ -179,7 +179,7 @@ module trdb_packet_emitter
                             F_START,
                             branch,
                             priv_i,
-                            iaddr_i
+                            tc_iaddr_i
                         };
                         payload_length_o = $bits(packet_payload_o)/8;
                     end
@@ -231,7 +231,7 @@ module trdb_packet_emitter
                     packet_payload_o = {
                         F_SYNC,
                         SF_SUPPORT,
-                        ienable_i,
+                        tc_ienable_i,
                         encoder_mode_i,
                         qual_status_i,
                         ioptions_i/*,
@@ -253,7 +253,7 @@ module trdb_packet_emitter
                 // requires trigger unit in CPU
                 /*
                 if(notify_i) begin // request from trigger unit
-                    notify = !iaddr_i[XLEN-1];
+                    notify = !tc_iaddr_i[XLEN-1];
                     updiscon = notify;
                     irreport = updsicon;
                     irdepth = irdepth_i;
@@ -261,19 +261,19 @@ module trdb_packet_emitter
 
                 // case of an updiscon
                 if(lc_updiscon_i) begin
-                    notify = iaddr_i[XLEN-1];
+                    notify = tc_iaddr_i[XLEN-1];
                     updiscon = !notify;
                     irreport = updiscon;
                     irdepth = {2**CALL_COUNTER_SIZE{updiscon}};
                 /* non mandatory
                 end else if(implicit_mode_i && irreport_i) begin // request for implicit return mode
-                    notify = iaddr_i[XLEN-1];
+                    notify = tc_iaddr_i[XLEN-1];
                     updiscon = notify;
                     irreport = !updiscon;
                     irdepth = irdepth_i;
                 */
                 end else begin //other cases
-                    notify = iaddr_i[XLEN-1];
+                    notify = tc_iaddr_i[XLEN-1];
                     updiscon = notify;
                     irreport = updiscon;
                     irdepth = {2**CALL_COUNTER_SIZE{updiscon}};
@@ -281,7 +281,7 @@ module trdb_packet_emitter
 
                 packet_payload_o = {
                     F_ADDR_ONLY,
-                    iaddr_i,
+                    tc_iaddr_i,
                     notify,
                     updiscon,
                     irreport,
@@ -311,7 +311,7 @@ module trdb_packet_emitter
                 // requires trigger unit in CPU
                 /*
                 if(notify_i) begin // request from trigger unit
-                    notify = !iaddr_i[XLEN-1];
+                    notify = !tc_iaddr_i[XLEN-1];
                     updiscon = notify;
                     irreport = updsicon;
                     irdepth = irdepth_i;
@@ -319,26 +319,26 @@ module trdb_packet_emitter
 
                 // case of an updiscon
                 if(lc_updiscon_i) begin
-                    notify = iaddr_i[XLEN-1];
+                    notify = tc_iaddr_i[XLEN-1];
                     updiscon = !notify;
                     irreport = updiscon;
                     irdepth = {2**CALL_COUNTER_SIZE{updiscon}};
                 /* non mandatory
                 end else if(implicit_return_i && irreport_i) begin // request for implicit return mode
-                    notify = iaddr_i[XLEN-1];
+                    notify = tc_iaddr_i[XLEN-1];
                     updiscon = notify;
                     irreport = !updiscon;
                     irdepth = irdepth_i;
                 */
                 end else begin // other cases
-                    notify = iaddr_i[XLEN-1];
+                    notify = tc_iaddr_i[XLEN-1];
                     updiscon = notify;
                     irreport = updiscon;
                     irdepth = {2**CALL_COUNTER_SIZE{updiscon}};
                 end
 
                 // computing differential address
-                diff_addr = iaddr_i - latest_addr_q;
+                diff_addr = tc_iaddr_i - latest_addr_q;
 
                 if(branches_i < '31) begin // branch map not full - address
                     packet_payload_o = {
@@ -369,12 +369,12 @@ module trdb_packet_emitter
                 // requires trigger unit in CPU
                 /*
                 if(notify_i) begin // request from trigger unit
-                    notify = !iaddr_i[XLEN-1];
+                    notify = !tc_iaddr_i[XLEN-1];
                     updiscon = notify;
                     irreport = updsicon;
                     irdepth = irdepth_i;
                 end else begin
-                notify = iaddr_i[XLEN-1];
+                notify = tc_iaddr_i[XLEN-1];
                 updiscon = notify;
                 irreport = updiscon;
                 irdepth = {2**CALL_COUNTER_SIZE{updiscon}};
