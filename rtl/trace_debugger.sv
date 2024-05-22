@@ -330,7 +330,7 @@ module trace_debugger import trdb_pkg::*;
     trdb_branch_map i_trdb_branch_map(
         .clk_i         (clk_gated),
         .rst_ni        (rst_ni),
-        .valid_i       (),
+        .valid_i       (branch_d && trace_valid && qualified0_d),
         .branch_taken_i(branch_taken_d),
         .flush_i       (nc_branch_map_flush),
         //.branch_taken_prediction_i(), // non mandatory
