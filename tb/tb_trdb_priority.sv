@@ -87,7 +87,7 @@ module tb_trdb_priority();
         .qual_status_o(qual_status_o)
     );
 
-    logic [34:0] test_vector[1000:0];
+    logic [30:0] test_vector[1000:0];
     //     length of line    # of lines
     
     initial begin // reading test vector
@@ -98,13 +98,35 @@ module tb_trdb_priority();
     end
     
     always @(posedge clk) begin // on posedge we get expected output
-        {valid_i, lc_exception_i, lc_updiscon_i, tc_qualified_i, tc_exception_i, tc_retired_i,
-        tc_first_qualified_i, tc_privchange_i, tc_gt_max_resync_i, tc_et_max_resync_i, 
-        tc_branch_map_empty_i, tc_branch_map_full_i, tc_enc_enabled_i, tc_enc_disabled_i,
-        tc_opmode_change_i, lc_final_qualified_i, nc_exception_i, nc_privchange_i,
-        nc_branch_map_empty_i, nc_qualified_i, nc_retired_i, expected_valid, expected_format,
-        expected_subformat, expected_thaddr, expected_lc_tc_mux, expected_resync_timer_rst,
-        expected_qual_status} = test_vector[i]; #10;
+        {valid_i,
+        lc_exception_i,
+        lc_updiscon_i,
+        tc_qualified_i,
+        tc_exception_i,
+        tc_retired_i,
+        tc_first_qualified_i,
+        tc_privchange_i,
+        tc_gt_max_resync_i,
+        tc_et_max_resync_i, 
+        tc_branch_map_empty_i,
+        tc_branch_map_full_i,
+        tc_enc_enabled_i,
+        tc_enc_disabled_i,
+        tc_opmode_change_i,
+        lc_final_qualified_i,
+        nc_exception_i,
+        nc_privchange_i,
+        nc_branch_map_empty_i,
+        nc_qualified_i,
+        nc_retired_i,
+        expected_valid,
+        expected_format,
+        expected_subformat,
+        expected_thaddr,
+        expected_lc_tc_mux,
+        expected_resync_timer_rst,
+        expected_qual_status
+        } = test_vector[i]; #10;
     end
 
     always @(negedge clk) begin// on negedge we compare the expected result with the actual one
