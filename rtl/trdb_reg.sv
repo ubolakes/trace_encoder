@@ -47,6 +47,7 @@ module trdb_reg
     logic trace_enable_d, trace_enable_q;
 
     logic clk_gated;
+    logic test_enabled;
 
     // assignment
     assign delta_address_o = '1;
@@ -68,12 +69,13 @@ module trdb_reg
     assign trace_activated_o = '1;
 
     assign clk_gated_o = clk_gated;
-    assign enabled = '1;
+    assign test_enabled = '0;
 
     // clock gating module
-    trdb_clock_gating i_trdb_clock_gating(
+    pulp_clock_gating i_pulp_clock_gating(
         .clk_i    (clk_i),
         .en_i     (trace_activated_o),
+        .test_en_i(test_enabled),
         .clk_o    (clk_gated)
     )
 
