@@ -251,163 +251,163 @@ module trace_debugger import trdb_pkg::*;
     /* MODULES INSTANTIATION */
     /* MAPPED REGISTERS */
     trdb_reg i_trdb_reg(
-        .clk_i(),
-        .rst_ni(rst_ni),
-        .trace_req_off_i(trace_req_deactivate), // from filter
-        .trace_req_on_i(trigger_trace_on),      // from trigger unit
-        .trace_enable_o(trace_enable),
+        .clk_i            (),
+        .rst_ni           (rst_ni),
+        .trace_req_off_i  (trace_req_deactivate), // from filter
+        .trace_req_on_i   (trigger_trace_on),      // from trigger unit
+        .trace_enable_o   (trace_enable),
         .trace_activated_o(trace_activated),
-        .nocontext_o(nocontext),
-        .notime_o(notime),
-        .encoder_mode_o(encoder_mode),
-        .delta_address_o(delta_address),
-        .configuration_o(enc_config_d)
+        .nocontext_o      (nocontext),
+        .notime_o         (notime),
+        .encoder_mode_o   (encoder_mode),
+        .delta_address_o  (delta_address),
+        .configuration_o  (enc_config_d)
     );
 
     /* FILTER */
     trdb_filter i_trdb_filter(
-        .trace_enable_i(trace_enable),
-        .trigger_trace_off_i(trigger_trace_off),
+        .trace_enable_i        (trace_enable),
+        .trigger_trace_off_i   (trigger_trace_off),
         .trace_req_deactivate_o(trace_req_deactivate),
-        .nc_trace_qualified_o(qualified0_d)
+        .nc_trace_qualified_o  (qualified0_d)
     );
 
     /* PRIORITY */
     // TODO: recheck for correctness
     trdb_priority i_trdb_priority(
-        .clk_i(),
-        .rst_ni(rst_ni),
-        .valid_i(inst_valid1_q),
-        .lc_exception_i(exception2_q),
-        .lc_updiscon_i(updiscon1_q),
-        .tc_qualified_i(qualified0_q),
-        .tc_exception_i(exception1_q),
-        .tc_retired_i(iretired1_q),
-        .tc_first_qualified_i(first_qualified),
-        .tc_privchange_i(privchange_q),
+        .clk_i                    (),
+        .rst_ni                   (rst_ni),
+        .valid_i                  (inst_valid1_q),
+        .lc_exception_i           (exception2_q),
+        .lc_updiscon_i            (updiscon1_q),
+        .tc_qualified_i           (qualified0_q),
+        .tc_exception_i           (exception1_q),
+        .tc_retired_i             (iretired1_q),
+        .tc_first_qualified_i     (first_qualified),
+        .tc_privchange_i          (privchange_q),
         //.tc_context_change_i(), // non mandatory
         //.tc_precise_context_report_i(), // requires ctype signal CPU side
         //.tc_context_report_as_disc_i(), // ibidem
         //.tc_imprecise_context_report_i(), // ibidem
-        .tc_gt_max_resync_i(gt_max_resync_q),
-        .tc_et_max_resync_i(et_max_resync_q),
-        .tc_branch_map_empty_i(tc_branch_map_empty),
-        .tc_branch_map_full_i(branch_map_full_q),
+        .tc_gt_max_resync_i       (gt_max_resync_q),
+        .tc_et_max_resync_i       (et_max_resync_q),
+        .tc_branch_map_empty_i    (tc_branch_map_empty),
+        .tc_branch_map_full_i     (branch_map_full_q),
         //.tc_branch_misprediction_i(), // non mandatory
         //.tc_pbc_i(), // non mandatory
-        .tc_enc_enabled_i(enc_enabled_q),
-        .tc_enc_disabled_i(enc_disabled_q),
-        .tc_opmode_change_i(enc_config_change_q),
-        .lc_final_qualified_i(final_qualified_q),
+        .tc_enc_enabled_i         (enc_enabled_q),
+        .tc_enc_disabled_i        (enc_disabled_q),
+        .tc_opmode_change_i       (enc_config_change_q),
+        .lc_final_qualified_i     (final_qualified_q),
         //.tc_packets_lost_i(), // non mandatory
-        .nc_exception_i(exception0_q),
-        .nc_privchange_i(privchange_d),
+        .nc_exception_i           (exception0_q),
+        .nc_privchange_i          (privchange_d),
         //.nc_context_change_i(),
         //.nc_precise_context_report_i(), // requires ctype signal CPU side
         //.nc_context_report_as_disc_i(), // ibidem
-        .nc_branch_map_empty_i(nc_branch_map_empty),
-        .nc_qualified_i(qualified0_d),
-        .nc_retired_i(iretired0_q),
+        .nc_branch_map_empty_i    (nc_branch_map_empty),
+        .nc_qualified_i           (qualified0_d),
+        .nc_retired_i             (iretired0_q),
         //.halted_i(), // non mandatory side band signal
         //.reset_i(), // ibidem
         //.implicit_return_i(), // non mandatory
         //.tc_trigger_req_i(), // non mandatory
         //.notify_o(), // non mandatory, depends on trigger request
-        .valid_o(packet_valid),
-        .packet_format_o(packet_format),
+        .valid_o                  (packet_valid),
+        .packet_format_o          (packet_format),
         .packet_f_sync_subformat_o(packet_f_sync_subformat),
         //.packet_f_opt_ext_subformat_o(), // non mandatory
-        .thaddr_o(thaddr),
-        .lc_tc_mux_o(lc_tc_mux),
-        .resync_timer_rst_o(resync_rst),
-        .qual_status_o(qual_status)
+        .thaddr_o                 (thaddr),
+        .lc_tc_mux_o              (lc_tc_mux),
+        .resync_timer_rst_o       (resync_rst),
+        .qual_status_o            (qual_status)
     );
 
     /* BRANCH MAP */
     // TODO: recheck for correctness
     trdb_branch_map i_trdb_branch_map(
-        .clk_i(),
-        .rst_ni(rst_ni),
-        .valid_i(),
+        .clk_i         (),
+        .rst_ni        (rst_ni),
+        .valid_i       (),
         .branch_taken_i(branch_taken_d),
-        .flush_i(nc_branch_map_flush),
+        .flush_i       (nc_branch_map_flush),
         //.branch_taken_prediction_i(), // non mandatory
-        .map_o(branch_map),
-        .branches_o(branch_count),
+        .map_o         (branch_map),
+        .branches_o    (branch_count),
         //.pbc_o(), // non mandatory - branch prediction mode
         //.misprediction_o(), // non mandatory - ibidem
-        .is_full_o(branch_map_full_d),
-        .is_empty_o(tc_branch_map_empty)
+        .is_full_o     (branch_map_full_d),
+        .is_empty_o    (tc_branch_map_empty)
     );
 
     /* PACKET EMITTER */
     // TODO: recheck for correctness
     trdb_packet_emitter i_trdb_packet_emitter(
-        .clk_i(),
-        .rst_ni(rst_ni),
-        .valid_i(packet_valid),
-        .packet_format_i(packet_format),
+        .clk_i                    (),
+        .rst_ni                   (rst_ni),
+        .valid_i                  (packet_valid),
+        .packet_format_i          (packet_format),
         .packet_f_sync_subformat_i(packet_f_sync_subformat),
         //.packet_f_opt_ext_subformat_i(), // non mandatory
-        .lc_cause_i(cause2_q),
-        .lc_tval_i(tval2_q),
-        .lc_interrupt_i(interrupt2_q),
-        .tc_cause_i(cause1_q),
-        .tc_tval_i(tval1_q),
-        .tc_interrupt_i(interrupt1_q),
-        .nocontext_i(nocontext),
-        .notime_i(notime),
-        .tc_branch_i(branch_q),
-        .tc_branch_taken_i(branch_taken_q),
-        .priv_i(priv_lvl1_q),    // tc -> delay from input
+        .lc_cause_i               (cause2_q),
+        .lc_tval_i                (tval2_q),
+        .lc_interrupt_i           (interrupt2_q),
+        .tc_cause_i               (cause1_q),
+        .tc_tval_i                (tval1_q),
+        .tc_interrupt_i           (interrupt1_q),
+        .nocontext_i              (nocontext),
+        .notime_i                 (notime),
+        .tc_branch_i              (branch_q),
+        .tc_branch_taken_i        (branch_taken_q),
+        .priv_i                   (priv_lvl1_q),    // tc -> delay from input
         //.time_i(), // non mandatory
         //.context_i(), // non mandatory
-        .tc_iaddr_i(iaddr1_q), // tc -> delay from input
-        .lc_tc_mux_i(lc_tc_mux),
-        .thaddr_i(thaddr),
-        .tvec_i(tvec1_q), // tc -> delay from input
-        .lc_epc_i(epc2_q),
-        .tc_ienable_i(trace_enable),
-        .encoder_mode_i(encoder_mode),
-        .qual_status_i(qual_status),
-        .ioptions_i(enc_config_q),
+        .tc_iaddr_i               (iaddr1_q),
+        .lc_tc_mux_i              (lc_tc_mux),
+        .thaddr_i                 (thaddr),
+        .tvec_i                   (tvec1_q), // tc -> delay from input
+        .lc_epc_i                 (epc2_q),
+        .tc_ienable_i             (trace_enable),
+        .encoder_mode_i           (encoder_mode),
+        .qual_status_i            (qual_status),
+        .ioptions_i               (enc_config_q),
         //.denable_i(), // stand-by
         //.dloss_i(), //stand-by
         //.notify_i(), // non mandatory
-        .lc_updiscon_i(updiscon1_q),
+        .lc_updiscon_i            (updiscon1_q),
         //.irreport_i(), // non mandatory
         //.irdepth_i(), // non mandatory
-        .branches_i(branch_count),
-        .branch_map_i(branch_map),
-        .packet_payload_o(packet_payload_o),
-        .payload_length_o(packet_length_o),
-        .packet_valid_o(packet_emitted),
-        .branch_map_flush_o(nc_branch_map_flush)
+        .branches_i               (branch_count),
+        .branch_map_i             (branch_map),
+        .packet_payload_o         (packet_payload_o),
+        .payload_length_o         (packet_length_o),
+        .packet_valid_o           (packet_emitted),
+        .branch_map_flush_o       (nc_branch_map_flush)
     );
 
     /* RESYNC COUNTER */
     // TODO: recheck for correctness
     trdb_resync_counter i_trdb_resync_counter( // for testing we keep the def settings
-        .clk_i(),
-        .rst_ni(rst_ni),
-        .trace_enabled_i(trace_enable),
+        .clk_i           (),
+        .rst_ni          (rst_ni),
+        .trace_enabled_i (trace_enable),
         .packet_emitted_i(packet_emitted),
-        .resync_rst_i(resync_rst),
-        .gt_resync_max_o(gt_max_resync_d),
-        .et_resync_max_o(et_max_resync_d)
+        .resync_rst_i    (resync_rst),
+        .gt_resync_max_o (gt_max_resync_d),
+        .et_resync_max_o (et_max_resync_d)
     );
 
     /* INST TYPE DETECTOR */
     trdb_itype_detector i_trdb_itype_detector(
-        .valid_i(),
-        .nc_inst_data_i(inst_data0_q),
-        .tc_compressed_i(compressed), // not supported on snitch
-        .tc_iaddr_i(iaddr1_q),
-        .nc_iaddr_i(iaddr0_q),
-        .nc_exception_i(exception0_q),
-        .nc_branch_o(branch_d),
+        .valid_i          (),
+        .nc_inst_data_i   (inst_data0_q),
+        .tc_compressed_i  (compressed), // not supported on snitch
+        .tc_iaddr_i       (iaddr1_q),
+        .nc_iaddr_i       (iaddr0_q),
+        .nc_exception_i   (exception0_q),
+        .nc_branch_o      (branch_d),
         .tc_branch_taken_o(branch_taken_d),
-        .nc_updiscon_o(updiscon0_d)
+        .nc_updiscon_o    (updiscon0_d)
     );
 
 
