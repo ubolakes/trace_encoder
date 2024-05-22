@@ -44,7 +44,7 @@ module trdb_packet_emitter
     // format 3 subformat 0 specific signals
     input logic                         tc_branch_i,
     input logic                         tc_branch_taken_i,
-    input logic [PRIV_LEN-1:0]          priv_i,
+    input logic [PRIV_LEN-1:0]          tc_priv_i,
     //input logic [:0]                    time_i,    // optional
     //input logic [:0]                    context_i, // optional
     input logic [XLEN-1:0]              tc_iaddr_i,
@@ -55,7 +55,7 @@ module trdb_packet_emitter
         To discriminate I use a mux to choose between lc or tc */
 
     input logic                         thaddr_i,
-    input logic [XLEN-1:0]              tvec_i, // trap handler address
+    input logic [XLEN-1:0]              tc_tvec_i, // trap handler address
     input logic [XLEN-1:0]              lc_epc_i,
     
     // format 3 subformat 3 specific signals
@@ -129,7 +129,7 @@ module trdb_packet_emitter
 
     // assigning values
     assign branch = ~(tc_branch_i && tc_branch_taken_i);
-    assign address = thaddr_i ? tvec_i : lc_epc_i;
+    assign address = thaddr_i ? tc_tvec_i : lc_epc_i;
     assign ecause = lc_tc_mux_i ? tc_cause_i : lc_cause_i;
     assign tval = lc_tc_mux_i ? tc_tval_i : lc_tval_i;
     assign interrupt = lc_tc_mux_i ? tc_interrupt_i : lc_interrupt_i;
@@ -178,7 +178,7 @@ module trdb_packet_emitter
                             F_SYNC,
                             F_START,
                             branch,
-                            priv_i,
+                            tc_priv_i,
                             tc_iaddr_i
                         };
                         payload_length_o = $bits(packet_payload_o)/8;
@@ -198,7 +198,7 @@ module trdb_packet_emitter
                             F_SYNC,
                             SF_TRAP,
                             branch,
-                            priv_i,
+                            tc_priv_i,
                             ecause,
                             interrupt,
                             thaddr_i,
@@ -218,7 +218,7 @@ module trdb_packet_emitter
                         packet_payload_o = {
                             F_SYNC,
                             SF_CONTEXT,
-                            priv_i
+                            tc_priv_i
                         };
                         payload_length_o = $bits(packet_payload_o)/8; //(2 + 2 + PRIV_LEN)/8;
                     end

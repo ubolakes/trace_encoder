@@ -359,13 +359,13 @@ module trace_debugger import trdb_pkg::*;
         .notime_i                 (notime),
         .tc_branch_i              (branch_q),
         .tc_branch_taken_i        (branch_taken_q),
-        .priv_i                   (priv_lvl1_q),    // tc -> delay from input
+        .tc_priv_i                (priv_lvl1_q),
         //.time_i(), // non mandatory
         //.context_i(), // non mandatory
         .tc_iaddr_i               (iaddr1_q),
         .lc_tc_mux_i              (lc_tc_mux),
         .thaddr_i                 (thaddr),
-        .tvec_i                   (tvec1_q), // tc -> delay from input
+        .tc_tvec_i                (tvec1_q),
         .lc_epc_i                 (epc2_q),
         .tc_ienable_i             (trace_enable),
         .encoder_mode_i           (encoder_mode),
