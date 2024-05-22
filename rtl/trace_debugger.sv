@@ -269,7 +269,7 @@ module trace_debugger import trdb_pkg::*;
         .trace_enable_i(trace_enable),
         .trigger_trace_off_i(trigger_trace_off),
         .trace_req_deactivate_o(trace_req_deactivate),
-        .trace_qualified_o(qualified0_d) // considered nc
+        .nc_trace_qualified_o(qualified0_d)
     );
 
     /* PRIORITY */
@@ -362,12 +362,12 @@ module trace_debugger import trdb_pkg::*;
         .priv_i(priv_lvl1_q),    // tc -> delay from input
         //.time_i(), // non mandatory
         //.context_i(), // non mandatory
-        .iaddr_i(iaddr1_q), // tc -> delay from input
+        .tc_iaddr_i(iaddr1_q), // tc -> delay from input
         .lc_tc_mux_i(lc_tc_mux),
         .thaddr_i(thaddr),
         .tvec_i(tvec1_q), // tc -> delay from input
         .lc_epc_i(epc2_q),
-        .ienable_i(trace_enable),
+        .tc_ienable_i(trace_enable),
         .encoder_mode_i(encoder_mode),
         .qual_status_i(qual_status),
         .ioptions_i(enc_config_q),

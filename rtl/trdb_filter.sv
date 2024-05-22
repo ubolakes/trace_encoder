@@ -43,22 +43,22 @@ module trdb_filter
     output logic trace_range_match_o,
     output logic trace_priv_match_o,
     */
-    output logic trace_qualified_o
+    output logic nc_trace_qualified_o
 );
 
     logic trace_activated;
 
     assign trace_req_deactivate_o = trigger_trace_off_i;
-    assign trace_qualified_o = trace_enable_i ? 1 : 0;
+    assign nc_trace_qualified_o = trace_enable_i ? 1 : 0;
 
     /* to be used in case of more complex filtering
     always_comb begin
-        trace_qualified_o = '0;
+        nc_trace_qualified_o = '0;
         // tracing
         if(!apply_filters_i)
-            trace_qualified_o = trace_enable_i;
+            nc_trace_qualified_o = trace_enable_i;
         else
-            trace_qualified_o = trace_enable_i;
+            nc_trace_qualified_o = trace_enable_i;
                                 //&& (trace_range_event_i && ip_in_range) && priv_matching;
     end
     */
