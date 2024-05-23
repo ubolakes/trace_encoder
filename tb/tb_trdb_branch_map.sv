@@ -4,6 +4,8 @@
 
 `timescale 1ns/1ns
 
+import trdb_pkg::*;
+
 module tb_trdb_branch_map();
 
     logic clk;
@@ -15,16 +17,16 @@ module tb_trdb_branch_map();
     logic flush_i;
 
     // outputs
-    logic [30:0]    map_o;
-    logic [4:0]     branches_o;
-    logic           is_full_o;
-    logic           is_empty_o;
+    logic [BRANCH_MAP_LEN-1:0]      map_o;
+    logic [BRANCH_COUNT_LEN-1:0]    branches_o;
+    logic                           is_full_o;
+    logic                           is_empty_o;
 
     // testing only outputs
-    logic [30:0]    expected_map;
-    logic [4:0]     expected_branches;
-    logic           expected_is_full;
-    logic           expected_is_empty;
+    logic [BRANCH_MAP_LEN-1:0]      expected_map;
+    logic [BRANCH_COUNT_LEN-1:0]    expected_branches;
+    logic                           expected_is_full;
+    logic                           expected_is_empty;
 
     // iteration variable
     logic [31:0] i;
@@ -88,6 +90,5 @@ module tb_trdb_branch_map();
         clk <= 1; #5;
         clk <= 0; #5;
     end
-
 
 endmodule

@@ -56,11 +56,11 @@ module trdb_branch_map
     end
 
     always_comb begin
-        map_d       = map_q;
+        map_d = map_q;
         branch_cnt_d = branch_cnt_q;
         // flush w/out branch in the same cycle
         if(flush_q) begin
-            map_d       = '0;
+            map_d = '0;
             branch_cnt_d = '0;
         end
         // flush w/branch in the same cycle
