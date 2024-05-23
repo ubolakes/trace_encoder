@@ -100,15 +100,15 @@ module trdb_packet_emitter
 
         Non mandatory, required support by the encoder.
     */
+    input logic [$clog2(XLEN):0]        keep_bits_i, // required for address compression
 
     // outputs
-    /* this module produces only the packet payload
-    that is the forwarded to the encapsulator that
-    takes care of the type and length.*/
     output logic                        packet_valid_o, // asserted when a packet is generated
     output logic [PAYLOAD_LEN-1:0]      packet_payload_o,
     output logic [P_LEN-1:0]            payload_length_o, // in bytes
     output logic                        branch_map_flush_o, // flushing done after each request
+    // to send back to priority module in order to compress them
+    output logic [XLEN-1:0]             addr_to_compress_o
 );
     
     // internal signals
@@ -134,6 +134,25 @@ module trdb_packet_emitter
     assign tval = lc_tc_mux_i ? tc_tval_i : lc_tval_i;
     assign interrupt = lc_tc_mux_i ? tc_interrupt_i : lc_interrupt_i;
     assign time_and_context = {notime_i, nocontext_i};
+    assign diff_addr = tc_iaddr_i - latest_addr_q;
+
+    always_comb begin : address_to_compress
+        addr_to_compress_o = '0;
+        if (ioptions_i == FULL_ADDRESS &&
+            packet_format_i == F_SYNC &&
+            packet_f_sync_subformat_i == SF_TRAP) begin
+            addr_to_compress_o = address;
+        end else if (packet_format_i == F_SYNC && packet_f_sync_subformat_i == SF_START) begin
+            addr_to_compress_o = tc_iaddr_i;
+        end else if (ioptions_i !== FULL_ADDRESS &&
+                    (packet_format_i == F_ADDR_ONLY ||
+                    packet_format_i == F_DIFF_DELTA ||
+                    (packet_format_i == F_OPT_EXT &&
+                    packet_f_sync_subformat_i == NO_CHANGE))) begin
+            addr_to_compress_o = diff_addr;
+        end
+    
+    end
 
     // register to store the last address emitted in a packet
     always_ff @(posedge clk_i, negedge rst_ni) begin
@@ -152,7 +171,6 @@ module trdb_packet_emitter
         payload_length_o = '0; // in bytes, computed as the length in bit of (type+payload)/8
         packet_payload_o = '0;
         packet_valid_o = '0;
-        diff_addr = '0;
         update_latest_address = '0;
         branch_map_flush_o = '0;
         
@@ -337,8 +355,7 @@ module trdb_packet_emitter
                     irdepth = {2**CALL_COUNTER_SIZE{updiscon}};
                 end
 
-                // computing differential address
-                diff_addr = tc_iaddr_i - latest_addr_q;
+
 
                 if(branches_i < '31) begin // branch map not full - address
                     packet_payload_o = {

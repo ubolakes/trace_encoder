@@ -8,7 +8,7 @@ change this module name to a more appropriate one
 for example "packet identifier" or something similar
 */
 /*
-it orders packet generation request by priority
+it orders packet generation - refer to page 53 of the spec
 */
 
 import trdb_pkg::*;
@@ -23,10 +23,6 @@ module trdb_priority (
     /*  signals for the jump target cache mode - non mandatory */
     //input logic jtc_enabled_i,
     //input logic address_in_cache_i, // communicates if the address is present in cache
-
-    // refer to page 53 of the specs for clarification
-
-    /*TODO: determine width of signals, not all are logic*/
 
     // lc (last cycle) signals
     input logic lc_exception_i,
@@ -81,6 +77,11 @@ module trdb_priority (
     //output logic notify_o,
     // communicates the packet emitter that format 2 packet was requested by trigger unit
 
+    // ports for address compression
+    input logic [XLEN-1:0]                      addr_to_compress_i,
+    output logic [$clog2(XLEN)-1:0]             keep_bits_o,
+
+    // outputs for packet_emitter
     output logic                                valid_o,
     output trdb_format_e                        packet_format_o,
     output trdb_f_sync_subformat_e              packet_f_sync_subformat_o,
@@ -112,6 +113,10 @@ module trdb_priority (
     // next cycle
     logic   nc_exc_only;
     logic   nc_ppccd_br;
+    
+    // signals for compression
+    logic [$clog2(XLEN)-1:0]    addr_zeros, addr_ones;
+    logic [$clog2(XLEN)-1:0]    sign_extendable;
 
 
     // value assignment
@@ -312,6 +317,46 @@ module trdb_priority (
         end
     end
 
+    /* compression logic */
+    /* short explanation on how it works:
+        by using the lzc we determine how many bits we can discard starting from the MSB,
+        this process is done with the normal address (we count 0s) and bitwise not of the
+        signal (we count 1s).
+        Then we decide in which way we can compress more and output the keep_bits signal.
+
+        On the encoder side, it's possible to reconstruct the address: because we don't
+        remove all 0s (or 1s) from the MSB, but we keep one. This way it's possible to 
+        sign extend the compressed address and get back the original address.
+
+        Example 1:
+        address to compress: 0000001100010
+        bits kept:           -----01100010
+
+        Example 2:
+        address to compress: 1111011110110
+        bits kept:           ---1011110110
+
+    */
+    // choosing between removing 1s or 0s
+    assign sign_extendable = addr_zeros > addr_ones ? addr_zeros : addr_ones;
+    // outputting the least sign bits we want to keep
+    assign keep_bits_o = XLEN - sign_extendable + 1;
+
+    // leading zero counters
+    trdb_lzc
+        #(.WIDTH(XLEN),
+          .MODE(1))
+    i_trdb_lzc_full
+        (.in_i(addr_to_compress_i),
+         .cnt_o(addr_zeros),
+         .empty_o());
+    trdb_lzc
+        #(.WIDTH(XLEN),
+          .MODE(1))
+    i_trdb_loc_full
+        (.in_i(~addr_to_compress_i),
+         .cnt_o(addr_ones),
+         .empty_o());
 
 
 endmodule
