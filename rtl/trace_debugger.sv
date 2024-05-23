@@ -81,6 +81,8 @@ module trace_debugger import trdb_pkg::*;
     // packet or not.
     logic                           first_qualified;
     logic                           tc_branch_map_empty;
+    logic [$clog2(XLEN):0]          keep_bits;
+    logic [XLEN-1:0]                addr_to_compress;
     
     /* MANAGING LC, TC, NC SIGNALS */
     /*
@@ -252,7 +254,7 @@ module trace_debugger import trdb_pkg::*;
     /* MODULES INSTANTIATION */
     /* MAPPED REGISTERS */
     trdb_reg i_trdb_reg(
-        .clk_i            (),
+        .clk_i            (clk_i),
         .rst_ni           (rst_ni),
         .trace_req_off_i  (trace_req_deactivate), // from filter
         .trace_req_on_i   (trigger_trace_on),      // from trigger unit
@@ -315,6 +317,8 @@ module trace_debugger import trdb_pkg::*;
         //.implicit_return_i(), // non mandatory
         //.tc_trigger_req_i(), // non mandatory
         //.notify_o(), // non mandatory, depends on trigger request
+        .addr_to_compress_i       (addr_to_compress),
+        .keep_bits_o              (keep_bits),
         .valid_o                  (packet_valid),
         .packet_format_o          (packet_format),
         .packet_f_sync_subformat_o(packet_f_sync_subformat),
@@ -381,10 +385,12 @@ module trace_debugger import trdb_pkg::*;
         //.irdepth_i(), // non mandatory
         .branches_i               (branch_count),
         .branch_map_i             (branch_map),
+        .keep_bits_i              (keep_bits),
         .packet_payload_o         (packet_payload_o),
         .payload_length_o         (packet_length_o),
         .packet_valid_o           (packet_emitted),
-        .branch_map_flush_o       (nc_branch_map_flush)
+        .branch_map_flush_o       (nc_branch_map_flush),
+        .addr_to_compress_o       (addr_to_compress)
     );
 
     /* RESYNC COUNTER */
