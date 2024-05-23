@@ -17,25 +17,25 @@ import trdb_pkg::*;
 
 module trdb_branch_map
 (
-    input logic clk_i,
-    input logic rst_ni,
+    input logic                         clk_i,
+    input logic                         rst_ni,
 
-    input logic valid_i, // == nc_is_branch && trace_valid && nc_qualified
-    input logic branch_taken_i,
-    input logic flush_i,
+    input logic                         valid_i, // == nc_is_branch && trace_valid && nc_qualified
+    input logic                         branch_taken_i,
+    input logic                         flush_i,
     //input logic branch_taken_prediction_i, // non mandatory
     
     output logic [BRANCH_MAP_LEN-1:0]   map_o, // array of branch taken and not 
     output logic [BRANCH_COUNT_LEN-1:0] branches_o, // number of branches stored, up to 31
     //output logic [:0] pbc_o, // non mandatory - branch prediction mode
     //output logic misprediction_o, // non mandatory - ibidem
-    output logic is_full_o,
-    output logic is_empty_o
+    output logic                        is_full_o,
+    output logic                        is_empty_o
 );
 
-    logic [BRANCH_MAP_LEN:0]            map_d, map_q;
-    logic [BRANCH_COUNT_LEN:0]          branch_cnt_d, branch_cnt_q;
-    logic                               flush_d, flush_q;
+    logic [BRANCH_MAP_LEN-1:0]      map_d, map_q;
+    logic [BRANCH_COUNT_LEN-1:0]    branch_cnt_d, branch_cnt_q;
+    logic                           flush_d, flush_q;
 
     assign map_o = map_d;
     assign branches_o = branch_cnt_d;
