@@ -79,7 +79,7 @@ module trdb_priority (
 
     // ports for address compression
     input logic [XLEN-1:0]                      addr_to_compress_i,
-    output logic [$clog2(XLEN)-1:0]             keep_bits_o,
+    output logic [$clog2(XLEN):0]               keep_bits_o,
 
     // outputs for packet_emitter
     output logic                                valid_o,
