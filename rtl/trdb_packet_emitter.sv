@@ -182,87 +182,85 @@ module trdb_packet_emitter
         */
             branch_map_flush_o = '1;
 
+            // setting the packet to emit as valid
+            packet_valid_o = '1;
+
+        /*  packet payload creation: 
+            at the beginning it's put in the payload the common part (i.e. the packet format)
+            then, for each format and subformat it's put the rest of the payload
+        */
+            
+            // setting the packet format - common for all payloads
+            packet_payload_o[1:0] = packet_format_i;
+
             case(packet_format_i)
             F_SYNC: begin // format 3
+                // setting packet subformat - common for all type 3 payloads
+                packet_payload_o[3:2] = packet_f_sync_subformat_i;
+                
+                // setting the rest of payload for each type
                 case(packet_f_sync_subformat_i)
-
                 SF_START: begin // subformat 0
                     // updating latest address sent in a packet
                     update_latest_address = '1;
 
                     case(time_and_context)
                     2'h0: begin
-                        packet_payload_o = {
-                            F_SYNC,
-                            F_START,
+                        packet_payload_o[4+:1+PRIV_LEN+keep_bits_i] = {
                             branch,
                             tc_priv_i,
-                            tc_iaddr_i
+                            tc_iaddr_i[keep_bits_i:0]
                         };
-                        payload_length_o = $bits(packet_payload_o)/8;
+                        payload_length_o = $ceil($bits(packet_payload_o)/8);
                     end
                     /*TODO: other cases*/
                     endcase
-                    packet_valid_o = '1;
                 end
-
                 SF_TRAP: begin // subformat 1
                     // updating latest address sent in a packet
                     update_latest_address = '1;
                     
                     case(time_and_context)
                     2'h0: begin
-                        packet_payload_o = {
-                            F_SYNC,
-                            SF_TRAP,
+                        packet_payload_o[4+:1+PRIV_LEN+CAUSE_LEN+2+keep_bits_i+XLEN] = {
                             branch,
                             tc_priv_i,
                             ecause,
                             interrupt,
-                            thaddr_i,
-                            address,
+                            address[keep_bits_i:0],
                             tval
                         };
-                        payload_length_o = $bits(packet_payload_o)/8;
+                        payload_length_o = $ceil($bits(packet_payload_o)/8);
                     end
                     /*TODO: other cases*/
                     endcase
-                    packet_valid_o = '1;
                 end
-                
                 SF_CONTEXT: begin // subformat 2
                     case(time_and_context)
                     2'h0: begin
-                        packet_payload_o = {
-                            F_SYNC,
-                            SF_CONTEXT,
+                        packet_payload_o[4+:PRIV_LEN] = {
                             tc_priv_i
                         };
-                        payload_length_o = $bits(packet_payload_o)/8; //(2 + 2 + PRIV_LEN)/8;
+                        payload_length_o = $ceil($bits(packet_payload_o)/8);
                     end
                     /*TODO: other cases*/
                     endcase
-                    packet_valid_o = '1;
                 end
-                
                 SF_SUPPORT: begin // subformat 3
-                    packet_payload_o = {
-                        F_SYNC,
-                        SF_SUPPORT,
+                    packet_payload_o[4+:1+1+2+3] = {
                         tc_ienable_i,
                         encoder_mode_i,
                         qual_status_i,
-                        ioptions_i/*,
+                        ioptions_i //,
+                        /* info required for data tracing - in the future
                         denable_i,
                         dloss_i,
                         doptions_i*/
                     };
-                    payload_length_o = $bits(packet_payload_o)/8; //(2 + 2 + 1 + 1 + 2 + $bits(ioptions) /*+ 1 + 1 + doptions length*/)/8;
-                    packet_valid_o = '1;
+                    payload_length_o = $ceil($bits(packet_payload_o)/8);
                 end
                 endcase
             end
-
 
             F_ADDR_ONLY: begin // format 2
                 // updating latest address sent in a packet
@@ -296,20 +294,16 @@ module trdb_packet_emitter
                     irreport = updiscon;
                     irdepth = {2**CALL_COUNTER_SIZE{updiscon}};
                 end
-
-                packet_payload_o = {
-                    F_ADDR_ONLY,
-                    tc_iaddr_i,
+                packet_payload_o[2+:keep_bits_i+2**CALL_COUNTER_SIZE] = {
+                    tc_iaddr_i[keep_bits_i:0],
                     notify,
                     updiscon,
                     irreport,
                     irdepth
                 };
-                payload_length_o = $bits(packet_payload_o)/8; //(2 + XLEN-1 + 1 + 1 + 1 + $bits(irdepth_i))/8;
-                packet_valid_o = '1;
+                payload_length_o = $ceil($bits(packet_payload_o)/8);
                 //end
             end
-
 
             F_DIFF_DELTA: begin // format 1
             /*  There can be two type of payloads for this format:
@@ -355,32 +349,26 @@ module trdb_packet_emitter
                     irdepth = {2**CALL_COUNTER_SIZE{updiscon}};
                 end
 
-
-
                 if(branches_i < '31) begin // branch map not full - address
-                    packet_payload_o = {
-                        F_DIFF_DELTA,
+                    packet_payload_o[2+:BRANCH_COUNT_LEN+BRANCH_MAP_LEN+keep_bits_i+3+2**CALL_COUNTER_SIZE] = {
                         branches_i,
                         branch_map_i,
-                        diff_addr,
+                        diff_addr[keep_bits_i:0],
                         notify,
                         updsicon,
                         irreport,
                         irdepth
                     };
-                    payload_length_o = $bits(packet_payload_o)/8; //(2 + 5 + 31 + XLEN-1 + 1 + 1 + 1 + $bits(irdepth_i))/8;
+                    payload_length_o = $ceil($bits(packet_payload_o)/8);
                 end else /*if(branches_i == '31)*/ begin // branch map full - no address
-                    packet_payload_o = {
-                        F_DIFF_DELTA,
+                    packet_payload_o[2+:BRANCH_COUNT_LEN+BRANCH_MAP_LEN] = {
                         branches_i,
                         branch_map_i
                     };
-                    payload_length_o = $bits(packet_payload_o)/8; //(2 + 5 + 31)/8;
+                    payload_length_o = $ceil($bits(packet_payload_o)/8);
                 end
-                packet_valid_o = '1;
                 //end
             end
-
 
             F_OPT_EXT: begin // format 0
                 // requires trigger unit in CPU
