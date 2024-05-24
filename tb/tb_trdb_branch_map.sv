@@ -50,8 +50,8 @@ module tb_trdb_branch_map();
     initial begin // reading test vector
         $readmemb("testbenchVector2", test_vector);
         i = 0;
-        reset = 1;  // set == 1 -> no reset each cycle
-                    // set == 0 -> reset each cycle
+        reset = 0; #10;
+        reset = 1;            
     end
 
     always @(posedge clk) begin // on posedge we get expected output
