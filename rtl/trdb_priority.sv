@@ -343,20 +343,22 @@ module trdb_priority (
     assign keep_bits_o = XLEN - sign_extendable + 1;
 
     // leading zero counters
-    trdb_lzc
-        #(.WIDTH(XLEN),
-          .MODE(1))
-    i_trdb_lzc_full
-        (.in_i(addr_to_compress_i),
-         .cnt_o(addr_zeros),
-         .empty_o());
-    trdb_lzc
-        #(.WIDTH(XLEN),
-          .MODE(1))
-    i_trdb_loc_full
-        (.in_i(~addr_to_compress_i),
-         .cnt_o(addr_ones),
-         .empty_o());
+    lzc #(
+        .WIDTH(XLEN),
+        .MODE(1)
+    )i_lzc_zeros(
+        .in_i   (addr_to_compress_i),
+        .cnt_o  (addr_zeros),
+        .empty_o()
+    );
 
+    lzc #(
+        .WIDTH(XLEN),
+        .MODE(1)
+    )i_lzc_ones(
+        .in_i   (~addr_to_compress_i),
+        .cnt_o  (addr_ones),
+        .empty_o()
+    );
 
 endmodule
