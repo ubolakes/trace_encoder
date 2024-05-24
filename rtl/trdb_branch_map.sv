@@ -66,10 +66,10 @@ module trdb_branch_map
         // flush w/branch in the same cycle
         if(valid_i) begin
             if(flush_q) begin
-                map_d[0] = ~branch_taken_i; // adds branch to map
+                map_d[0] = branch_taken_i; // adds branch to map
                 branch_cnt_d = 5'b1;
             end else begin
-                map_d[branch_cnt_q] = ~branch_taken_i;
+                map_d[branch_cnt_q] = branch_taken_i;
                 branch_cnt_d        = branch_cnt_q + 1;
             end
         end
