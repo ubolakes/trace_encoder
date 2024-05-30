@@ -126,6 +126,7 @@ module trdb_packet_emitter
     logic                               irreport;
     logic [2**CALL_COUNTER_SIZE-1:0]    irdepth;
     logic                               update_latest_address;
+    logic [4:0]                         branch_map_off;
 
     // assigning values
     assign branch = ~(tc_branch_i && tc_branch_taken_i);
@@ -162,6 +163,23 @@ module trdb_packet_emitter
             if(update_latest_address) begin
                 latest_addr_q <= tc_iaddr_i;
             end
+        end
+    end
+
+    // combinatorial network to compute the offset to compress the branch_map
+    always_comb begin : branch_map_offset
+        if(branches_i == 0) begin
+            branch_map_off = 0;
+        end else if(branches_i <= 1) begin
+            branch_map_off = 1;
+        end else if(branches_i <= 9) begin
+            branch_map_off = 9;
+        end else if(branches_i <= 17) begin
+            branch_map_off = 17;
+        end else if(branches_i <= 25) begin
+            branch_map_off = 25;
+        end else begin
+            branch_map_off = 31;
         end
     end
 
@@ -348,26 +366,48 @@ module trdb_packet_emitter
                     irreport = updiscon;
                     irdepth = {2**CALL_COUNTER_SIZE{updiscon}};
                 end
-
-                if(branches_i < '31) begin // branch map not full - address
-                    packet_payload_o[2+:BRANCH_COUNT_LEN+BRANCH_MAP_LEN+keep_bits_i+3+2**CALL_COUNTER_SIZE] = {
+                
+                // adding branch count and branch map
+                if (branch_map_off == 0) begin
+                    packet_payload_o[2+:BRANCH_COUNT_LEN] = branches_i;
+                end else if (branch_map_off == 1) begin
+                    packet_payload_o[2+:BRANCH_COUNT_LEN+1] = {
                         branches_i,
-                        branch_map_i,
-                        diff_addr[keep_bits_i:0],
+                        branch_map_i[0]
+                    };
+                end else if (branch_map_off == 9) begin
+                    packet_payload_o[2+:BRANCH_COUNT_LEN+9] = {
+                        branches_i,
+                        branch_map_i[8:0]
+                    };
+                end else if (branch_map_off == 17) begin
+                    packet_payload_o[2+:BRANCH_COUNT_LEN+17] = {
+                        branches_i,
+                        branch_map_i[16:0]
+                    };
+                end else if (branch_map_off == 25) begin
+                    packet_payload_o[2+:BRANCH_COUNT_LEN+25] = {
+                        branches_i,
+                        branch_map_i[24:0]
+                    };
+                end else if (branch_map_off == 31) begin
+                    packet_payload_o[2+:BRANCH_COUNT_LEN+31] = {
+                        branches_i,
+                        branch_map_i[30:0]
+                    }
+                end
+
+                // attaching the rest of the payload
+                if(branches_i < '31) begin // branch map not full - address
+                    packet_payload_o[2+BRANCH_COUNT_LEN+branch_map_off+:keep_bits_i+3+2**CALL_COUNTER_SIZE] = {
+                        diff_addr[keep_bits_i:0], // doesn't work
                         notify,
                         updsicon,
                         irreport,
                         irdepth
                     };
-                    payload_length_o = $ceil($bits(packet_payload_o)/8);
-                end else /*if(branches_i == '31)*/ begin // branch map full - no address
-                    packet_payload_o[2+:BRANCH_COUNT_LEN+BRANCH_MAP_LEN] = {
-                        branches_i,
-                        branch_map_i
-                    };
-                    payload_length_o = $ceil($bits(packet_payload_o)/8);
                 end
-                //end
+                payload_length_o = $ceil($bits(packet_payload_o)/8);
             end
 
             F_OPT_EXT: begin // format 0
