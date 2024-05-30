@@ -2,8 +2,8 @@
 Master thesis project: RISC-V spec compliant trace encoder 
 
 ## Modules present
-trace_debugger      - top level__
-trdb_branch_map     - keeps track of branches__  
+trace_debugger      - top level  
+trdb_branch_map     - keeps track of branches  
 trdb_filter         - turns on/off the tracing__
 trdb_itype_detector - determines the type of an instruction__
 trdb_lzc            - leading zero counter__
