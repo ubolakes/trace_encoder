@@ -318,7 +318,6 @@ module trace_debugger import trdb_pkg::*;
         //.tc_trigger_req_i(), // non mandatory
         //.notify_o(), // non mandatory, depends on trigger request
         .addr_to_compress_i       (addr_to_compress),
-        .keep_bits_o              (keep_bits),
         .valid_o                  (packet_valid),
         .packet_format_o          (packet_format),
         .packet_f_sync_subformat_o(packet_f_sync_subformat),
@@ -326,7 +325,8 @@ module trace_debugger import trdb_pkg::*;
         .thaddr_o                 (thaddr),
         .lc_tc_mux_o              (lc_tc_mux),
         .resync_timer_rst_o       (resync_rst),
-        .qual_status_o            (qual_status)
+        .qual_status_o            (qual_status),
+        .keep_bits_o              (keep_bits),
     );
 
     /* BRANCH MAP */

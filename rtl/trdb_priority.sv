@@ -77,9 +77,8 @@ module trdb_priority (
     //output logic notify_o,
     // communicates the packet emitter that format 2 packet was requested by trigger unit
 
-    // ports for address compression
+    // input to compress
     input logic [XLEN-1:0]                      addr_to_compress_i,
-    output logic [$clog2(XLEN):0]               keep_bits_o,
 
     // outputs for packet_emitter
     output logic                                valid_o,
@@ -89,7 +88,9 @@ module trdb_priority (
     output logic                                thaddr_o, // required for f3 sf1 packet payload
     output logic                                lc_tc_mux_o, // operates the MUX to choose between lc or tc cause, tval, interrupt: 0 -> lc, 1 
     output logic                                resync_timer_rst_o, // resets counter
-    output qual_status_e                        qual_status_o
+    output qual_status_e                        qual_status_o,
+    // output for compression
+    output logic [$clog2(XLEN):0]               keep_bits_o,
     );
     //output logic                                irreport_o, // non mandatory, required implicit return mode
     //);
