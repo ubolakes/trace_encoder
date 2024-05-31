@@ -90,7 +90,7 @@ module trdb_priority (
     output logic                                resync_timer_rst_o, // resets counter
     output qual_status_e                        qual_status_o,
     // output for compression
-    output logic [$clog2(XLEN):0]               keep_bits_o,
+    output logic [$clog2(XLEN):0]               keep_bits_o
     );
     //output logic                                irreport_o, // non mandatory, required implicit return mode
     //);
@@ -344,7 +344,7 @@ module trdb_priority (
     assign keep_bits_o = XLEN - sign_extendable + 1;
 
     // leading zero counters
-    lzc #(
+    trdb_lzc #(
         .WIDTH(XLEN),
         .MODE(1)
     )i_lzc_zeros(
@@ -353,7 +353,7 @@ module trdb_priority (
         .empty_o()
     );
 
-    lzc #(
+    trdb_lzc #(
         .WIDTH(XLEN),
         .MODE(1)
     )i_lzc_ones(

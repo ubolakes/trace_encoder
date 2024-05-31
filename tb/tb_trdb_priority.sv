@@ -41,7 +41,7 @@ module tb_trdb_priority();
     logic lc_tc_mux_o;
     logic resync_timer_rst_o;
     logic [1:0] qual_status_o;
-    logic [4:0] keep_bits_o;
+    logic [5:0] keep_bits_o;
 
     //testing only output
     logic expected_valid;
@@ -51,7 +51,7 @@ module tb_trdb_priority();
     logic expected_lc_tc_mux;
     logic expected_resync_timer_rst;
     logic [1:0] expected_qual_status;
-    logic [4:0] expected_keep_bits;
+    logic [5:0] expected_keep_bits;
     
     // iteration variable
     logic [31:0] i;
@@ -92,7 +92,7 @@ module tb_trdb_priority();
         .keep_bits_o(keep_bits_o)
     );
 
-    logic [30:0] test_vector[1000:0];
+    logic [68:0] test_vector[1000:0];
     //     length of line    # of lines
     
     initial begin // reading test vector
