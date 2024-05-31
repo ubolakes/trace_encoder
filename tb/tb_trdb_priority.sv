@@ -31,6 +31,7 @@ module tb_trdb_priority();
     logic nc_branch_map_empty_i;
     logic nc_qualified_i;
     logic nc_retired_i;
+    logic [31:0] addr_to_compress_i;
 
     // outputs
     logic valid_o;
@@ -40,6 +41,7 @@ module tb_trdb_priority();
     logic lc_tc_mux_o;
     logic resync_timer_rst_o;
     logic [1:0] qual_status_o;
+    logic [4:0] keep_bits_o;
 
     //testing only output
     logic expected_valid;
@@ -49,6 +51,7 @@ module tb_trdb_priority();
     logic expected_lc_tc_mux;
     logic expected_resync_timer_rst;
     logic [1:0] expected_qual_status;
+    logic [4:0] expected_keep_bits;
     
     // iteration variable
     logic [31:0] i;
@@ -78,13 +81,15 @@ module tb_trdb_priority();
         .nc_branch_map_empty_i(nc_branch_map_empty_i),
         .nc_qualified_i(nc_qualified_i),
         .nc_retired_i(nc_retired_i),
+        .addr_to_compress_i(addr_to_compress_i),
         .valid_o(valid_o),
         .packet_format_o(format_o),
         .packet_f_sync_subformat_o(subformat_o),
         .thaddr_o(thaddr_o),
         .lc_tc_mux_o(lc_tc_mux_o),
         .resync_timer_rst_o(resync_timer_rst_o),
-        .qual_status_o(qual_status_o)
+        .qual_status_o(qual_status_o),
+        .keep_bits_o(keep_bits_o)
     );
 
     logic [30:0] test_vector[1000:0];
@@ -119,13 +124,15 @@ module tb_trdb_priority();
         nc_branch_map_empty_i,
         nc_qualified_i,
         nc_retired_i,
+        addr_to_compress_i,
         expected_valid,
         expected_format,
         expected_subformat,
         expected_thaddr,
         expected_lc_tc_mux,
         expected_resync_timer_rst,
-        expected_qual_status
+        expected_qual_status,
+        expected_keep_bits
         } = test_vector[i]; #10;
     end
 
@@ -150,14 +157,19 @@ module tb_trdb_priority();
         if(expected_lc_tc_mux !== lc_tc_mux_o) begin
             $display("Wrong lc_tc_mux: %b!=%b", expected_lc_tc_mux, lc_tc_mux_o);
         end
-        // expected_resync_rst_o
+        // resync_rst_o
         if(expected_resync_timer_rst !== resync_timer_rst_o) begin
             $display("Wrong resync_rst: %b!=%b", expected_resync_timer_rst, resync_timer_rst_o);
         end    
-        // expected_qual_status_o
+        // qual_status_o
         if(expected_qual_status !== qual_status_o) begin
             $display("Wrong qual_status: %b!=%b", expected_qual_status, qual_status_o);
-        end    
+        end
+        // keep_bits_o
+        if(expected_keep_bits !== keep_bits_o) begin
+            $display("Wrong keep_bits: %b!=%b", expected_keep_bits, keep_bits_o);
+        end
+
         // index increase
         i = i + 1; 
     end
