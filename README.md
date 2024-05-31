@@ -19,6 +19,6 @@ trdb_filter         :x:
 trdb_itype_detector :x:  
 trdb_lzc            :x:  
 trdb_packet_emitter :x:  
-trdb_priority       :white_check_mark: (excluded keep_bits logic)  
+trdb_priority       :white_check_mark:  
 trdb_reg            :x:  
 trdb_resync_counter :x:  
