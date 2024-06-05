@@ -118,6 +118,9 @@ module trdb_priority (
     // signals for compression
     logic [$clog2(XLEN)-1:0]    addr_zeros, addr_ones;
     logic [$clog2(XLEN)-1:0]    sign_extendable;
+    logic                       empty_zeros;
+    logic                       empty_ones;
+    logic                       empty;
 
 
     // value assignment
@@ -340,8 +343,10 @@ module trdb_priority (
     */
     // choosing between removing 1s or 0s
     assign sign_extendable = addr_zeros > addr_ones ? addr_zeros : addr_ones;
+    // check if corner case: 32'b0 or 32'b1
+    assign empty = empty_zeros || empty_ones;
     // outputting the least sign bits we want to keep
-    assign keep_bits_o = XLEN - sign_extendable + 1;
+    assign keep_bits_o = empty ? '0 : XLEN - sign_extendable + 1;
 
     // leading zero counters
     trdb_lzc #(
@@ -350,7 +355,7 @@ module trdb_priority (
     )i_lzc_zeros(
         .in_i   (addr_to_compress_i),
         .cnt_o  (addr_zeros),
-        .empty_o()
+        .empty_o(empty_zeros)
     );
 
     trdb_lzc #(
@@ -359,7 +364,7 @@ module trdb_priority (
     )i_lzc_ones(
         .in_i   (~addr_to_compress_i),
         .cnt_o  (addr_ones),
-        .empty_o()
+        .empty_o(empty_ones)
     );
 
 endmodule
