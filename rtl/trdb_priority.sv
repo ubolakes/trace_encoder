@@ -346,7 +346,7 @@ module trdb_priority (
     // check if corner case: 32'b0 or 32'b1
     assign empty = empty_zeros || empty_ones;
     // outputting the least sign bits we want to keep
-    assign keep_bits_o = empty ? '0 : XLEN - sign_extendable + 1;
+    assign keep_bits_o = empty ? 1 : XLEN - sign_extendable + 1;
 
     // leading zero counters
     trdb_lzc #(
