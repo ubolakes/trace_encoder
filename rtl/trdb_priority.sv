@@ -120,7 +120,6 @@ module trdb_priority (
     logic [$clog2(XLEN)-1:0]    sign_extendable;
     logic                       empty_zeros;
     logic                       empty_ones;
-    logic                       empty;
 
 
     // value assignment
@@ -343,10 +342,9 @@ module trdb_priority (
     */
     // choosing between removing 1s or 0s
     assign sign_extendable = addr_zeros > addr_ones ? addr_zeros : addr_ones;
-    // check if corner case: 32'b0 or 32'b1
-    assign empty = empty_zeros || empty_ones;
     // outputting the least sign bits we want to keep
-    assign keep_bits_o = empty ? 1 : XLEN - sign_extendable + 1;
+    // empty signals are used to cover 32'b0 and 32'b1 corner cases
+    assign keep_bits_o = (empty_zeros || empty_ones) ? 1 : XLEN - sign_extendable + 1;
 
     // leading zero counters
     trdb_lzc #(
