@@ -127,6 +127,7 @@ module trdb_packet_emitter
     logic [2**CALL_COUNTER_SIZE-1:0]    irdepth;
     logic                               update_latest_address;
     logic [4:0]                         branch_map_off;
+    logic [3:0]                         address_off;
 
     // assigning values
     assign branch = ~(tc_branch_i && tc_branch_taken_i);
@@ -182,55 +183,19 @@ module trdb_packet_emitter
         end
     end
 
-    // find the upper number of bytes to keep in the address
-    assign address_off = (keep_bits_i + 7)/8;
-
-    /* next code is for demonstration purpose only - glorified pseudocode */
-    // TODO: add in case for each payload that requires an address
-    /*
-    if ( address_off == 1) begin
-        packet_payload_o[START:8+REST_LEN] = {
-            address[7:0],
-            rest_of_payload
-        };
-    end else if (address_off == 2) begin
-        packet_payload_o[START:16+REST_LEN] = {
-            address[15:0],
-            rest_of_payload
-        };
-    end else if (address_off == 3) begin
-        packet_payload_o[START:24+REST_LEN] = {
-            address[23:0],
-            rest_of_payload
-        };
-    end else if (address_off == 4) begin
-        packet_payload_o[START:32+REST_LEN] = {
-            address[31:0],
-            rest_of_payload
-        };
-    end else if (address_off == 5) begin
-        packet_payload_o[START:40+REST_LEN] = {
-            address[39:0],
-            rest_of_payload
-        };
-    end else if (address_off == 6) begin
-        packet_payload_o[START:48+REST_LEN] = {
-            address[47:0],
-            rest_of_payload
-        };
-    end else if (address_off == 7) begin
-        packet_payload_o[START:56+REST_LEN] = {
-            address[55:0],
-            rest_of_payload
-        };
-    end else begin
-        packet_payload_o[START:64+REST_LEN] = {
-            address,
-            rest_of_payload
-        };
-    end
+    /*  
+    the address compression works in byte chunks: based on the value of
+    keep_bits_i, the number of least significant bytes to keep is determined.
+    
+    example:
+        keep_bits_i == 7  -> 1 lsB kept
+        keep_bits_i == 10 -> 2 lsB kept
+        keep_bits_i == 25 -> 4 lsB kept
     */
 
+    // find the number of least significant bytes to keep in the compressed address
+    assign address_off = (keep_bits_i + 7)/8;
+    
     // combinatorial network to output packets
     always_comb begin
         // init values
@@ -276,39 +241,49 @@ module trdb_packet_emitter
                             branch,
                             tc_priv_i
                         };
-                        if (address_off == 1) begin
+                        // address compression
+                        case (address_off)
+                        1: begin
                             packet_payload_o[5+PRIV_LEN+:8] = {
                                 tc_iaddr_i[7:0]
                             };
-                        end else if (address_off == 2) begin
+                        end 
+                        2: begin
                             packet_payload_o[5+PRIV_LEN+:16] = {
                                 tc_iaddr_i[15:0]
                             };
-                        end else if (address_off == 3) begin
+                        end
+                        3: begin
                             packet_payload_o[5+PRIV_LEN+:24] = {
                                 tc_iaddr_i[23:0]
                             };
-                        end else if (address_off == 4) begin
+                        end
+                        4: begin
                             packet_payload_o[5+PRIV_LEN+:32] = {
                                 tc_iaddr_i[31:0]
                             };
-                        end else if (address_off == 5) begin
+                        end
+                        5: begin
                             packet_payload_o[5+PRIV_LEN+:40] = {
                                 tc_iaddr_i[39:0]
                             };
-                        end else if (address_off == 6) begin
+                        end 
+                        6: begin
                             packet_payload_o[5+PRIV_LEN+:48] = {
                                 tc_iaddr_i[47:0]
                             };
-                        end else if (address_off == 7) begin
+                        end
+                        7: begin
                             packet_payload_o[5+PRIV_LEN+:56] = {
                                 tc_iaddr_i[55:0]
                             };
-                        end else begin
+                        end
+                        8: begin
                             packet_payload_o[5+PRIV_LEN+:64] = {
                                 tc_iaddr_i
                             };
                         end
+                        endcase
                         payload_length_o = $ceil($bits(packet_payload_o)/8);
                     end
                     /*TODO: other cases*/
@@ -326,49 +301,57 @@ module trdb_packet_emitter
                             ecause,
                             interrupt,
                         };
-
-                        if (address_off == 1) begin
+                        // address compression
+                        case (address_off)
+                        1: begin
                             packet_payload_o[7+PRIV_LEN+CAUSE_LEN+:8+XLEN] = {
                                 address[7:0],
                                 tval
                             };
-                        end else if (address_off == 2) begin
+                        end
+                        2: begin
                             packet_payload_o[7+PRIV_LEN+CAUSE_LEN+:16+XLEN] = {
                                 address[15:0],
                                 tval
                             };
-                        end else if (address_off == 3) begin
+                        end
+                        3: begin
                             packet_payload_o[7+PRIV_LEN+CAUSE_LEN+:24+XLEN] = {
                                 address[23:0],
                                 tval
                             };
-                        end else if (address_off == 4) begin
+                        end
+                        4: begin
                             packet_payload_o[7+PRIV_LEN+CAUSE_LEN+:32+XLEN] = {
                                 address[31:0],
                                 tval
                             };
-                        end else if (address_off == 5) begin
+                        end
+                        5: begin
                             packet_payload_o[7+PRIV_LEN+CAUSE_LEN+:40+XLEN] = {
                                 address[39:0],
                                 tval
                             };
-                        end else if (address_off == 6) begin
+                        end
+                        6: begin
                             packet_payload_o[7+PRIV_LEN+CAUSE_LEN+:48+XLEN] = {
                                 address[47:0],
                                 tval
                             };
-                        end else if (address_off == 7) begin
+                        end
+                        7: begin
                             packet_payload_o[7+PRIV_LEN+CAUSE_LEN+:56+XLEN] = {
                                 address[55:0],
                                 tval
                             };
-                        end else begin
+                        end
+                        8: begin
                             packet_payload_o[7+PRIV_LEN+CAUSE_LEN+:64+XLEN] = {
                                 address,
                                 tval
                             };
                         end
-
+                        endcase
                         payload_length_o = $ceil($bits(packet_payload_o)/8);
                     end
                     /*TODO: other cases*/
@@ -433,8 +416,9 @@ module trdb_packet_emitter
                     irreport = updiscon;
                     irdepth = {2**CALL_COUNTER_SIZE{updiscon}};
                 end
-
-                if (address_off == 1) begin
+                // address compression
+                case (address_off)
+                1: begin
                     packet_payload_o[2+:8+3+2**CALL_COUNTER_SIZE] = {
                         tc_iaddr_i[7:0],
                         notify,
@@ -442,7 +426,8 @@ module trdb_packet_emitter
                         irreport,
                         irdepth
                     };
-                end else if (address_off == 2) begin
+                end
+                2: begin
                     packet_payload_o[2+:16+3+2**CALL_COUNTER_SIZE] = {
                         tc_iaddr_i[15:0],
                         notify,
@@ -450,7 +435,8 @@ module trdb_packet_emitter
                         irreport,
                         irdepth
                     };
-                end else if (address_off == 3) begin
+                end
+                3: begin
                     packet_payload_o[2+:24+3+2**CALL_COUNTER_SIZE] = {
                         tc_iaddr_i[23:0],
                         notify,
@@ -458,7 +444,8 @@ module trdb_packet_emitter
                         irreport,
                         irdepth
                     };
-                end else if (address_off == 4) begin
+                end
+                4: begin
                     packet_payload_o[2+:32+3+2**CALL_COUNTER_SIZE] = {
                         tc_iaddr_i[31:0],
                         notify,
@@ -466,7 +453,8 @@ module trdb_packet_emitter
                         irreport,
                         irdepth
                     };
-                end else if (address_off == 5) begin
+                end
+                5: begin
                     packet_payload_o[2+:40+3+2**CALL_COUNTER_SIZE] = {
                         tc_iaddr_i[39:0],
                         notify,
@@ -474,7 +462,8 @@ module trdb_packet_emitter
                         irreport,
                         irdepth
                     };
-                end else if (address_off == 6) begin
+                end
+                6: begin
                     packet_payload_o[2+:48+3+2**CALL_COUNTER_SIZE] = {
                         tc_iaddr_i[47:0],
                         notify,
@@ -482,7 +471,8 @@ module trdb_packet_emitter
                         irreport,
                         irdepth
                     };
-                end else if (address_off == 7) begin
+                end
+                7: begin
                     packet_payload_o[2+:56+3+2**CALL_COUNTER_SIZE] = {
                         tc_iaddr_i[55:0],
                         notify,
@@ -490,7 +480,8 @@ module trdb_packet_emitter
                         irreport,
                         irdepth
                     };
-                end else begin
+                end
+                8: begin
                     packet_payload_o[2+:64+3+2**CALL_COUNTER_SIZE] = {
                         tc_iaddr_i,
                         notify,
@@ -499,6 +490,7 @@ module trdb_packet_emitter
                         irdepth
                     };
                 end
+                endcase
 
                 payload_length_o = $ceil($bits(packet_payload_o)/8);
                 //end
@@ -580,7 +572,9 @@ module trdb_packet_emitter
 
                 // attaching the rest of the payload
                 if(branches_i < '31) begin // branch map not full - address
-                    if (address_off == 1) begin
+                    // address compression
+                    case (address_off)
+                    1: begin
                         packet_payload_o[2+BRANCH_COUNT_LEN+branch_map_off+:8+3+2**CALL_COUNTER_SIZE] = {
                             diff_addr[7:0],
                             notify,
@@ -588,7 +582,8 @@ module trdb_packet_emitter
                             irreport,
                             irdepth
                         };
-                    end else if (address_off == 2) begin
+                    end
+                    2: begin
                         packet_payload_o[2+BRANCH_COUNT_LEN+branch_map_off+:16+3+2**CALL_COUNTER_SIZE] = {
                             diff_addr[15:0],
                             notify,
@@ -596,7 +591,8 @@ module trdb_packet_emitter
                             irreport,
                             irdepth
                         };
-                    end else if (address_off == 3) begin
+                    end
+                    3: begin
                         packet_payload_o[2+BRANCH_COUNT_LEN+branch_map_off+:24+3+2**CALL_COUNTER_SIZE] = {
                             diff_addr[23:0],
                             notify,
@@ -604,7 +600,8 @@ module trdb_packet_emitter
                             irreport,
                             irdepth
                         };
-                    end else if (address_off == 4) begin
+                    end
+                    4: begin
                         packet_payload_o[2+BRANCH_COUNT_LEN+branch_map_off+:32+3+2**CALL_COUNTER_SIZE] = {
                             diff_addr[31:0],
                             notify,
@@ -612,7 +609,8 @@ module trdb_packet_emitter
                             irreport,
                             irdepth
                         };
-                    end else if (address_off == 5) begin
+                    end
+                    5: begin
                         packet_payload_o[2+BRANCH_COUNT_LEN+branch_map_off+:40+3+2**CALL_COUNTER_SIZE] = {
                             diff_addr[39:0],
                             notify,
@@ -620,7 +618,8 @@ module trdb_packet_emitter
                             irreport,
                             irdepth
                         };
-                    end else if (address_off == 6) begin
+                    end
+                    6: begin
                         packet_payload_o[2+BRANCH_COUNT_LEN+branch_map_off+:48+3+2**CALL_COUNTER_SIZE] = {
                             diff_addr[47:0],
                             notify,
@@ -628,7 +627,8 @@ module trdb_packet_emitter
                             irreport,
                             irdepth
                         };
-                    end else if (address_off == 7) begin
+                    end
+                    7: begin
                         packet_payload_o[2+BRANCH_COUNT_LEN+branch_map_off+:56+3+2**CALL_COUNTER_SIZE] = {
                             diff_addr[55:0],
                             notify,
@@ -636,7 +636,8 @@ module trdb_packet_emitter
                             irreport,
                             irdepth
                         };
-                    end else begin
+                    end
+                    8: begin
                         packet_payload_o[2+BRANCH_COUNT_LEN+branch_map_off+:64+3+2**CALL_COUNTER_SIZE] = {
                             diff_addr,
                             notify,
@@ -645,6 +646,7 @@ module trdb_packet_emitter
                             irdepth
                         };
                     end
+                    endcase
                 end
                 payload_length_o = $ceil($bits(packet_payload_o)/8);
             end
