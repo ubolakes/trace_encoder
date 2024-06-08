@@ -20,18 +20,18 @@ module trace_debugger import trdb_pkg::*;
     - instr address
     */
     // mandatory inputs
-    input logic                 inst_valid_i, // inst_valid_o
-    input logic                 iretired_i, // core_events_o.retired_i 
-    input logic                 exception_i, // exception
-    input logic                 interrupt_i, // cause_irq_q - used with the previous one to discriminate interrupt from exception
-    input logic [CAUSE_LEN-1:0] cause_i, // cause_q
-    input logic [XLEN-1:2]      tvec_i, // tvec_q, contains trap handler address
-    input logic [XLEN-1:0]      tval_i, // not implemented in snitch, mandatory according to the spec
-    input logic [PRIV_LEN-1:0]  priv_lvl_i, // priv_lvl_q
-    input logic [INST_LEN-1:0]  inst_data_i, // inst_data
-    //input logic                     compressed, // to discriminate compressed instructions from the others - in case the CPU supports C extension
-    input logic [XLEN-1:0]      pc_i, //pc_q - instruction address
-    input logic [XLEN-1:0]      epc_i, // epc_q, required for format 3 subformat 1
+    input logic                     inst_valid_i, // inst_valid_o
+    input logic                     iretired_i, // core_events_o.retired_i 
+    input logic                     exception_i, // exception
+    input logic                     interrupt_i, // cause_irq_q - used to discriminate interrupt
+    input logic [CAUSE_LEN-1:0]     cause_i, // cause_q
+    input logic [XLEN-1:2]          tvec_i, // tvec_q, contains trap handler address
+    input logic [XLEN-1:0]          tval_i, // not implemented in snitch, mandatory in spec
+    input logic [PRIV_LEN-1:0]      priv_lvl_i, // priv_lvl_q
+    input logic [INST_LEN-1:0]      inst_data_i, // inst_data
+    //input logic                     compressed, // to discriminate compressed instrs
+    input logic [XLEN-1:0]          pc_i, //pc_q - instruction address
+    input logic [XLEN-1:0]          epc_i, // epc_q, required for format 3 subformat 1
     //input logic [TRIGGER_LEN-1:0]   trigger_i, // must be supported CPU side
     //input logic [CTYPE_LEN-1:0]     ctype_i, // spec says it's 1 or 2 bit wide
 
