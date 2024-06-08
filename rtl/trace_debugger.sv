@@ -6,9 +6,9 @@
 
 module trace_debugger import trdb_pkg::*;
 (
-    input logic clk_i,
-    input logic rst_ni,
-    input logic test_mode_i,
+    input logic                     clk_i,
+    input logic                     rst_ni,
+    input logic                     test_mode_i,
 
     /* data from the CPU */
     /*
