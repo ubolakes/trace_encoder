@@ -25,12 +25,12 @@ module trdb_packet_emitter
     // lc (last cycle) signals
     input logic [CAUSE_LEN-1:0]         lc_cause_i,
     input logic [XLEN-1:0]              lc_tval_i,
-    input logic                         lc_interrupt_i;
+    input logic                         lc_interrupt_i,
 
     // tc (this cycle) signals
     input logic [CAUSE_LEN-1:0]         tc_cause_i,
     input logic [XLEN-1:0]              tc_tval_i,
-    input logic                         tc_interrupt_i;
+    input logic                         tc_interrupt_i,
 
     // nc (next cycle) signals
 
