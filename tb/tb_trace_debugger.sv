@@ -55,9 +55,9 @@ module tb_trace_debugger();
         .packet_type_o(packet_type_o),
         .packet_length_o(packet_length_o),
         .packet_payload_o(packet_payload_o)
-    )
+    );
 
-    logic [NN:0] test_vector[1000:0];
+    logic [435:0] test_vector[1000:0];
 
     initial begin 
         $readmemb("testvectorTopLevel", test_vector);
@@ -78,15 +78,15 @@ module tb_trace_debugger();
         inst_data_i,
         pc_i,
         epc_i,
-        expected_packet_type_o,
-        expected_packet_length_o,
-        expected_packet_payload_o
+        expected_packet_type,
+        expected_packet_length,
+        expected_packet_payload
         } = test_vector[i]; #10;
     end
 
     always @(negedge clk) begin
         // packet_type_o
-        if(expected_packet_type_o !== packet_type_o) begin
+        if(expected_packet_type !== packet_type_o) begin
             $display("Wrong packet type: %b!=%b", expected_packet_type, packet_type_o);
         end
         // packet_length_o

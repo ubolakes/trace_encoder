@@ -198,7 +198,6 @@ module trace_debugger import trdb_pkg::*;
 
     /* ASSIGNMENT */
     /* hardwired assignments */
-    assign encoder_mode = '0;
     assign compressed = '0;
     assign trigger_trace_on = '0;
     assign trigger_trace_off = '0;
@@ -265,7 +264,7 @@ module trace_debugger import trdb_pkg::*;
         .encoder_mode_o   (encoder_mode),
         .delta_address_o  (delta_address),
         .configuration_o  (enc_config_d),
-        .clock_gated_o    (clk_gated)
+        .clk_gated_o    (clk_gated)
     );
 
     /* FILTER */
