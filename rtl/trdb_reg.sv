@@ -10,7 +10,6 @@ it stores values for the encoder in memory mapped registers
 import trdb_pkg::*;
 
 module trdb_reg
-    #()
     (
     input logic clk_i,
     input logic rst_ni,
@@ -59,8 +58,7 @@ module trdb_reg
     assign jump_target_cache = '0;
     assign configuration_o = DELTA_ADDRESS; // so far only this supported
     
-    assign trace_enable_d = trace_req_off_i ? 0 : 1;
-    assign trace_enable_d = trace_req_on_i  ? 1 : 0;
+    assign trace_enable_d = ~trace_req_off_i || trace_req_on_i;
     assign trace_enable_o = trace_enable_q;
 
     assign nocontext_o = '1;
@@ -77,7 +75,7 @@ module trdb_reg
         .en_i     (trace_activated_o),
         .test_en_i(test_enabled),
         .clk_o    (clk_gated)
-    )
+    );
 
     always_ff @(posedge clk_i, negedge rst_ni) begin
         if(~rst_ni) begin

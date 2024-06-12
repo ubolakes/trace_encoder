@@ -15,8 +15,9 @@ import trdb_pkg::*;
 
 module trdb_resync_counter #(
     parameter MODE = CYCLE_MODE, // counts cycles as default
-    parameter MAX_VALUE = 2'hFFFF, // default max value, can be personalized
-    ) (
+    parameter MAX_VALUE = 2'hFFFF // default max value, can be personalized
+    )
+    (
     input logic clk_i,
     input logic rst_ni,
 
@@ -40,10 +41,10 @@ module trdb_resync_counter #(
 
 
     assign count_enabled = trace_enabled_i && enabled_q;
-    assign enabled_d = counter == MAX_VALUE ? 0 : 1;
+    assign enabled_d = (counter_d == MAX_VALUE) ? 0 : 1;
     assign gt_resync_max_d = ~enabled_d; //counter == MAX_VALUE ? 1 : 0;
     assign gt_resync_max_o = gt_resync_max_q; 
-    assign et_resync_max_o = counter == MAX_VALUE-1 ? 1 : 0;
+    assign et_resync_max_o = (counter_d == MAX_VALUE-1) ? 1 : 0;
     assign packet_count_enabled = count_enabled && PACKET_MODE && packet_emitted_i;
     assign cycle_count_enabled = count_enabled && CYCLE_MODE;
 

@@ -154,11 +154,11 @@ module trace_debugger import trdb_pkg::*;
     logic                           et_max_resync_d, et_max_resync_q;
     logic                           branch_map_full_d, branch_map_full_q;
     //logic                           branch_misprediction_d, branch_misprediction_q; // non mandatory
-    logic                           trace_enable_d, trace_enabled_q;
+    logic                           trace_enable_d, trace_enable_q;
     logic                           enc_enabled_d, enc_enabled_q;
     logic                           enc_disabled_d, enc_disabled_q;
     //logic                           packets_lost_d, packets_lost_q; // non mandatory
-    logic ioptions_e                enc_config_d, enc_config_q;
+    ioptions_e                      enc_config_d, enc_config_q;
     logic                           enc_config_change_d, enc_config_change_q;
     logic                           branch_d, branch_q;
     logic                           branch_taken_d, branch_taken_q;
@@ -238,7 +238,7 @@ module trace_debugger import trdb_pkg::*;
     assign epc0_d = epc_i;
 
     assign final_qualified_d = qualified0_q && ~qualified0_d; // == tc_final_qualified
-    assign privchange_d = (priv_lvl0_q != priv_lvl1_q) && tc_valid;
+    assign privchange_d = (priv_lvl0_q != priv_lvl1_q) && inst_valid1_q;
     assign trace_enable_d = trace_enable;
     assign enc_enabled_d = trace_enable_d && ~trace_enable_q; // == nc_enc_enabled
     assign enc_disabled_d = ~trace_enable_d && trace_enable_q; // == nc_enc_disabled
@@ -326,7 +326,7 @@ module trace_debugger import trdb_pkg::*;
         .lc_tc_mux_o              (lc_tc_mux),
         .resync_timer_rst_o       (resync_rst),
         .qual_status_o            (qual_status),
-        .keep_bits_o              (keep_bits),
+        .keep_bits_o              (keep_bits)
     );
 
     /* BRANCH MAP */
@@ -435,9 +435,12 @@ module trace_debugger import trdb_pkg::*;
             priv_lvl1_q <= '0;
             qualified0_q <= '0;
             qualified1_q <= '0;
-            inst_valid_q <= '0;
-            retired_q <= '0;
-            inst_data_q <= '0;
+            inst_valid0_q <= '0;
+            inst_valid1_q <= '0;
+            iretired0_q <= '0;
+            iretired1_q <= '0;
+            inst_data0_q <= '0;
+            inst_data1_q <= '0;
             tvec0_q <= '0;
             tvec1_q <= '0;
             epc0_q <= '0;
@@ -458,8 +461,7 @@ module trace_debugger import trdb_pkg::*;
             enc_disabled_q <= '0;
             final_qualified_q <= '0;
             //packets_lost_q <= '0; // non mandatory
-            pc_q <= '0;
-            enc_config_q <= '0;
+            enc_config_q <= DELTA_ADDRESS; // 3'b0
             enc_config_change_q <= '0;
             branch_q <= '0;
             branch_taken_q <= '0;
@@ -476,9 +478,12 @@ module trace_debugger import trdb_pkg::*;
             priv_lvl1_q <= priv_lvl1_d;
             qualified0_q <= qualified0_d;
             qualified1_q <= qualified1_d;
-            inst_valid_q <= inst_valid_d;
-            retired_q <= retired_d;
-            inst_data_q <= inst_data_d;
+            inst_valid0_q <= inst_valid0_d;
+            inst_valid1_q <= inst_valid1_d;
+            iretired0_q <= iretired0_d;
+            iretired1_q <= iretired1_d;
+            inst_data0_q <= inst_data0_d;
+            inst_data1_q <= inst_data1_d;
             tvec0_q <= tvec0_d;
             tvec1_q <= tvec1_d;
             epc0_q <= epc0_d;
@@ -499,7 +504,6 @@ module trace_debugger import trdb_pkg::*;
             enc_disabled_q <= enc_disabled_d;
             final_qualified_q <= final_qualified_d;
             //packets_lost_q <= packets_lost_d; // non mandatory
-            pc_q <= pc_d;
             enc_config_q <= enc_config_d;
             enc_config_change_q <= enc_config_change_d;
             branch_q <= branch_d;

@@ -299,7 +299,7 @@ module trdb_packet_emitter
                             branch,
                             tc_priv_i,
                             ecause,
-                            interrupt,
+                            interrupt
                         };
                         // address compression
                         case (address_off)
@@ -567,11 +567,11 @@ module trdb_packet_emitter
                     packet_payload_o[2+:BRANCH_COUNT_LEN+31] = {
                         branches_i,
                         branch_map_i[30:0]
-                    }
+                    };
                 end
 
                 // attaching the rest of the payload
-                if(branches_i < '31) begin // branch map not full - address
+                if(branches_i < 31) begin // branch map not full - address
                     // address compression
                     case (address_off)
                     1: begin
@@ -651,7 +651,7 @@ module trdb_packet_emitter
                 payload_length_o = $ceil($bits(packet_payload_o)/8);
             end
 
-            F_OPT_EXT: begin // format 0
+            //F_OPT_EXT: begin // format 0
                 // requires trigger unit in CPU
                 /*
                 if(notify_i) begin // request from trigger unit
@@ -690,7 +690,7 @@ module trdb_packet_emitter
                 end
                 endcase
                 */
-            end
+            //end
             endcase
         
         end
