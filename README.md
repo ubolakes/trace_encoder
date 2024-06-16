@@ -21,4 +21,4 @@ trdb_lzc            :x:
 trdb_packet_emitter :x:  
 trdb_priority       :white_check_mark:  
 trdb_reg            :x:  
-trdb_resync_counter :x:  
+trdb_resync_counter :white_check_mark:  
