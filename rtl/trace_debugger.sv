@@ -249,6 +249,9 @@ module trace_debugger import trdb_pkg::*;
     /* next cycle */
     assign nc_branch_map_empty = nc_branch_map_flush || (tc_branch_map_empty && ~branch_d);
 
+    // output
+    assign packet_type_o = {packet_format, packet_f_sync_subformat};
+
 
     /* MODULES INSTANTIATION */
     /* MAPPED REGISTERS */
@@ -333,7 +336,7 @@ module trace_debugger import trdb_pkg::*;
     trdb_branch_map i_trdb_branch_map(
         .clk_i         (clk_gated),
         .rst_ni        (rst_ni),
-        .valid_i       (branch_d && trace_valid && qualified0_d),
+        .valid_i       (branch_d && qualified0_d), // && trace_valid
         .branch_taken_i(branch_taken_d),
         .flush_i       (nc_branch_map_flush),
         //.branch_taken_prediction_i(), // non mandatory
@@ -442,6 +445,8 @@ module trace_debugger import trdb_pkg::*;
             inst_data1_q <= '0;
             tvec0_q <= '0;
             tvec1_q <= '0;
+            iaddr0_q <= '0;
+            iaddr1_q <= '0;
             epc0_q <= '0;
             epc1_q <= '0;
             epc2_q <= '0;
@@ -485,6 +490,8 @@ module trace_debugger import trdb_pkg::*;
             inst_data1_q <= inst_data1_d;
             tvec0_q <= tvec0_d;
             tvec1_q <= tvec1_d;
+            iaddr0_q <= iaddr0_d;
+            iaddr1_q <= iaddr1_d;
             epc0_q <= epc0_d;
             epc1_q <= epc1_d;
             epc2_q <= epc2_d;

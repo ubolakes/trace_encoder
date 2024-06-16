@@ -62,7 +62,7 @@ module tb_trace_debugger();
     initial begin 
         $readmemb("testvectorTopLevel", test_vector);
         i = 0;
-        reset = 0; #20; // resetting for two periods
+        reset = 0; #10; // resetting for one period
         reset = 1; // set to 1 for the rest of simulation
     end
 
