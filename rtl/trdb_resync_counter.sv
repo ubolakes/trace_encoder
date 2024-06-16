@@ -29,39 +29,39 @@ module trdb_resync_counter #(
     output logic et_resync_max_o // equals to the max value, in reality MAX_VALUE-1
     );
 
-    localparam COUNTER_LEN = $clog2(MAX_VALUE);
-
-    logic [COUNTER_LEN-1:0] counter_q;
-    logic [COUNTER_LEN-1:0] counter_d;
-    logic                   enabled_d, enabled_q;  // operates the counter
-    logic                   count_enabled;
-    logic                   gt_resync_max_d, gt_resync_max_q;
-    logic                   packet_count_enabled;
-    logic                   cycle_count_enabled;
+    logic [$clog2(MAX_VALUE):0] counter_q, counter_d;
+    logic                       enabled_d, enabled_q;  // operates the counter
+    logic                       count_enabled;
+    logic                       gt_resync_max_d, gt_resync_max_q;
+    logic                       packet_count_enabled;
+    logic                       cycle_count_enabled;
 
 
     assign count_enabled = trace_enabled_i && enabled_q;
-    assign enabled_d = (counter_d == MAX_VALUE) ? 0 : 1;
+    assign enabled_d = (counter_q <= MAX_VALUE);
     assign gt_resync_max_d = ~enabled_d; //counter == MAX_VALUE ? 1 : 0;
-    assign gt_resync_max_o = gt_resync_max_q; 
-    assign et_resync_max_o = (counter_d == MAX_VALUE-1) ? 1 : 0;
+    assign gt_resync_max_o = (counter_d > MAX_VALUE-1); //? 1 : 0; // gt_resync_max_q; 
+    assign et_resync_max_o = (counter_d == MAX_VALUE-1);// ? 1 : 0;
     assign packet_count_enabled = count_enabled && PACKET_MODE && packet_emitted_i;
     assign cycle_count_enabled = count_enabled && CYCLE_MODE;
 
     always_ff @( posedge clk_i, negedge rst_ni ) begin: counter
         if(~rst_ni) begin
             counter_q <= '0;
+            counter_d <= '0;
             enabled_q <= '1; // counter enabled by default
             gt_resync_max_q <= '0;
         end else begin
+            // updating FF values
+            enabled_q <= enabled_d;
+            // updating counters values
             if(packet_count_enabled || cycle_count_enabled) begin
-                counter_q <= counter_d + 1;
+                counter_d += 1;
+                counter_q <= counter_d;
             end else if(resync_rst_i) begin
+                counter_d <= '0;
                 counter_q <= '0; // reset to zero is done after receiving the reset signal
             end
-            // updating FF values
-            gt_resync_max_q <= gt_resync_max_d;
-            enabled_q <= enabled_d;
         end
     end
 
