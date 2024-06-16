@@ -32,8 +32,8 @@ module tb_trdb_resync_counter();
         .MODE(PACKET_MODE), // counting packets
         .MAX_VALUE(7) // counting up to 7
     ) DUT(
-        .clk             (clk),
-        .reset           (reset),
+        .clk_i           (clk),
+        .rst_ni          (reset),
         .trace_enabled_i (trace_enabled_i),
         .packet_emitted_i(packet_emitted_i),
         .resync_rst_i    (resync_rst_i),
@@ -46,7 +46,7 @@ module tb_trdb_resync_counter();
     //    length of line   # of lines
 
     initial begin // reading test vector
-        $readmemb("testbenchVector2", test_vector);
+        $readmemb("testbenchRC", test_vector);
         i = 0;
         reset = 0; #10;
         reset = 1;            
