@@ -40,7 +40,7 @@ module tb_trace_debugger();
     trace_debugger DUT(
         .clk_i(clk),
         .rst_ni(reset),
-        .test_mode_i('0), //TODO: which value to set?
+        .test_mode_i('0), // which value to set?
         .inst_valid_i(inst_valid_i),
         .iretired_i(iretired_i),
         .exception_i(exception_i),

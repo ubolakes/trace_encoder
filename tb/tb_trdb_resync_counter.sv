@@ -46,7 +46,7 @@ module tb_trdb_resync_counter();
     //    length of line   # of lines
 
     initial begin // reading test vector
-        $readmemb("testbenchRC", test_vector);
+        $readmemb("tv_trdb_resync_counter", test_vector);
         i = 0;
         reset = 0; #10;
         reset = 1;            

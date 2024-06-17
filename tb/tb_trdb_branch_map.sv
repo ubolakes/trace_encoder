@@ -48,7 +48,7 @@ module tb_trdb_branch_map();
     //    length of line   # of lines
 
     initial begin // reading test vector
-        $readmemb("testbenchVector2", test_vector);
+        $readmemb("tv_trdb_branch_map", test_vector);
         i = 0;
         reset = 0; #10;
         reset = 1;            

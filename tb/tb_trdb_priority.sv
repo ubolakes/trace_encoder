@@ -98,7 +98,7 @@ module tb_trdb_priority();
     //     length of line    # of lines
     
     initial begin // reading test vector
-        $readmemb("testbenchVector", test_vector);
+        $readmemb("tv_trdb_priority", test_vector);
         i = 0;
         reset = 1;  // set == 1 -> no reset each cycle
                     // set == 0 -> reset each cycle

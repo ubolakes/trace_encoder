@@ -94,7 +94,7 @@ module tb_trdb_packet_emitter();
     //     length of line    # of lines
 
     initial begin // reading test vector
-        $readmemb("<nome_file>", test_vector);
+        $readmemb("tv_trdb_packet_emitter", test_vector);
         i = 0;
         reset = 1;  // set == 1 -> no reset each cycle
                     // set == 0 -> reset each cycle
