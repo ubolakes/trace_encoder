@@ -48,7 +48,7 @@ module trdb_reg
     logic clk_gated;
     logic test_enabled;
 
-    // assignment
+    // assignments
     assign delta_address_o = '1;
     assign full_address = '0;
     assign implicit_exception = '0;

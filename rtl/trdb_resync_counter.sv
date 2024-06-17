@@ -36,7 +36,6 @@ module trdb_resync_counter #(
     logic                       packet_count_enabled;
     logic                       cycle_count_enabled;
 
-
     assign count_enabled = trace_enabled_i && enabled_q;
     assign enabled_d = (counter_q <= MAX_VALUE);
     assign gt_resync_max_d = ~enabled_d; //counter == MAX_VALUE ? 1 : 0;
