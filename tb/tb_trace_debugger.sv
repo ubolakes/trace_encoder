@@ -12,17 +12,17 @@ module tb_trace_debugger();
     logic reset;
 
     // inputs
-    logic inst_valid_i;
-    logic iretired_i;
-    logic exception_i;
-    logic interrupt_i;
-    logic [CAUSE_LEN-1:0] cause_i;
-    logic [XLEN-1:2] tvec_i;
-    logic [XLEN-1:0] tval_i;
-    logic [PRIV_LEN-1:0] priv_lvl_i;
-    logic [INST_LEN-1:0] inst_data_i;
-    logic [XLEN-1:0] pc_i;
-    logic [XLEN-1:0] epc_i;
+    logic                   inst_valid_i;
+    logic                   iretired_i;
+    logic                   exception_i;
+    logic                   interrupt_i;
+    logic [CAUSE_LEN-1:0]   cause_i;
+    logic [XLEN-1:2]        tvec_i;
+    logic [XLEN-1:0]        tval_i;
+    logic [PRIV_LEN-1:0]    priv_lvl_i;
+    logic [INST_LEN-1:0]    inst_data_i;
+    logic [XLEN-1:0]        pc_i;
+    logic [XLEN-1:0]        epc_i;
 
     // outputs
     logic [PTYPE_LEN-1:0]   packet_type_o;
@@ -38,22 +38,22 @@ module tb_trace_debugger();
     logic [31:0] i;
 
     trace_debugger DUT(
-        .clk_i(clk),
-        .rst_ni(reset),
-        .test_mode_i('0), // which value to set?
-        .inst_valid_i(inst_valid_i),
-        .iretired_i(iretired_i),
-        .exception_i(exception_i),
-        .interrupt_i(interrupt_i),
-        .cause_i(cause_i),
-        .tvec_i(tvec_i),
-        .tval_i(tval_i),
-        .priv_lvl_i(priv_lvl_i),
-        .inst_data_i(inst_data_i),
-        .pc_i(pc_i),
-        .epc_i(epc_i),
-        .packet_type_o(packet_type_o),
-        .packet_length_o(packet_length_o),
+        .clk_i           (clk),
+        .rst_ni          (reset),
+        .test_mode_i     ('0), // which value to set?
+        .inst_valid_i    (inst_valid_i),
+        .iretired_i      (iretired_i),
+        .exception_i     (exception_i),
+        .interrupt_i     (interrupt_i),
+        .cause_i         (cause_i),
+        .tvec_i          (tvec_i),
+        .tval_i          (tval_i),
+        .priv_lvl_i      (priv_lvl_i),
+        .inst_data_i     (inst_data_i),
+        .pc_i            (pc_i),
+        .epc_i           (epc_i),
+        .packet_type_o   (packet_type_o),
+        .packet_length_o (packet_length_o),
         .packet_payload_o(packet_payload_o)
     );
 

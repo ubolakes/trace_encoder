@@ -33,15 +33,15 @@ module tb_trdb_branch_map();
 
     // DUT instantiation
     trdb_branch_map DUT(
-        .clk_i(clk),
-        .rst_ni(reset),
-        .valid_i(valid_i),
+        .clk_i         (clk),
+        .rst_ni        (reset),
+        .valid_i       (valid_i),
         .branch_taken_i(branch_taken_i),
-        .flush_i(flush_i),
-        .map_o(map_o),
-        .branches_o(branches_o),
-        .is_full_o(is_full_o),
-        .is_empty_o(is_empty_o)
+        .flush_i       (flush_i),
+        .map_o         (map_o),
+        .branches_o    (branches_o),
+        .is_full_o     (is_full_o),
+        .is_empty_o    (is_empty_o)
     );
 
     logic [40:0] test_vector[1000:0];
