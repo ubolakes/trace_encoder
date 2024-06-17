@@ -336,7 +336,7 @@ module trace_debugger import trdb_pkg::*;
     trdb_branch_map i_trdb_branch_map(
         .clk_i         (clk_gated),
         .rst_ni        (rst_ni),
-        .valid_i       (branch_d && qualified0_d), // && trace_valid
+        .valid_i       (branch_q && qualified0_d), // && trace_valid
         .branch_taken_i(branch_taken_d),
         .flush_i       (nc_branch_map_flush),
         //.branch_taken_prediction_i(), // non mandatory
@@ -396,7 +396,6 @@ module trace_debugger import trdb_pkg::*;
     );
 
     /* RESYNC COUNTER */
-    // TODO: recheck for correctness
     trdb_resync_counter i_trdb_resync_counter( // for testing we keep the def settings
         .clk_i           (clk_gated),
         .rst_ni          (rst_ni),
@@ -422,7 +421,7 @@ module trace_debugger import trdb_pkg::*;
 
 
     /* REGISTERS MANAGEMENT */
-    // TODO: look at Robert's implementation to better understand
+    // TODO: look at Robert's implementation to better understand how it works
     always_ff @( posedge clk_i, negedge rst_ni ) begin : registers
         if(~rst_ni) begin
             exception0_q <= '0;
