@@ -1,0 +1,28 @@
+# Package metadata. Required.
+package:
+  # The name of the package. Required.
+  name: trace_encoder
+
+  # The list of package authors and contributors. Optional.
+  # By convention, authors should be listed in the form shown below.
+  authors: ["Umberto Laghi <umberto.laghi@studio.unibo.it>"]
+
+# Freeze any dependency updates. Optional. False if omitted.
+# Useful for chip packages. Once the chip is in final tapeout mode, and
+# dependency updates would require disastrous amounts of re-verification.
+frozen: true
+
+# List of source files in this package. Optional.
+sources:
+  # Source files can be grouped:
+  - files:
+      - rtl/trace_debugger.sv
+      - rtl/trdb_branch_map.sv
+      - rtl/trdb_filter.sv
+      - rtl/trdb_itype_detector.sv
+      - rtl/lzc.sv
+      - rtl/trdb_packet_emitter.sv
+      - rtl/trdb_priority.sv
+      - rtl/trdb_reg.sv
+      - rtl/trdb_resync_counter.sv
+      - include/trdb_pkg.sv
