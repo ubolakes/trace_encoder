@@ -16,6 +16,7 @@ frozen: true
 sources:
   # Source files can be grouped:
   - files:
+      - include/trdb_pkg.sv
       - rtl/trace_debugger.sv
       - rtl/trdb_branch_map.sv
       - rtl/trdb_filter.sv
@@ -25,4 +26,3 @@ sources:
       - rtl/trdb_priority.sv
       - rtl/trdb_reg.sv
       - rtl/trdb_resync_counter.sv
-      - include/trdb_pkg.sv
