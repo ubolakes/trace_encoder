@@ -17,12 +17,12 @@ sources:
   # Source files can be grouped:
   - files:
       - include/trdb_pkg.sv
-      - rtl/trace_debugger.sv
+      - rtl/lzc.sv
       - rtl/trdb_branch_map.sv
       - rtl/trdb_filter.sv
       - rtl/trdb_itype_detector.sv
-      - rtl/lzc.sv
       - rtl/trdb_packet_emitter.sv
       - rtl/trdb_priority.sv
       - rtl/trdb_reg.sv
       - rtl/trdb_resync_counter.sv
+      - rtl/trace_debugger.sv
