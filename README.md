@@ -16,6 +16,26 @@ trdb_priority       - determines the packet type
 trdb_reg            - configuration registers for the tracer  
 trdb_resync_counter - timer to request sync packets  
 
+## Supported features
+| Feature                                       | Implemented           |
+| :-------------------------------------------: | :-------------------: |
+| **Branch Trace**                              |                       |
+| Delta address mode                            | :white_check_mark:    |
+| Full address mode                             | :white_check_mark:    |
+| Implicit exception mode                       | :x:                   |
+| Sequentially inferable jump mode              | :x:                   |
+| Implicit return mode                          | :x:                   |
+| Branch prediction mode                        | :x:                   |
+| Jump target cache mode                        | :x:                   |
+| **Instruction Trace Interface**               |                       |
+| Single-retirement                             | :white_check_mark:    |
+| Multiple-retirement                           | :x:                   |
+| Trigger unit                                  | :white_check_mark:    |
+| **Data Trace**                                | :x:                   |
+| **Instruction Trace Encoder Output Packets**  |                       |
+| Time                                          | :x:                   |
+| Context                                       | :x:                   |
+
 ## Testing progress
 trace_debugger      :x:  
 trdb_branch_map     :white_check_mark:  
