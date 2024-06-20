@@ -37,12 +37,14 @@ trdb_resync_counter - timer to request sync packets
 | Context                                       | :x:                   |
 
 ## Testing progress
-trace_debugger      :x:  
-trdb_branch_map     :white_check_mark:  
-trdb_filter         :x:  
-trdb_itype_detector :white_check_mark: (no compressed instructions)  
-trdb_lzc            :x:  
-trdb_packet_emitter :x:  
-trdb_priority       :white_check_mark:  
-trdb_reg            :x:  
-trdb_resync_counter :white_check_mark:  
+| Module                | Tested                                         	|
+| :-------------------:	| :-----------------------------------------------: |
+| trace_debugger      	| :x:                                            	|
+| trdb_branch_map     	| :white_check_mark:                             	|
+| trdb_filter         	| :x:                                            	|
+| trdb_itype_detector 	| :white_check_mark: (no compressed instruction) 	|
+| trdb_lzc            	| :x:                                            	|
+| trdb_packet_emitter 	| :x:                                            	|
+| trdb_priority       	| :white_check_mark:                             	|
+| trdb_reg            	| :x:                                            	|
+| trdb_resync_counter 	| :white_check_mark:                             	|
