@@ -1,3 +1,7 @@
+[comment]: <> (Author:  Umberto Laghi)
+[comment]: <> (Contact: umberto.laghi@studio.unibo.it)
+[comment]: <> (Github:  @ubolakes)
+
 # trace_encoder
 Master thesis project: RISC-V spec compliant trace encoder 
 
