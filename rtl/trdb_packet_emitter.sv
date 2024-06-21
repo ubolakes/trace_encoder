@@ -55,7 +55,7 @@ module trdb_packet_emitter
         To discriminate I use a mux to choose between lc or tc */
 
     input logic                         thaddr_i,
-    input logic [XLEN-1:0]              tc_tvec_i, // trap handler address
+    input logic [XLEN-1:2]              tc_tvec_i, // trap handler address
     input logic [XLEN-1:0]              lc_epc_i,
     
     // format 3 subformat 3 specific signals
@@ -128,6 +128,7 @@ module trdb_packet_emitter
     logic                               update_latest_address;
     logic [4:0]                         branch_map_off;
     logic [3:0]                         address_off;
+    logic [8:0]                         used_bits; // counts the bits used inside each payload
 
     // assigning values
     assign branch = ~(tc_branch_i && tc_branch_taken_i);
@@ -204,6 +205,7 @@ module trdb_packet_emitter
         packet_valid_o = '0;
         update_latest_address = '0;
         branch_map_flush_o = '0;
+        used_bits = '0;
         
         if(valid_i) begin
             // flush the branch map
@@ -228,6 +230,9 @@ module trdb_packet_emitter
             F_SYNC: begin // format 3
                 // setting packet subformat - common for all type 3 payloads
                 packet_payload_o[3:2] = packet_f_sync_subformat_i;
+                
+                // increasing the number of bits used in the payload
+                used_bits = used_bits + 2;
                 
                 // setting the rest of payload for each type
                 case(packet_f_sync_subformat_i)
@@ -387,7 +392,7 @@ module trdb_packet_emitter
             F_ADDR_ONLY: begin // format 2
                 // updating latest address sent in a packet
                 update_latest_address = '1;
-                    
+
                 // requires trigger unit in CPU
                 /*
                 if(notify_i) begin // request from trigger unit
@@ -416,83 +421,97 @@ module trdb_packet_emitter
                     irreport = updiscon;
                     irdepth = {2**CALL_COUNTER_SIZE{updiscon}};
                 end
+
+                // increase for the common part
+                used_bits = used_bits + 3 + 2**CALL_COUNTER_SIZE;
+
                 // address compression
                 case (address_off)
                 1: begin
                     packet_payload_o[2+:8+3+2**CALL_COUNTER_SIZE] = {
-                        tc_iaddr_i[7:0],
-                        notify,
-                        updiscon,
+                        irdepth,
                         irreport,
-                        irdepth
+                        updiscon,
+                        notify,
+                        diff_addr[7:0]
                     };
+                    // increasing the number of bits used in the payload
+                    used_bits = used_bits + 8;
+
                 end
                 2: begin
                     packet_payload_o[2+:16+3+2**CALL_COUNTER_SIZE] = {
-                        tc_iaddr_i[15:0],
-                        notify,
-                        updiscon,
+                        irdepth,
                         irreport,
-                        irdepth
+                        updiscon,
+                        notify,
+                        diff_addr[15:0]
                     };
+                    used_bits = used_bits + 16;
                 end
                 3: begin
                     packet_payload_o[2+:24+3+2**CALL_COUNTER_SIZE] = {
-                        tc_iaddr_i[23:0],
-                        notify,
-                        updiscon,
+                        irdepth,
                         irreport,
-                        irdepth
+                        updiscon,
+                        notify,
+                        diff_addr[23:0]
                     };
+                    used_bits = used_bits + 24;
                 end
                 4: begin
                     packet_payload_o[2+:32+3+2**CALL_COUNTER_SIZE] = {
-                        tc_iaddr_i[31:0],
-                        notify,
-                        updiscon,
+                        irdepth,
                         irreport,
-                        irdepth
+                        updiscon,
+                        notify,
+                        diff_addr[31:0]
                     };
+                    used_bits = used_bits + 32;
                 end
                 5: begin
                     packet_payload_o[2+:40+3+2**CALL_COUNTER_SIZE] = {
-                        tc_iaddr_i[39:0],
-                        notify,
-                        updiscon,
+                        irdepth,
                         irreport,
-                        irdepth
+                        updiscon,
+                        notify,
+                        diff_addr[39:0]
                     };
+                    used_bits = used_bits + 40;
                 end
                 6: begin
                     packet_payload_o[2+:48+3+2**CALL_COUNTER_SIZE] = {
-                        tc_iaddr_i[47:0],
-                        notify,
-                        updiscon,
+                        irdepth,
                         irreport,
-                        irdepth
+                        updiscon,
+                        notify,
+                        diff_addr[47:0]
                     };
+                    used_bits = used_bits + 48;
                 end
                 7: begin
                     packet_payload_o[2+:56+3+2**CALL_COUNTER_SIZE] = {
-                        tc_iaddr_i[55:0],
-                        notify,
-                        updiscon,
+                        irdepth,
                         irreport,
-                        irdepth
+                        updiscon,
+                        notify,
+                        diff_addr[55:0]
                     };
+                    used_bits = used_bits + 56;
                 end
                 8: begin
                     packet_payload_o[2+:64+3+2**CALL_COUNTER_SIZE] = {
-                        tc_iaddr_i,
-                        notify,
-                        updiscon,
+                        irdepth,
                         irreport,
-                        irdepth
+                        updiscon,
+                        notify,
+                        diff_addr
                     };
+                    used_bits = used_bits + 64;
                 end
                 endcase
 
-                payload_length_o = $ceil($bits(packet_payload_o)/8);
+                payload_length_o = (used_bits + 7)/8;
                 //end
             end
 
