@@ -95,12 +95,13 @@ module tb_trdb_packet_emitter();
         .addr_to_compress_o       (addr_to_compress_o)
     );
 
-    logic [526:0] test_vector[1000:0];
+    logic [527:0] test_vector[1000:0];
     //     length of line    # of lines
 
     initial begin // reading test vector
         $readmemb("tv_trdb_packet_emitter", test_vector);
         i = 0;
+        //reset = 0; #10;
         reset = 1;  // set == 1 -> no reset each cycle
                     // set == 0 -> reset each cycle
     end
