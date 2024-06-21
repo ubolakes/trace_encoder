@@ -234,6 +234,8 @@ module trdb_packet_emitter
                 // setting packet subformat - common for all type 3 payloads
                 packet_payload_o[3:2] = packet_f_sync_subformat_i;
                 
+                used_bits = used_bits + 2; // subformat bits
+
                 // setting the rest of payload for each type
                 case(packet_f_sync_subformat_i)
                 SF_START: begin // subformat 0
@@ -242,6 +244,8 @@ module trdb_packet_emitter
 
                     case(time_and_context)
                     2'h0: begin
+                        used_bits = used_bits + 3 + address_off * 8;
+
                         packet_payload_o[4+:1+PRIV_LEN] = {
                             branch,
                             tc_priv_i
@@ -289,7 +293,8 @@ module trdb_packet_emitter
                             };
                         end
                         endcase
-                        payload_length_o = $ceil($bits(packet_payload_o)/8);
+
+                        payload_length_o = (used_bits + 7)/8;
                     end
                     /*TODO: other cases*/
                     endcase
@@ -300,6 +305,8 @@ module trdb_packet_emitter
                     
                     case(time_and_context)
                     2'h0: begin
+                        used_bits = used_bits + 9 + address_off * 8 + XLEN;
+
                         packet_payload_o[4+:1+PRIV_LEN+CAUSE_LEN+2] = {
                             branch,
                             tc_priv_i,
@@ -357,7 +364,8 @@ module trdb_packet_emitter
                             };
                         end
                         endcase
-                        payload_length_o = $ceil($bits(packet_payload_o)/8);
+
+                        payload_length_o = (used_bits + 7)/8;
                     end
                     /*TODO: other cases*/
                     endcase
@@ -365,15 +373,20 @@ module trdb_packet_emitter
                 SF_CONTEXT: begin // subformat 2
                     case(time_and_context)
                     2'h0: begin
+                        used_bits = used_bits + 2;
+
                         packet_payload_o[4+:PRIV_LEN] = {
                             tc_priv_i
                         };
-                        payload_length_o = $ceil($bits(packet_payload_o)/8);
+
+                        payload_length_o = (used_bits + 7)/8; 
                     end
                     /*TODO: other cases*/
                     endcase
                 end
                 SF_SUPPORT: begin // subformat 3
+                    used_bits = used_bits + 7;
+
                     packet_payload_o[4+:1+1+2+3] = {
                         tc_ienable_i,
                         encoder_mode_i,
@@ -384,7 +397,8 @@ module trdb_packet_emitter
                         dloss_i,
                         doptions_i*/
                     };
-                    payload_length_o = $ceil($bits(packet_payload_o)/8);
+
+                    payload_length_o = (used_bits + 7)/8;
                 end
                 endcase
             end
@@ -667,7 +681,7 @@ module trdb_packet_emitter
                 payload_length_o = (used_bits + 7)/8;
             end
 
-            //F_OPT_EXT: begin // format 0
+            //F_OPT_EXT: begin // format 0 // TODO
                 // requires trigger unit in CPU
                 /*
                 if(notify_i) begin // request from trigger unit
