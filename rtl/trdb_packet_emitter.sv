@@ -247,8 +247,8 @@ module trdb_packet_emitter
                         used_bits = used_bits + 3 + address_off * 8;
 
                         packet_payload_o[4+:1+PRIV_LEN] = {
-                            branch,
-                            tc_priv_i
+                            tc_priv_i,
+                            branch
                         };
                         // address compression
                         case (address_off)
@@ -308,59 +308,59 @@ module trdb_packet_emitter
                         used_bits = used_bits + 9 + address_off * 8 + XLEN;
 
                         packet_payload_o[4+:1+PRIV_LEN+CAUSE_LEN+2] = {
-                            branch,
-                            tc_priv_i,
+                            interrupt,
                             ecause,
-                            interrupt
+                            tc_priv_i,
+                            branch
                         };
                         // address compression
                         case (address_off)
                         1: begin
                             packet_payload_o[7+PRIV_LEN+CAUSE_LEN+:8+XLEN] = {
-                                address[7:0],
-                                tval
+                                tval,
+                                address[7:0]
                             };
                         end
                         2: begin
                             packet_payload_o[7+PRIV_LEN+CAUSE_LEN+:16+XLEN] = {
-                                address[15:0],
-                                tval
+                                tval,
+                                address[15:0]
                             };
                         end
                         3: begin
                             packet_payload_o[7+PRIV_LEN+CAUSE_LEN+:24+XLEN] = {
-                                address[23:0],
-                                tval
+                                tval,
+                                address[23:0]
                             };
                         end
                         4: begin
                             packet_payload_o[7+PRIV_LEN+CAUSE_LEN+:32+XLEN] = {
-                                address[31:0],
-                                tval
+                                tval,
+                                address[31:0]
                             };
                         end
                         5: begin
                             packet_payload_o[7+PRIV_LEN+CAUSE_LEN+:40+XLEN] = {
-                                address[39:0],
-                                tval
+                                tval,
+                                address[39:0]
                             };
                         end
                         6: begin
                             packet_payload_o[7+PRIV_LEN+CAUSE_LEN+:48+XLEN] = {
-                                address[47:0],
-                                tval
+                                tval,
+                                address[47:0]
                             };
                         end
                         7: begin
                             packet_payload_o[7+PRIV_LEN+CAUSE_LEN+:56+XLEN] = {
-                                address[55:0],
-                                tval
+                                tval,
+                                address[55:0]
                             };
                         end
                         8: begin
                             packet_payload_o[7+PRIV_LEN+CAUSE_LEN+:64+XLEN] = {
-                                address,
-                                tval
+                                tval,
+                                address
                             };
                         end
                         endcase
@@ -388,14 +388,14 @@ module trdb_packet_emitter
                     used_bits = used_bits + 7;
 
                     packet_payload_o[4+:1+1+2+3] = {
-                        tc_ienable_i,
-                        encoder_mode_i,
-                        qual_status_i,
-                        ioptions_i //,
                         /* info required for data tracing - in the future
-                        denable_i,
+                        doptions_i,
                         dloss_i,
-                        doptions_i*/
+                        denable_i, */
+                        ioptions_i,
+                        qual_status_i,
+                        encoder_mode_i,
+                        tc_ienable_i
                     };
 
                     payload_length_o = (used_bits + 7)/8;
