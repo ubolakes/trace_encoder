@@ -225,14 +225,14 @@ module trdb_packet_emitter
             
             // setting the packet format - common for all payloads
             packet_payload_o[1:0] = packet_format_i;
+            
+            // format bits
+            used_bits = used_bits + 2;
 
             case(packet_format_i)
             F_SYNC: begin // format 3
                 // setting packet subformat - common for all type 3 payloads
                 packet_payload_o[3:2] = packet_f_sync_subformat_i;
-                
-                // increasing the number of bits used in the payload
-                used_bits = used_bits + 2;
                 
                 // setting the rest of payload for each type
                 case(packet_f_sync_subformat_i)
@@ -422,8 +422,8 @@ module trdb_packet_emitter
                     irdepth = {2**CALL_COUNTER_SIZE{updiscon}};
                 end
 
-                // increase for the common part
-                used_bits = used_bits + 3 + 2**CALL_COUNTER_SIZE;
+                // F2 payload bits
+                used_bits = used_bits + 3 + 2**CALL_COUNTER_SIZE + address_off*8;
 
                 // address compression
                 case (address_off)
@@ -435,9 +435,6 @@ module trdb_packet_emitter
                         notify,
                         diff_addr[7:0]
                     };
-                    // increasing the number of bits used in the payload
-                    used_bits = used_bits + 8;
-
                 end
                 2: begin
                     packet_payload_o[2+:16+3+2**CALL_COUNTER_SIZE] = {
@@ -447,7 +444,6 @@ module trdb_packet_emitter
                         notify,
                         diff_addr[15:0]
                     };
-                    used_bits = used_bits + 16;
                 end
                 3: begin
                     packet_payload_o[2+:24+3+2**CALL_COUNTER_SIZE] = {
@@ -457,7 +453,6 @@ module trdb_packet_emitter
                         notify,
                         diff_addr[23:0]
                     };
-                    used_bits = used_bits + 24;
                 end
                 4: begin
                     packet_payload_o[2+:32+3+2**CALL_COUNTER_SIZE] = {
@@ -467,7 +462,6 @@ module trdb_packet_emitter
                         notify,
                         diff_addr[31:0]
                     };
-                    used_bits = used_bits + 32;
                 end
                 5: begin
                     packet_payload_o[2+:40+3+2**CALL_COUNTER_SIZE] = {
@@ -477,7 +471,6 @@ module trdb_packet_emitter
                         notify,
                         diff_addr[39:0]
                     };
-                    used_bits = used_bits + 40;
                 end
                 6: begin
                     packet_payload_o[2+:48+3+2**CALL_COUNTER_SIZE] = {
@@ -487,7 +480,6 @@ module trdb_packet_emitter
                         notify,
                         diff_addr[47:0]
                     };
-                    used_bits = used_bits + 48;
                 end
                 7: begin
                     packet_payload_o[2+:56+3+2**CALL_COUNTER_SIZE] = {
@@ -497,7 +489,6 @@ module trdb_packet_emitter
                         notify,
                         diff_addr[55:0]
                     };
-                    used_bits = used_bits + 56;
                 end
                 8: begin
                     packet_payload_o[2+:64+3+2**CALL_COUNTER_SIZE] = {
@@ -507,7 +498,6 @@ module trdb_packet_emitter
                         notify,
                         diff_addr
                     };
-                    used_bits = used_bits + 64;
                 end
                 endcase
 
@@ -558,116 +548,123 @@ module trdb_packet_emitter
                     irreport = updiscon;
                     irdepth = {2**CALL_COUNTER_SIZE{updiscon}};
                 end
-                
+
+                // branches and branch_map bits
+                used_bits = used_bits + BRANCH_COUNT_LEN + branch_map_off;
+
                 // adding branch count and branch map
                 if (branch_map_off == 0) begin
                     packet_payload_o[2+:BRANCH_COUNT_LEN] = branches_i;
                 end else if (branch_map_off == 1) begin
                     packet_payload_o[2+:BRANCH_COUNT_LEN+1] = {
-                        branches_i,
-                        branch_map_i[0]
+                        branch_map_i[0],
+                        branches_i
                     };
                 end else if (branch_map_off == 9) begin
                     packet_payload_o[2+:BRANCH_COUNT_LEN+9] = {
-                        branches_i,
-                        branch_map_i[8:0]
+                        branch_map_i[8:0],
+                        branches_i
                     };
                 end else if (branch_map_off == 17) begin
                     packet_payload_o[2+:BRANCH_COUNT_LEN+17] = {
-                        branches_i,
-                        branch_map_i[16:0]
+                        branch_map_i[16:0],
+                        branches_i
                     };
                 end else if (branch_map_off == 25) begin
                     packet_payload_o[2+:BRANCH_COUNT_LEN+25] = {
-                        branches_i,
-                        branch_map_i[24:0]
+                        branch_map_i[24:0],
+                        branches_i
                     };
                 end else if (branch_map_off == 31) begin
                     packet_payload_o[2+:BRANCH_COUNT_LEN+31] = {
-                        branches_i,
-                        branch_map_i[30:0]
+                        branch_map_i[30:0],
+                        branches_i
                     };
                 end
 
                 // attaching the rest of the payload
                 if(branches_i < 31) begin // branch map not full - address
+                    // rest of the payload bits
+                    used_bits = used_bits + 3 + 2**CALL_COUNTER_SIZE + address_off*8;
+                    
                     // address compression
                     case (address_off)
                     1: begin
                         packet_payload_o[2+BRANCH_COUNT_LEN+branch_map_off+:8+3+2**CALL_COUNTER_SIZE] = {
-                            diff_addr[7:0],
-                            notify,
-                            updiscon,
+                            irdepth,
                             irreport,
-                            irdepth
+                            updiscon,
+                            notify,
+                            diff_addr[7:0]
                         };
                     end
                     2: begin
                         packet_payload_o[2+BRANCH_COUNT_LEN+branch_map_off+:16+3+2**CALL_COUNTER_SIZE] = {
-                            diff_addr[15:0],
-                            notify,
-                            updiscon,
+                            irdepth,
                             irreport,
-                            irdepth
+                            updiscon,
+                            notify,
+                            diff_addr[15:0]
                         };
                     end
                     3: begin
                         packet_payload_o[2+BRANCH_COUNT_LEN+branch_map_off+:24+3+2**CALL_COUNTER_SIZE] = {
-                            diff_addr[23:0],
-                            notify,
-                            updiscon,
+                            irdepth,
                             irreport,
-                            irdepth
+                            updiscon,
+                            notify,
+                            diff_addr[23:0]
                         };
                     end
                     4: begin
                         packet_payload_o[2+BRANCH_COUNT_LEN+branch_map_off+:32+3+2**CALL_COUNTER_SIZE] = {
-                            diff_addr[31:0],
-                            notify,
-                            updiscon,
+                            irdepth,
                             irreport,
-                            irdepth
+                            updiscon,
+                            notify,
+                            diff_addr[31:0]
                         };
                     end
                     5: begin
                         packet_payload_o[2+BRANCH_COUNT_LEN+branch_map_off+:40+3+2**CALL_COUNTER_SIZE] = {
-                            diff_addr[39:0],
-                            notify,
-                            updiscon,
+                            irdepth,
                             irreport,
-                            irdepth
+                            updiscon,
+                            notify,
+                            diff_addr[39:0]
                         };
                     end
                     6: begin
                         packet_payload_o[2+BRANCH_COUNT_LEN+branch_map_off+:48+3+2**CALL_COUNTER_SIZE] = {
-                            diff_addr[47:0],
-                            notify,
-                            updiscon,
+                            irdepth,
                             irreport,
-                            irdepth
+                            updiscon,
+                            notify,
+                            diff_addr[47:0]
                         };
                     end
                     7: begin
                         packet_payload_o[2+BRANCH_COUNT_LEN+branch_map_off+:56+3+2**CALL_COUNTER_SIZE] = {
-                            diff_addr[55:0],
-                            notify,
-                            updiscon,
+                            irdepth,
                             irreport,
-                            irdepth
+                            updiscon,
+                            notify,
+                            diff_addr[56:0]
                         };
                     end
                     8: begin
                         packet_payload_o[2+BRANCH_COUNT_LEN+branch_map_off+:64+3+2**CALL_COUNTER_SIZE] = {
-                            diff_addr,
-                            notify,
-                            updiscon,
+                            irdepth,
                             irreport,
-                            irdepth
+                            updiscon,
+                            notify,
+                            diff_addr
                         };
                     end
                     endcase
                 end
-                payload_length_o = $ceil($bits(packet_payload_o)/8);
+                
+                payload_length_o = (used_bits + 7)/8;
             end
 
             //F_OPT_EXT: begin // format 0
