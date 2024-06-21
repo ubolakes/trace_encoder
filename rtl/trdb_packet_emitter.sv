@@ -649,7 +649,7 @@ module trdb_packet_emitter
                             irreport,
                             updiscon,
                             notify,
-                            diff_addr[56:0]
+                            diff_addr[55:0]
                         };
                     end
                     8: begin
