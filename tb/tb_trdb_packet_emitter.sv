@@ -25,31 +25,34 @@ module tb_trdb_packet_emitter();
     logic                           notime_i;
     logic                           tc_branch_i;
     logic                           tc_branch_taken_i;
-    logic [1:0]                     priv_i;
-    logic [XLEN-1:0]                iaddr_i;
+    logic [1:0]                     tc_priv_i;
+    logic [XLEN-1:0]                tc_iaddr_i;
     logic                           lc_tc_mux_i;
     logic                           thaddr_i;
-    logic [XLEN-1:2]                tvec_i;
-    logic [XLEN:0]                  lc_epc_i;
-    logic                           ienable_i;
+    logic [XLEN-1:2]                tc_tvec_i;
+    logic [XLEN-1:0]                lc_epc_i;
+    logic                           tc_ienable_i;
     logic                           encoder_mode_i;
     qual_status_e                   qual_status_i;
     ioptions_e                      ioptions_i;
     logic                           lc_updiscon_i;
     logic [BRANCH_COUNT_LEN-1:0]    branches_i;
-    logic [BRANCH_MAP_LEN-1:0]      branch_map_i;    
+    logic [BRANCH_MAP_LEN-1:0]      branch_map_i;
+    logic [$clog2(XLEN):0]          keep_bits_i;  
 
     // outputs
     logic                   packet_valid_o;
     logic [PAYLOAD_LEN-1:0] packet_payload_o;
     logic [P_LEN-1:0]       payload_length_o;
     logic                   branch_map_flush_o;
+    logic [XLEN-1:0]        addr_to_compress_o;
 
     // testing only output
     logic                   expected_packet_valid;
     logic [PAYLOAD_LEN-1:0] expected_packet_payload;
     logic [P_LEN-1:0]       expected_payload_length;
     logic                   expected_branch_map_flush;
+    logic [XLEN-1:0]        expected_addr_to_compress;
 
     // iteration variable
     logic [31:0] i;
@@ -71,26 +74,28 @@ module tb_trdb_packet_emitter();
         .notime_i                 (notime_i),
         .tc_branch_i              (tc_branch_i),
         .tc_branch_taken_i        (tc_branch_taken_i),
-        .priv_i                   (priv_i),
-        .iaddr_i                  (iaddr_i),
+        .tc_priv_i                (tc_priv_i),
+        .tc_iaddr_i               (tc_iaddr_i),
         .lc_tc_mux_i              (lc_tc_mux_i),
         .thaddr_i                 (thaddr_i),
-        .tvec_i                   (tvec_i),
+        .tc_tvec_i                (tc_tvec_i),
         .lc_epc_i                 (lc_epc_i),
-        .ienable_i                (ienable_i),
+        .tc_ienable_i             (tc_ienable_i),
         .encoder_mode_i           (encoder_mode_i),
         .qual_status_i            (qual_status_i),
         .ioptions_i               (ioptions_i),
         .lc_updiscon_i            (lc_updiscon_i),
         .branches_i               (branches_i),
         .branch_map_i             (branch_map_i),
+        .keep_bits_i              (keep_bits_i),
         .packet_valid_o           (packet_valid_o),
         .packet_payload_o         (packet_payload_o),
         .payload_length_o         (payload_length_o),
-        .branch_map_flush_o       (branch_map_flush_o)
+        .branch_map_flush_o       (branch_map_flush_o),
+        .addr_to_compress_o       (addr_to_compress_o)
     );
 
-    logic [:0] test_vector[1000:0];
+    logic [526:0] test_vector[1000:0];
     //     length of line    # of lines
 
     initial begin // reading test vector
@@ -114,28 +119,30 @@ module tb_trdb_packet_emitter();
         notime_i,
         tc_branch_i,
         tc_branch_taken_i,
-        priv_i,
-        iaddr_i,
+        tc_priv_i,
+        tc_iaddr_i,
         lc_tc_mux_i,
         thaddr_i,
-        tvec_i,
+        tc_tvec_i,
         lc_epc_i,
-        ienable_i,
+        tc_ienable_i,
         encoder_mode_i,
         qual_status_i,
         ioptions_i,
         lc_updiscon_i,
         branches_i,
         branch_map_i,
+        keep_bits_i,
         expected_packet_valid,
         expected_packet_payload,
         expected_payload_length,
-        expected_branch_map_flush
+        expected_branch_map_flush,
+        expected_addr_to_compress
         } = test_vector[i]; #10;
         
     end
 
-    always_ff @(negedge clk) begin // prints the line if it's wrong
+    always @(negedge clk) begin // prints the line if it's wrong
         // packet_valid_o
         if(expected_packet_valid !== packet_valid_o) begin
             $display("Wrong valid: %b!=%b", expected_packet_valid, packet_valid_o);
@@ -152,6 +159,11 @@ module tb_trdb_packet_emitter();
         if(expected_branch_map_flush !== branch_map_flush_o) begin
             $display("Wrong branch map flush: %b!=%b", expected_branch_map_flush, branch_map_flush_o);
         end
+        // addr_to_compress_o
+        if(expected_addr_to_compress !== addr_to_compress_o) begin
+            $display("Wrong address to compress: %b!=%b", expected_addr_to_compress, addr_to_compress_o);
+        end
+
         // index increase
         i = i + 1;
     end
