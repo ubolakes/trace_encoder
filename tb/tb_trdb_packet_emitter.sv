@@ -101,7 +101,7 @@ module tb_trdb_packet_emitter();
     initial begin // reading test vector
         $readmemb("tv_trdb_packet_emitter", test_vector);
         i = 0;
-        //reset = 0; #10;
+        reset = 0; #10;
         reset = 1;  // set == 1 -> no reset each cycle
                     // set == 0 -> reset each cycle
     end
