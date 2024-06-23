@@ -308,6 +308,7 @@ module trdb_packet_emitter
                         used_bits = used_bits + 9 + address_off * 8 + XLEN;
 
                         packet_payload_o[4+:1+PRIV_LEN+CAUSE_LEN+2] = {
+                            thaddr_i,
                             interrupt,
                             ecause,
                             tc_priv_i,
