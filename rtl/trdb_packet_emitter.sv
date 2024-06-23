@@ -115,11 +115,11 @@ module trdb_packet_emitter
     logic                               branch;
     logic [XLEN-1:0]                    address;
     logic [CAUSE_LEN-1:0]               ecause;
-    logic [XLEN-2:0]                    diff_addr;
+    logic [XLEN-1:0]                    diff_addr;
     logic [XLEN-1:0]                    latest_addr_d;
     logic [XLEN-1:0]                    latest_addr_q;
-    logic                               tval;
-    logic                               time_and_context; // if payload requires time/context
+    logic [XLEN-1:0]                    tval;
+    logic [1:0]                         time_and_context; // if payload requires time/context
     ioptions_e                          ioptions;
     logic                               notify;
     logic                               updiscon;
@@ -243,7 +243,7 @@ module trdb_packet_emitter
                     update_latest_address = '1;
 
                     case(time_and_context)
-                    2'h0: begin
+                    2'b11: begin
                         used_bits = used_bits + 3 + address_off * 8;
 
                         packet_payload_o[4+:1+PRIV_LEN] = {
@@ -304,7 +304,7 @@ module trdb_packet_emitter
                     update_latest_address = '1;
                     
                     case(time_and_context)
-                    2'h0: begin
+                    2'b11: begin
                         used_bits = used_bits + 9 + address_off * 8 + XLEN;
 
                         packet_payload_o[4+:1+PRIV_LEN+CAUSE_LEN+2] = {
@@ -372,7 +372,7 @@ module trdb_packet_emitter
                 end
                 SF_CONTEXT: begin // subformat 2
                     case(time_and_context)
-                    2'h0: begin
+                    2'b11: begin
                         used_bits = used_bits + 2;
 
                         packet_payload_o[4+:PRIV_LEN] = {
