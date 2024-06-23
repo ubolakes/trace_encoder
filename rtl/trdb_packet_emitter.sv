@@ -141,7 +141,7 @@ module trdb_packet_emitter
 
     always_comb begin : address_to_compress
         addr_to_compress_o = '0;
-        if (ioptions_i == FULL_ADDRESS &&
+        if (ioptions_i !== FULL_ADDRESS &&
             packet_format_i == F_SYNC &&
             packet_f_sync_subformat_i == SF_TRAP) begin
             addr_to_compress_o = address;
