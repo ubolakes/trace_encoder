@@ -132,7 +132,7 @@ module trdb_packet_emitter
 
     // assigning values
     assign branch = ~(tc_branch_i && tc_branch_taken_i);
-    assign address = thaddr_i ? 32'(signed'(tc_tvec_i)) : lc_epc_i; // sign extending tc_tvec_i
+    assign address = thaddr_i ? {tc_tvec_i, 2'b0} : lc_epc_i;
     assign ecause = lc_tc_mux_i ? tc_cause_i : lc_cause_i;
     assign tval = lc_tc_mux_i ? tc_tval_i : lc_tval_i;
     assign interrupt = lc_tc_mux_i ? tc_interrupt_i : lc_interrupt_i;
