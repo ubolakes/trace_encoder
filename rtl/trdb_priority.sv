@@ -89,11 +89,10 @@ module trdb_priority (
     output logic                                lc_tc_mux_o, // operates the MUX to choose between lc or tc cause, tval, interrupt: 0 -> lc, 1 
     output logic                                resync_timer_rst_o, // resets counter
     output qual_status_e                        qual_status_o,
+    //output logic                                irreport_o, // non mandatory, required implicit return mode
     // output for compression
     output logic [$clog2(XLEN):0]               keep_bits_o
     );
-    //output logic                                irreport_o, // non mandatory, required implicit return mode
-    //);
 
 
     /* internal signals required for packet determination */
