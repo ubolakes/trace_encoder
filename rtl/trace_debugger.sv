@@ -38,6 +38,7 @@ module trace_debugger import trdb_pkg::*;
 
     // outputs
     // info needed for the encapsulator
+    output logic                    packet_valid_o,
     output logic [PTYPE_LEN-1:0]    packet_type_o,
     output logic [P_LEN-1:0]        packet_length_o, // in bytes
     output logic [PAYLOAD_LEN-1:0]  packet_payload_o,
@@ -254,6 +255,7 @@ module trace_debugger import trdb_pkg::*;
 
     // output
     assign packet_type_o = {packet_format, packet_f_sync_subformat};
+    assign packet_valid_o = packet_emitted;
     // sideband
     assign stall_o = ~packets_lost_i;
 
