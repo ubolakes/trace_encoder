@@ -1,7 +1,7 @@
 [submodule "rtl/common_cells"]
 	path = rtl/common_cells
 	url = git@github.com:pulp-platform/common_cells.git
-	branch = adda219
+	branch = f4d6406
 [submodule "rtl/tech_cells_generic"]
 	path = rtl/tech_cells_generic
 	url = git@github.com:pulp-platform/tech_cells_generic.git
