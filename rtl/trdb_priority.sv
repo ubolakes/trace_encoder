@@ -50,7 +50,7 @@ module trdb_priority (
     input logic tc_enc_disabled_i,
     input logic tc_opmode_change_i,
     input logic lc_final_qualified_i,
-    //input logic tc_packets_lost_i, // non mandatory
+    input logic tc_packets_lost_i, // non mandatory
 
     // nc (next cycle) signals
     input logic nc_exception_i,
@@ -135,7 +135,7 @@ module trdb_priority (
                                 (nc_precise_context_report_i || nc_context_report_as_disc_i))*/) && 
                                 ~nc_branch_map_empty_i;
     assign  tc_f3_sf3       = tc_enc_enabled_i || tc_enc_disabled_i || tc_opmode_change_i ||
-                                lc_final_qualified_i /*|| tc_packets_lost_i*/;
+                                lc_final_qualified_i || tc_packets_lost_i;
     assign reported_update  =   (packet_format_o == F_SYNC && packet_f_sync_subformat_o == SF_TRAP && ~thaddr_o) || 
                                 (packet_format_o == F_SYNC && packet_f_sync_subformat_o == SF_START && ~tc_exc_only);
 
@@ -189,9 +189,9 @@ module trdb_priority (
                     qual_status_o = ENDED_NTR;
                 end else if(lc_ended_rep_q == '1) begin
                     qual_status_o = ENDED_REP;
-                end/* else if(tc_packets_lost_i == '1) begin
+                end else if(tc_packets_lost_i == '1) begin
                     qual_status_o = TRACE_LOST;
-                end*/
+                end
                 valid_o = '1;
             /* TODO:    if for halted and reset sideband signals,
                         if at least one asserted -> considers unqualified*/  

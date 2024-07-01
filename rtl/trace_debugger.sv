@@ -34,12 +34,15 @@ module trace_debugger import trdb_pkg::*;
     input logic [XLEN-1:0]          epc_i, // epc_q, required for format 3 subformat 1
     //input logic [TRIGGER_LEN-1:0]   trigger_i, // must be supported CPU side
     //input logic [CTYPE_LEN-1:0]     ctype_i, // spec says it's 1 or 2 bit wide
+    input logic                     packets_lost_i, // non mandatory
 
     // outputs
     // info needed for the encapsulator
     output logic [PTYPE_LEN-1:0]    packet_type_o,
     output logic [P_LEN-1:0]        packet_length_o, // in bytes
-    output logic [PAYLOAD_LEN-1:0]  packet_payload_o
+    output logic [PAYLOAD_LEN-1:0]  packet_payload_o,
+    // sideband signals
+    output logic                    stall_o
 );
 
     /* signals for management */
@@ -251,6 +254,8 @@ module trace_debugger import trdb_pkg::*;
 
     // output
     assign packet_type_o = {packet_format, packet_f_sync_subformat};
+    // sideband
+    assign stall_o = ~packets_lost_i;
 
 
     /* MODULES INSTANTIATION */
@@ -305,7 +310,7 @@ module trace_debugger import trdb_pkg::*;
         .tc_enc_disabled_i        (enc_disabled_q),
         .tc_opmode_change_i       (enc_config_change_q),
         .lc_final_qualified_i     (final_qualified_q),
-        //.tc_packets_lost_i(), // non mandatory
+        .tc_packets_lost_i        (packets_lost_i), // non mandatory
         .nc_exception_i           (exception0_q),
         .nc_privchange_i          (privchange_d),
         //.nc_context_change_i(),
