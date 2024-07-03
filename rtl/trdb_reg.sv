@@ -58,7 +58,7 @@ module trdb_reg
     assign jump_target_cache = '0;
     assign configuration_o = DELTA_ADDRESS; // so far only this supported
     
-    assign trace_enable_d = ~trace_req_off_i || trace_req_on_i;
+    assign trace_enable_d = trace_req_on_i; // || ~trace_req_off_i 
     assign trace_enable_o = trace_enable_q;
 
     assign nocontext_o = '1;

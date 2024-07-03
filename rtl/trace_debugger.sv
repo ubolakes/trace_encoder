@@ -279,7 +279,7 @@ module trace_debugger import trdb_pkg::*;
         .encoder_mode_o   (encoder_mode),
         .delta_address_o  (delta_address),
         .configuration_o  (enc_config_d),
-        .clk_gated_o    (clk_gated)
+        .clk_gated_o      (clk_gated)
     );
 
     /* FILTER */
