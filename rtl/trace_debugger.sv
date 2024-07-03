@@ -34,7 +34,7 @@ module trace_debugger import trdb_pkg::*;
     input logic [XLEN-1:0]          epc_i, // epc_q, required for format 3 subformat 1
     //input logic [TRIGGER_LEN-1:0]   trigger_i, // must be supported CPU side
     //input logic [CTYPE_LEN-1:0]     ctype_i, // spec says it's 1 or 2 bit wide
-    input logic                     packets_lost_i, // non mandatory
+    input logic                     encapsulator_ready_i, // non mandatory
 
     // outputs
     // info needed for the encapsulator
@@ -90,6 +90,7 @@ module trace_debugger import trdb_pkg::*;
     
     /* MANAGING LC, TC, NC SIGNALS */
     /*
+    TODO: use a shift register for cleaner code
     To manage lc, tc, nc signals I decided to use two 
     serially connected FFs.
             ___________                    ___________              
@@ -257,7 +258,7 @@ module trace_debugger import trdb_pkg::*;
     assign packet_type_o = {packet_format, packet_f_sync_subformat};
     assign packet_valid_o = packet_emitted;
     // sideband
-    assign stall_o = ~packets_lost_i;
+    assign stall_o = encapsulator_ready_i;
 
 
     /* MODULES INSTANTIATION */
@@ -312,7 +313,7 @@ module trace_debugger import trdb_pkg::*;
         .tc_enc_disabled_i        (enc_disabled_q),
         .tc_opmode_change_i       (enc_config_change_q),
         .lc_final_qualified_i     (final_qualified_q),
-        .tc_packets_lost_i        (packets_lost_i), // non mandatory
+        .tc_packets_lost_i        (encapsulator_ready_i), // non mandatory
         .nc_exception_i           (exception0_q),
         .nc_privchange_i          (privchange_d),
         //.nc_context_change_i(),
@@ -433,6 +434,7 @@ module trace_debugger import trdb_pkg::*;
         if(~rst_ni) begin
             exception0_q <= '0;
             exception1_q <= '0;
+            exception2_q <= '0;
             updiscon0_q <= '0;
             updiscon1_q <= '0;
             cause0_q <= '0;
@@ -478,6 +480,7 @@ module trace_debugger import trdb_pkg::*;
         end else begin
             exception0_q <= exception0_d;
             exception1_q <= exception1_d;
+            exception2_q <= exception2_d;
             updiscon0_q <= updiscon0_d;
             updiscon1_q <= updiscon1_d;
             cause0_q <= cause0_d;
