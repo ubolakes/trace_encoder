@@ -262,7 +262,7 @@ module trace_debugger import trdb_pkg::*;
     assign stall_o = encapsulator_ready_i;
 
     // other
-    assign turn_on_tracer_d = retired_i;
+    assign turn_on_tracer_d = iretired_i;
 
 
     /* MODULES INSTANTIATION */
