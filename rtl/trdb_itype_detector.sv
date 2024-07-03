@@ -11,7 +11,6 @@ import trdb_pkg::*;
 
 module trdb_itype_detector
 (
-    input logic             valid_i,
     input logic [XLEN-1:0]  nc_inst_data_i,
     input logic             tc_compressed_i,
     input logic [XLEN-1:0]  tc_iaddr_i,
