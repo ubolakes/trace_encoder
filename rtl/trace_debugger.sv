@@ -79,6 +79,7 @@ module trace_debugger import trdb_pkg::*;
     // not classified
     logic                           nc_branch_map_empty;
     logic                           clk_gated;
+    logic                           turn_on_tracer_d, turn_on_tracer_q;
 
     // we have three phases, called last cycle (lc), this cycle (tc) and next
     // cycle (nc), based on which we make decision whether we need to emit a
@@ -260,6 +261,9 @@ module trace_debugger import trdb_pkg::*;
     // sideband
     assign stall_o = encapsulator_ready_i;
 
+    // other
+    assign turn_on_tracer_d = retired_i;
+
 
     /* MODULES INSTANTIATION */
     /* MAPPED REGISTERS */
@@ -267,7 +271,7 @@ module trace_debugger import trdb_pkg::*;
         .clk_i            (clk_i),
         .rst_ni           (rst_ni),
         .trace_req_off_i  (trace_req_deactivate), // from filter
-        .trace_req_on_i   (trigger_trace_on),      // from trigger unit
+        .trace_req_on_i   (turn_on_tracer_q), // trigger_trace_on      // from trigger unit
         .trace_enable_o   (trace_enable),
         .trace_activated_o(trace_activated),
         .nocontext_o      (nocontext),
@@ -477,6 +481,7 @@ module trace_debugger import trdb_pkg::*;
             enc_config_change_q <= '0;
             branch_q <= '0;
             branch_taken_q <= '0;
+            turn_on_tracer_q <= '0;
         end else begin
             exception0_q <= exception0_d;
             exception1_q <= exception1_d;
@@ -523,6 +528,9 @@ module trace_debugger import trdb_pkg::*;
             enc_config_change_q <= enc_config_change_d;
             branch_q <= branch_d;
             branch_taken_q <= branch_taken_d;
+            if (!turn_on_tracer_q) begin
+                turn_on_tracer_q <= turn_on_tracer_d;
+            end
         end
     end
     
