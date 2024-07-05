@@ -258,7 +258,7 @@ module trace_debugger import trdb_pkg::*;
     assign nc_branch_map_empty = nc_branch_map_flush || (tc_branch_map_empty && ~branch_d);
 
     // output
-    assign packet_subformat = (packet_format_o == F_OPT_EXT) 
+    assign packet_subformat = (packet_format == F_OPT_EXT) 
                             ? packet_f_opt_ext_subformat 
                             : packet_f_sync_subformat;
     assign packet_type_o = {packet_format, packet_subformat};
