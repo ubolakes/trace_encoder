@@ -92,7 +92,7 @@ module trdb_reg
 
     // edge detector for encapsulator_ready_i
     // turns on and off the tracing
-    edge_detect i_edge_detect(
+    edge_detect i_edge_detect_enc(
         .clk_i(clk_gated),
         .rst_ni(rst_ni),
         .d_i(encapsulator_ready_i),
@@ -102,7 +102,7 @@ module trdb_reg
 
     // edge detector for trace_req_on_i
     // turns on and off the tracing
-    edge_detect i_edge_detect(
+    edge_detect i_edge_detect_on(
         .clk_i(clk_gated),
         .rst_ni(rst_ni),
         .d_i(trace_req_on_i),
@@ -112,7 +112,7 @@ module trdb_reg
 
     // edge detector for trace_req_off_i
     // turns on and off the tracing
-    edge_detect i_edge_detect(
+    edge_detect i_edge_detect_off(
         .clk_i(clk_gated),
         .rst_ni(rst_ni),
         .d_i(trace_req_off_i),
