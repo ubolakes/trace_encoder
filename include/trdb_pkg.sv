@@ -7,7 +7,6 @@ package trdb_pkg;
     localparam CAUSE_LEN = 5;
     localparam PRIV_LEN = 2; // depends on CPU implementation
     localparam INST_LEN = 32;
-    localparam PTYPE_LEN = 4; // is it F + SF? spec not clear
     localparam P_LEN = 5;
     localparam PAYLOAD_LEN = 256;
     localparam TRIGGER_LEN = 4;
@@ -71,6 +70,19 @@ typedef enum logic[2:0] {
     BRANCH_PREDICTION   = 3'h5,
     JUMP_TARGET_CACHE   = 3'h6
 } ioptions_e; // instruction trace options
+
+// enum that expresses the packet format and 
+// subformat to better readability
+typedef enum logic[3:0] {
+    F0SF0   = 4'h0,
+    F0SF1   = 4'h1,
+    F1      = 4'h4,
+    F2      = 4'h8,
+    F3SF0   = 4'hC,
+    F3SF1   = 4'hD,
+    F3SF2   = 4'hE,
+    F3SF3   = 4'hF
+} it_packet_type_e; // it stands for "instruction trace"
 
 /*TODO:
     doptions struct for data tracing
