@@ -24,10 +24,16 @@ module trace_debugger import trdb_pkg::*;
     input logic                     iretired_i, // core_events_o.retired_i 
     input logic                     exception_i, // exception
     input logic                     interrupt_i, // cause_irq_q - used to discriminate interrupt
-    input logic [CAUSE_LEN-1:0]     cause_i, // cause_q
+    input logic [CAUSE_LEN-1:0]     ucause_i, // user cause
+    input logic [CAUSE_LEN-1:0]     scause_i, // supervisor cause
+    input logic [CAUSE_LEN-1:0]     vscause_i, // virtual supervisor cause
+    input logic [CAUSE_LEN-1:0]     mcause_i, // machine cause
     input logic [XLEN-1:2]          tvec_i, // tvec_q, contains trap handler address
-    input logic [XLEN-1:0]          tval_i, // not implemented in snitch, mandatory in spec
-    input logic [PRIV_LEN-1:0]      priv_lvl_i, // priv_lvl_q
+    input logic [XLEN-1:0]          utval_i, // user tval
+    input logic [XLEN-1:0]          stval_i, // supervisor tval
+    input logic [XLEN-1:0]          vstval_i, // virtual supervisor tval
+    input logic [XLEN-1:0]          mtval_i, // machine tval
+    input priv_lvl_t                priv_lvl_i, // priv_lvl_q
     input logic [INST_LEN-1:0]      inst_data_i, // inst_data
     //input logic                     compressed, // to discriminate compressed instrs
     input logic [XLEN-1:0]          pc_i, //pc_q - instruction address
@@ -82,6 +88,8 @@ module trace_debugger import trdb_pkg::*;
     logic                           nc_branch_map_empty;
     logic                           clk_gated;
     logic                           turn_on_tracer_d, turn_on_tracer_q;
+    logic [CAUSE_LEN-1:0]           cause;
+    logic [XLEN-1:0]                tval;
 
     // we have three phases, called last cycle (lc), this cycle (tc) and next
     // cycle (nc), based on which we make decision whether we need to emit a
@@ -204,6 +212,29 @@ module trace_debugger import trdb_pkg::*;
     */
     // maybe it's enough to define values and hardwire them to 0
 
+    // combinatorial network to assign cause and tval according to the priv_lvl
+    always_comb begin
+        case(priv_lvl_i)
+        M: begin
+            cause = mcause_i;
+            tval = mtval_i;
+        end
+        VS: begin
+            cause = vscause_i;
+            tval = vstval_i;
+        end
+        S: begin
+            cause = scause_i;
+            tval = stval_i;
+        end
+        U: begin
+            cause = ucause_i;
+            tval = utval_i;
+        end
+        endcase
+    end
+
+
     /* ASSIGNMENT */
     /* hardwired assignments */
     assign compressed = '0;
@@ -236,9 +267,9 @@ module trace_debugger import trdb_pkg::*;
     assign iretired0_d = iretired_i;
     assign exception0_d = exception_i;
     assign interrupt0_d = interrupt_i;
-    assign cause0_d = cause_i;
+    assign cause0_d = cause;
     assign tvec0_d = tvec_i;
-    assign tval0_d = '0; // not supported by snitch - hardwired to 0 //tval_i;
+    assign tval0_d = tval; // not supported by snitch
     assign priv_lvl0_d = priv_lvl_i;
     assign inst_data0_d = inst_data_i;
     assign iaddr0_d = pc_i;
