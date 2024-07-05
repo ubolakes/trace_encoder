@@ -47,6 +47,7 @@ module trdb_reg
     logic trace_enable_d, trace_enable_q;
     // trace enabling
     logic trace_req_off, trace_req_on;
+    logic enc_ready, enc_full;
     logic toggle;
     logic clk_gated;
     logic test_enabled;
@@ -61,7 +62,7 @@ module trdb_reg
     assign jump_target_cache = '0;
     assign configuration_o = DELTA_ADDRESS; // so far only this supported
     
-    assign toggle = (trace_req_on_i || trace_req_on) || (trace_req_off_i || trace_req_off);
+    assign toggle = (trace_req_on || enc_ready) || (trace_req_off || enc_full);
     assign trace_enable_d = toggle ? ~trace_enable_q : trace_enable_q;
     assign trace_enable_o = trace_enable_d;
 
@@ -95,8 +96,28 @@ module trdb_reg
         .clk_i(clk_gated),
         .rst_ni(rst_ni),
         .d_i(encapsulator_ready_i),
+        .re_o(enc_ready),
+        .fe_o(enc_full)
+    );
+
+    // edge detector for trace_req_on_i
+    // turns on and off the tracing
+    edge_detect i_edge_detect(
+        .clk_i(clk_gated),
+        .rst_ni(rst_ni),
+        .d_i(trace_req_on_i),
         .re_o(trace_req_on),
-        .fe_o(trace_req_off)
+        .fe_o()
+    );
+
+    // edge detector for trace_req_off_i
+    // turns on and off the tracing
+    edge_detect i_edge_detect(
+        .clk_i(clk_gated),
+        .rst_ni(rst_ni),
+        .d_i(trace_req_off_i),
+        .re_o(trace_req_off),
+        .fe_o()
     );
 
 endmodule
