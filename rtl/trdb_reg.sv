@@ -48,6 +48,7 @@ module trdb_reg
     // trace enabling
     logic trace_req_off, trace_req_on;
     logic enc_ready, enc_full;
+    logic turn_on, turn_off;
     logic toggle;
     logic clk_gated;
     logic test_enabled;
@@ -62,7 +63,9 @@ module trdb_reg
     assign jump_target_cache = '0;
     assign configuration_o = DELTA_ADDRESS; // so far only this supported
     
-    assign toggle = (trace_req_on || enc_ready) || (trace_req_off || enc_full);
+    assign turn_on = (trace_enable_q == 0) && (trace_req_on || enc_ready);
+    assign turn_off = (trace_enable_q == 1) && (trace_req_off || enc_full);
+    assign toggle = turn_on || turn_off;
     assign trace_enable_d = toggle ? ~trace_enable_q : trace_enable_q;
     assign trace_enable_o = trace_enable_d;
 
