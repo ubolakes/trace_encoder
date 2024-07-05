@@ -7,6 +7,7 @@ package trdb_pkg;
     localparam CAUSE_LEN = 5;
     localparam PRIV_LEN = 2; // depends on CPU implementation
     localparam INST_LEN = 32;
+    localparam PTYPE_LEN = 4; // is it F + SF? spec not clear
     localparam P_LEN = 5;
     localparam PAYLOAD_LEN = 256;
     localparam TRIGGER_LEN = 4;
