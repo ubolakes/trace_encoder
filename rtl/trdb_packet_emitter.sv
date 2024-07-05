@@ -44,7 +44,7 @@ module trdb_packet_emitter
     // format 3 subformat 0 specific signals
     input logic                         tc_branch_i,
     input logic                         tc_branch_taken_i,
-    input priv_lvl_t                    tc_priv_i,
+    input logic [PRIV_LEN-1:0]          tc_priv_i,
     //input logic [:0]                    time_i,    // optional
     //input logic [:0]                    context_i, // optional
     input logic [XLEN-1:0]              tc_iaddr_i,
