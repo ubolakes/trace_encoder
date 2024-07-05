@@ -15,7 +15,7 @@ import trdb_pkg::*;
 
 module trdb_resync_counter #(
     parameter MODE = CYCLE_MODE, // counts cycles as default
-    parameter MAX_VALUE = 2'hFFFF // default max value, can be personalized
+    parameter MAX_VALUE = 16'hFFFF // default max value, can be personalized
     )
     (
     input logic clk_i,
