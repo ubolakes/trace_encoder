@@ -308,6 +308,7 @@ module trace_debugger import trdb_pkg::*;
         .rst_ni           (rst_ni),
         .trace_req_off_i  (trace_req_deactivate), // from filter
         .trace_req_on_i   (turn_on_tracer_q), // trigger_trace_on      // from trigger unit
+        .encapsulator_ready_i(encapsulator_ready_i),
         .trace_enable_o   (trace_enable),
         .trace_activated_o(trace_activated),
         .nocontext_o      (nocontext),
@@ -353,7 +354,7 @@ module trace_debugger import trdb_pkg::*;
         .tc_enc_disabled_i        (enc_disabled_q),
         .tc_opmode_change_i       (enc_config_change_q),
         .lc_final_qualified_i     (final_qualified_q),
-        .tc_packets_lost_i        (encapsulator_ready_i), // non mandatory
+        .tc_packets_lost_i        (~encapsulator_ready_i), // non mandatory
         .nc_exception_i           (exception0_q),
         .nc_privchange_i          (privchange_d),
         //.nc_context_change_i(),
