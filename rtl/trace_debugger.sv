@@ -214,19 +214,19 @@ module trace_debugger import trdb_pkg::*;
     // combinatorial network to assign cause and tval according to the priv_lvl
     always_comb begin
         case(priv_lvl_i)
-        M: begin
+        2'b11: begin
             cause = mcause_i;
             tval = mtval_i;
         end
-        VS: begin
+        2'b10: begin
             cause = vscause_i;
             tval = vstval_i;
         end
-        S: begin
+        2'b01: begin
             cause = scause_i;
             tval = stval_i;
         end
-        U: begin
+        2'b00: begin
             cause = ucause_i;
             tval = utval_i;
         end
