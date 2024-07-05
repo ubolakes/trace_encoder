@@ -39,7 +39,7 @@ module trace_debugger import trdb_pkg::*;
     // outputs
     // info needed for the encapsulator
     output logic                    packet_valid_o,
-    output logic [PTYPE_LEN-1:0]    packet_type_o,
+    output it_packet_type_e         packet_type_o,
     output logic [P_LEN-1:0]        packet_length_o, // in bytes
     output logic [PAYLOAD_LEN-1:0]  packet_payload_o,
     // sideband signals
@@ -63,6 +63,8 @@ module trace_debugger import trdb_pkg::*;
     // priority
     trdb_format_e                   packet_format;
     trdb_f_sync_subformat_e         packet_f_sync_subformat;
+    trdb_f_opt_ext_subformat_e      packet_f_opt_ext_subformat;
+    logic [1:0]                     packet_subformat;
     logic                           thaddr;
     logic                           lc_tc_mux;
     qual_status_e                   qual_status;
@@ -256,7 +258,10 @@ module trace_debugger import trdb_pkg::*;
     assign nc_branch_map_empty = nc_branch_map_flush || (tc_branch_map_empty && ~branch_d);
 
     // output
-    assign packet_type_o = {packet_format, packet_f_sync_subformat};
+    assign packet_subformat = (packet_format_o == F_OPT_EXT) 
+                            ? packet_f_opt_ext_subformat 
+                            : packet_f_sync_subformat;
+    assign packet_type_o = {packet_format, packet_subformat};
     assign packet_valid_o = packet_emitted;
     // sideband
     assign stall_o = encapsulator_ready_i;
@@ -335,7 +340,7 @@ module trace_debugger import trdb_pkg::*;
         .valid_o                  (packet_valid),
         .packet_format_o          (packet_format),
         .packet_f_sync_subformat_o(packet_f_sync_subformat),
-        //.packet_f_opt_ext_subformat_o(), // non mandatory
+        //.packet_f_opt_ext_subformat_o(packet_f_opt_ext_subformat), // non mandatory
         .thaddr_o                 (thaddr),
         .lc_tc_mux_o              (lc_tc_mux),
         .resync_timer_rst_o       (resync_rst),
@@ -368,7 +373,7 @@ module trace_debugger import trdb_pkg::*;
         .valid_i                  (packet_valid),
         .packet_format_i          (packet_format),
         .packet_f_sync_subformat_i(packet_f_sync_subformat),
-        //.packet_f_opt_ext_subformat_i(), // non mandatory
+        //.packet_f_opt_ext_subformat_i(packet_f_opt_ext_subformat), // non mandatory
         .lc_cause_i               (cause2_q),
         .lc_tval_i                (tval2_q),
         .lc_interrupt_i           (interrupt2_q),
