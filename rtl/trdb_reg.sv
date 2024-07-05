@@ -17,6 +17,7 @@ module trdb_reg
     // tracing management
     input logic trace_req_off_i, // from filter
     input logic trace_req_on_i, // directly from trigger unit
+    input logic encapsulator_ready_i,
 
     output logic trace_enable_o,    // turned off by filter
     output logic trace_activated_o, // managed by user
@@ -44,7 +45,9 @@ module trdb_reg
     logic jump_target_cache;
     // FFs I/Os
     logic trace_enable_d, trace_enable_q;
-
+    // trace enabling
+    logic trace_req_off, trace_req_on;
+    logic toggle;
     logic clk_gated;
     logic test_enabled;
 
@@ -58,7 +61,8 @@ module trdb_reg
     assign jump_target_cache = '0;
     assign configuration_o = DELTA_ADDRESS; // so far only this supported
     
-    assign trace_enable_d = trace_req_on_i; // || ~trace_req_off_i 
+    assign toggle = (trace_req_on_i || trace_req_on) || (trace_req_off_i || trace_req_off);
+    assign trace_enable_d = toggle ? ~trace_enable_q : trace_enable_q;
     assign trace_enable_o = trace_enable_d;
 
     assign nocontext_o = '1;
@@ -84,4 +88,15 @@ module trdb_reg
             trace_enable_q <= trace_enable_d;
         end
     end
+
+    // edge detector for encapsulator_ready_i
+    // turns on and off the tracing
+    edge_detect i_edge_detect(
+        .clk_i(clk_gated),
+        .rst_ni(rst_ni),
+        .d_i(encapsulator_ready_i),
+        .re_o(trace_req_on),
+        .fe_o(trace_req_off)
+    );
+
 endmodule
