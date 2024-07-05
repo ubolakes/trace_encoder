@@ -207,6 +207,7 @@ module trdb_packet_emitter
         update_latest_address = '0;
         branch_map_flush_o = '0;
         used_bits = '0;
+        packet_type_o = F0SF0;
         
         if(valid_i) begin
             // flush the branch map
