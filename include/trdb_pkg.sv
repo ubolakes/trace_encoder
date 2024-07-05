@@ -28,6 +28,14 @@ package trdb_pkg;
     localparam BRANCH_MAP_LEN = 31;
     localparam BRANCH_COUNT_LEN = 5;
 
+// priority levels
+typedef enum logic [1:0] {
+    M   = 2'b11,
+    VS  = 2'b10,
+    S   = 2'b01,
+    U   = 2'b00
+} priv_lvl_t;
+
 // packet types
 typedef enum logic[1:0] { 
     F_OPT_EXT       = 2'h0,
