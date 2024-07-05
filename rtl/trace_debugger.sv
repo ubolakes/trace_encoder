@@ -61,7 +61,7 @@ module trace_debugger import trdb_pkg::*;
     //logic                           qualified; // is it needed or I can use qualified_d?
     logic                           trace_req_deactivate;
     // priority
-    trdb_format_e                   packet_format;
+    it_packet_type_e                packet_format;
     trdb_f_sync_subformat_e         packet_f_sync_subformat;
     trdb_f_opt_ext_subformat_e      packet_f_opt_ext_subformat;
     logic [1:0]                     packet_subformat;
