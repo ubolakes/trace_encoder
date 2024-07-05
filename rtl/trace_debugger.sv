@@ -33,7 +33,7 @@ module trace_debugger import trdb_pkg::*;
     input logic [XLEN-1:0]          stval_i, // supervisor tval
     input logic [XLEN-1:0]          vstval_i, // virtual supervisor tval
     input logic [XLEN-1:0]          mtval_i, // machine tval
-    input priv_lvl_t                priv_lvl_i, // priv_lvl_q
+    input logic [PRIV_LEN-1:0]      priv_lvl_i, // priv_lvl_q
     input logic [INST_LEN-1:0]      inst_data_i, // inst_data
     //input logic                     compressed, // to discriminate compressed instrs
     input logic [XLEN-1:0]          pc_i, //pc_q - instruction address
@@ -67,10 +67,9 @@ module trace_debugger import trdb_pkg::*;
     //logic                           qualified; // is it needed or I can use qualified_d?
     logic                           trace_req_deactivate;
     // priority
-    it_packet_type_e                packet_format;
+    trdb_format_e                   packet_format;
     trdb_f_sync_subformat_e         packet_f_sync_subformat;
     trdb_f_opt_ext_subformat_e      packet_f_opt_ext_subformat;
-    logic [1:0]                     packet_subformat;
     logic                           thaddr;
     logic                           lc_tc_mux;
     qual_status_e                   qual_status;
@@ -289,10 +288,6 @@ module trace_debugger import trdb_pkg::*;
     assign nc_branch_map_empty = nc_branch_map_flush || (tc_branch_map_empty && ~branch_d);
 
     // output
-    assign packet_subformat = (packet_format == F_OPT_EXT) 
-                            ? packet_f_opt_ext_subformat 
-                            : packet_f_sync_subformat;
-    assign packet_type_o = {packet_format, packet_subformat};
     assign packet_valid_o = packet_emitted;
     // sideband
     assign stall_o = encapsulator_ready_i;
@@ -437,9 +432,10 @@ module trace_debugger import trdb_pkg::*;
         .branches_i               (branch_count),
         .branch_map_i             (branch_map),
         .keep_bits_i              (keep_bits),
+        .packet_valid_o           (packet_emitted),
+        .packet_type_o            (packet_type_o),
         .packet_payload_o         (packet_payload_o),
         .payload_length_o         (packet_length_o),
-        .packet_valid_o           (packet_emitted),
         .branch_map_flush_o       (nc_branch_map_flush),
         .addr_to_compress_o       (addr_to_compress)
     );

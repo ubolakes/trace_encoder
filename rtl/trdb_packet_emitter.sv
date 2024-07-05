@@ -104,6 +104,7 @@ module trdb_packet_emitter
 
     // outputs
     output logic                        packet_valid_o, // asserted when a packet is generated
+    output it_packet_type_e             packet_type_o,
     output logic [PAYLOAD_LEN-1:0]      packet_payload_o,
     output logic [P_LEN-1:0]            payload_length_o, // in bytes
     output logic                        branch_map_flush_o, // flushing done after each request
@@ -239,6 +240,8 @@ module trdb_packet_emitter
                 // setting the rest of payload for each type
                 case(packet_f_sync_subformat_i)
                 SF_START: begin // subformat 0
+                    // updating packet type
+                    packet_type_o = F3SF0;
                     // updating latest address sent in a packet
                     update_latest_address = '1;
 
@@ -300,6 +303,8 @@ module trdb_packet_emitter
                     endcase
                 end
                 SF_TRAP: begin // subformat 1
+                    // updating packet type
+                    packet_type_o = F3SF1;
                     // updating latest address sent in a packet
                     update_latest_address = '1;
                     
@@ -372,6 +377,9 @@ module trdb_packet_emitter
                     endcase
                 end
                 SF_CONTEXT: begin // subformat 2
+                    // updating packet type
+                    packet_type_o = F3SF2;
+
                     case(time_and_context)
                     2'b11: begin
                         used_bits = used_bits + 2;
@@ -386,6 +394,9 @@ module trdb_packet_emitter
                     endcase
                 end
                 SF_SUPPORT: begin // subformat 3
+                    // updating packet type
+                    packet_type_o = F3SF3;
+
                     used_bits = used_bits + 7;
 
                     packet_payload_o[4+:1+1+2+3] = {
@@ -405,6 +416,8 @@ module trdb_packet_emitter
             end
 
             F_ADDR_ONLY: begin // format 2
+                // updating packet type
+                packet_type_o = F2;
                 // updating latest address sent in a packet
                 update_latest_address = '1;
 
@@ -521,17 +534,19 @@ module trdb_packet_emitter
             end
 
             F_DIFF_DELTA: begin // format 1
-            /*  There can be two type of payloads for this format:
-                1. address, branch map
-                2. no address, branch map
-                
-                Type 1 payload is used when there has been at least
-                one branch from last packet. This can be determined
-                by the number of branches in the branch map.
+                /*  There can be two type of payloads for this format:
+                    1. address, branch map
+                    2. no address, branch map
+                    
+                    Type 1 payload is used when there has been at least
+                    one branch from last packet. This can be determined
+                    by the number of branches in the branch map.
 
-                Type 2 payload is used when the address is not needed,
-                for examples if the branch map is full.
-            */
+                    Type 2 payload is used when the address is not needed,
+                    for examples if the branch map is full.
+                */
+                // updating packet type
+                packet_type_o = F1;
                 // updating latest address sent in a packet
                 update_latest_address = '1;    
 
