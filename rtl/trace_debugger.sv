@@ -41,6 +41,7 @@ module trace_debugger import trdb_pkg::*;
     //input logic [TRIGGER_LEN-1:0]   trigger_i, // must be supported CPU side
     //input logic [CTYPE_LEN-1:0]     ctype_i, // spec says it's 1 or 2 bit wide
     input logic                     encapsulator_ready_i, // non mandatory
+    input logic                     lossless_trace_i,
 
     // outputs
     // info needed for the encapsulator
@@ -290,7 +291,7 @@ module trace_debugger import trdb_pkg::*;
     // output
     assign packet_valid_o = packet_emitted;
     // sideband
-    assign stall_o = encapsulator_ready_i;
+    assign stall_o = ~encapsulator_ready_i && lossless_trace_i;
 
     // other
     assign turn_on_tracer_d = iretired_i;
