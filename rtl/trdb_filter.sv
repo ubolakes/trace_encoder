@@ -11,6 +11,9 @@ import trdb_pkg::*;
 
 module trdb_filter
 (
+    // if trace isn't enabled it doesn't make sense to filter
+    input logic                 trace_enable_i,
+
     /*
     The idea is to have all inputs to be filtered in range or match.
     To achieve this, the filter requires for each parameter:
@@ -124,6 +127,7 @@ module trdb_filter
                             ((priv_lvl_filter_i && (priv_lvl_in_range || priv_lvl_equals)) ||
                             ~priv_lvl_filter_i) && // priv_lvl
                             ((iaddr_filter_i && (iaddr_in_range || iaddr_equals)) ||
-                            ~iaddr_filter_i); // iaddr
+                            ~iaddr_filter_i) && // iaddr
+                            trace_enable;
 
 endmodule

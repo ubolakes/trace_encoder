@@ -12,6 +12,7 @@ module tb_trdb_filter();
     logic reset;
 
     // inputs
+    logic                   trace_enable_i;
     // cause
     logic                   cause_filter_i;
     logic [CAUSE_LEN-1:0]   upper_cause_i;
@@ -59,6 +60,7 @@ module tb_trdb_filter();
 
     // DUT instantiation
     trdb_filter DUT(
+        .trace_enable_i(trace_enable_i),
         .cause_filter_i(cause_filter_i),
         .upper_cause_i(upper_cause_i),
         .lower_cause_i(lower_cause_i),
@@ -69,13 +71,13 @@ module tb_trdb_filter();
         .upper_tvec_i(upper_tvec_i),
         .lower_tvec_i(lower_tvec_i),
         .match_tvec_i(match_tvec_i),
-        .tvec_range_mode_i(tvec_mode_i),
+        .tvec_mode_i(tvec_mode_i),
         .tvec_i(tvec_i),
         .tval_filter_i(tval_filter_i),
         .upper_tval_i(upper_tval_i),
         .lower_tval_i(lower_tval_i),
         .match_tval_i(match_tval_i),
-        .tval_range_mode_i(tval_mode_i),
+        .tval_mode_i(tval_mode_i),
         .tval_i(tval_i),
         .priv_lvl_filter_i(priv_lvl_filter_i),
         .upper_priv_lvl_i(upper_priv_lvl_i),
@@ -104,6 +106,7 @@ module tb_trdb_filter();
 
     always @(posedge clk) begin
         {
+            trace_enable_i,
             cause_filter_i,
             upper_cause_i,
             lower_cause_i,
