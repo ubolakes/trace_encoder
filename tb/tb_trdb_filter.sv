@@ -38,20 +38,20 @@ module tb_trdb_filter();
     logic [XLEN-1:0]        tval_i;
     // priv_lvl
     logic                   priv_lvl_filter_i;
-    logic [XLEN-1:2]        upper_priv_lvl_i;
-    logic [XLEN-1:2]        lower_priv_lvl_i;
-    logic [XLEN-1:2]        match_priv_lvl_i;
+    logic [PRIV_LEN-1:0]    upper_priv_lvl_i;
+    logic [PRIV_LEN-1:0]    lower_priv_lvl_i;
+    logic [PRIV_LEN-1:0]    match_priv_lvl_i;
     logic                   priv_lvl_range_mode_i;
     logic                   priv_lvl_equal_mode_i;
-    logic [XLEN-1:2]        priv_lvl_i;
+    logic [PRIV_LEN-1:0]    priv_lvl_i;
     // iaddr (pc)
     logic                   iaddr_filter_i;
-    logic [XLEN-1:2]        upper_iaddr_i;
-    logic [XLEN-1:2]        lower_iaddr_i;
-    logic [XLEN-1:2]        match_iaddr_i;
+    logic [XLEN-1:0]        upper_iaddr_i;
+    logic [XLEN-1:0]        lower_iaddr_i;
+    logic [XLEN-1:0]        match_iaddr_i;
     logic                   iaddr_range_mode_i;
     logic                   iaddr_equal_mode_i;
-    logic [XLEN-1:2]        iaddr_i;
+    logic [XLEN-1:0]        iaddr_i;
 
     // outputs
     logic                   nc_qualified_o;

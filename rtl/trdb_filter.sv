@@ -51,20 +51,20 @@ module trdb_filter
     input logic [XLEN-1:0]      tval_i,
     // priv_lvl
     input logic                 priv_lvl_filter_i,
-    input logic [XLEN-1:2]      upper_priv_lvl_i,
-    input logic [XLEN-1:2]      lower_priv_lvl_i,
-    input logic [XLEN-1:2]      match_priv_lvl_i,
+    input logic [PRIV_LEN-1:0]  upper_priv_lvl_i,
+    input logic [PRIV_LEN-1:0]  lower_priv_lvl_i,
+    input logic [PRIV_LEN-1:0]  match_priv_lvl_i,
     input logic                 priv_lvl_range_mode_i,
     input logic                 priv_lvl_equal_mode_i,
-    input logic [XLEN-1:2]      priv_lvl_i,
+    input logic [PRIV_LEN-1:0]  priv_lvl_i,
     // iaddr (pc)
     input logic                 iaddr_filter_i,
-    input logic [XLEN-1:2]      upper_iaddr_i,
-    input logic [XLEN-1:2]      lower_iaddr_i,
-    input logic [XLEN-1:2]      match_iaddr_i,
+    input logic [XLEN-1:0]      upper_iaddr_i,
+    input logic [XLEN-1:0]      lower_iaddr_i,
+    input logic [XLEN-1:0]      match_iaddr_i,
     input logic                 iaddr_range_mode_i,
     input logic                 iaddr_equal_mode_i,
-    input logic [XLEN-1:2]      iaddr_i,
+    input logic [XLEN-1:0]      iaddr_i,
 
     output logic                nc_qualified_o
 );
