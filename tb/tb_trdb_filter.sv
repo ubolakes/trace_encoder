@@ -94,7 +94,7 @@ module tb_trdb_filter();
         .nc_qualified_o(nc_qualified_o)
     );
 
-    logic [414:0] test_vector[1000:0];
+    logic [415:0] test_vector[1000:0];
 
     initial begin // reading test vector
         $readmemb("tv_trdb_filter", test_vector);
