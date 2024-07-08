@@ -119,6 +119,7 @@ module trdb_filter
                             iaddr_i == match_iaddr_i;
 
     // assigning output
+    // if no filter is enabled -> the instruction is qualified
     assign nc_qualified_o = ((cause_filter_i && (cause_in_range || cause_equals)) ||
                             ~cause_filter_i) && // cause
                             ((tvec_filter_i && (tvec_in_range || tvec_equals)) ||
