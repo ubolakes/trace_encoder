@@ -128,6 +128,6 @@ module trdb_filter
                             ~priv_lvl_filter_i) && // priv_lvl
                             ((iaddr_filter_i && (iaddr_in_range || iaddr_equals)) ||
                             ~iaddr_filter_i) && // iaddr
-                            trace_enable;
+                            trace_enable_i;
 
 endmodule
