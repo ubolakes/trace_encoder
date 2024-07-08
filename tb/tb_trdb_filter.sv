@@ -88,7 +88,7 @@ module tb_trdb_filter();
         .priv_lvl_filter_i(priv_lvl_filter_i),
         .upper_priv_lvl_i(upper_priv_lvl_i),
         .lower_priv_lvl_i(lower_priv_lvl_i),
-        .match_priv_lvl_i(match_priv_lvl_i)
+        .match_priv_lvl_i(match_priv_lvl_i),
         .priv_lvl_range_mode_i(priv_lvl_range_mode_i),
         .priv_lvl_equal_mode_i(priv_lvl_equal_mode_i),
         .priv_lvl_i(priv_lvl_i),
