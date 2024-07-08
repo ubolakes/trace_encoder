@@ -302,7 +302,7 @@ module trace_debugger import trdb_pkg::*;
     trdb_reg i_trdb_reg(
         .clk_i            (clk_i),
         .rst_ni           (rst_ni),
-        .trace_req_off_i  (trace_req_deactivate), // from filter
+        .trace_req_off_i  ('0), // from filter
         .trace_req_on_i   (turn_on_tracer_q), // trigger_trace_on      // from trigger unit
         .encapsulator_ready_i(encapsulator_ready_i),
         .trace_enable_o   (trace_enable),
