@@ -41,7 +41,7 @@ Master thesis project: RISC-V spec compliant trace encoder
 | :-------------------:	| :-----------------------------------------------: |
 | trace_debugger      	| :x:                                            	|
 | trdb_branch_map     	| :white_check_mark:                             	|
-| trdb_filter         	| :x:                                            	|
+| trdb_filter         	| :white_check_mark:                                |
 | trdb_itype_detector 	| :white_check_mark: (no compressed instruction) 	|
 | trdb_lzc            	| :x:                                            	|
 | trdb_packet_emitter 	| :white_check_mark: (no format 0 packets)          |
