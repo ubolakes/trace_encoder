@@ -325,7 +325,7 @@ module trace_debugger import trdb_pkg::*;
     );*/
     // new one
     trdb_filter i_trdb_filter(
-        .trace_enable_i   (trace_enable_i),
+        .trace_enable_i   (trace_enable),
         .cause_filter_i   ('0),
         .upper_cause_i    ('0),
         .lower_cause_i    ('0),
