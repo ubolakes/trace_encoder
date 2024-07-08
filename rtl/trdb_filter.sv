@@ -30,40 +30,35 @@ module trdb_filter
     input logic [CAUSE_LEN-1:0] upper_cause_i,
     input logic [CAUSE_LEN-1:0] lower_cause_i,
     input logic [CAUSE_LEN-1:0] match_cause_i,
-    input logic                 cause_range_mode_i,
-    input logic                 cause_equal_mode_i,
+    input logic                 cause_mode_i,
     input logic [CAUSE_LEN-1:0] cause_i,
     // tvec
     input logic                 tvec_filter_i,
     input logic [XLEN-1:2]      upper_tvec_i,
     input logic [XLEN-1:2]      lower_tvec_i,
     input logic [XLEN-1:2]      match_tvec_i,
-    input logic                 tvec_range_mode_i,
-    input logic                 tvec_equal_mode_i,
+    input logic                 tvec_mode_i,
     input logic [XLEN-1:2]      tvec_i,
     // tval
     input logic                 tval_filter_i,
     input logic [XLEN-1:0]      upper_tval_i,
     input logic [XLEN-1:0]      lower_tval_i,
     input logic [XLEN-1:0]      match_tval_i,
-    input logic                 tval_range_mode_i,
-    input logic                 tval_equal_mode_i,
+    input logic                 tval_mode_i,
     input logic [XLEN-1:0]      tval_i,
     // priv_lvl
     input logic                 priv_lvl_filter_i,
     input logic [PRIV_LEN-1:0]  upper_priv_lvl_i,
     input logic [PRIV_LEN-1:0]  lower_priv_lvl_i,
     input logic [PRIV_LEN-1:0]  match_priv_lvl_i,
-    input logic                 priv_lvl_range_mode_i,
-    input logic                 priv_lvl_equal_mode_i,
+    input logic                 priv_lvl_mode_i,
     input logic [PRIV_LEN-1:0]  priv_lvl_i,
     // iaddr (pc)
     input logic                 iaddr_filter_i,
     input logic [XLEN-1:0]      upper_iaddr_i,
     input logic [XLEN-1:0]      lower_iaddr_i,
     input logic [XLEN-1:0]      match_iaddr_i,
-    input logic                 iaddr_range_mode_i,
-    input logic                 iaddr_equal_mode_i,
+    input logic                 iaddr_mode_i,
     input logic [XLEN-1:0]      iaddr_i,
 
     output logic                nc_qualified_o
@@ -88,34 +83,34 @@ module trdb_filter
 
     // assignments
     // cause
-    assign cause_in_range = cause_range_mode_i &&
+    assign cause_in_range = cause_mode_i == RANGE_MODE &&
                             cause_i < upper_cause_i &&
                             cause_i > lower_cause_i;
-    assign cause_equals =   cause_equal_mode_i &&
+    assign cause_equals =   cause_mode_i == EQUAL_MODE &&
                             cause_i == match_cause_i;
     // tvec
-    assign tvec_in_range =  tvec_range_mode_i &&
+    assign tvec_in_range =  tvec_mode_i == RANGE_MODE &&
                             tvec_i < upper_tvec_i &&
                             tvec_i > lower_tvec_i;
-    assign tvec_equals =    tvec_equal_mode_i &&
+    assign tvec_equals =    tvec_mode_i == EQUAL_MODE &&
                             tvec_i == match_tvec_i;
     // tval
-    assign tval_in_range =  tval_range_mode_i &&
+    assign tval_in_range =  tval_mode_i == RANGE_MODE &&
                             tval_i < upper_tval_i &&
                             tval_i > lower_tval_i;
-    assign tval_equals =    tval_equal_mode_i &&
+    assign tval_equals =    tval_mode_i == EQUAL_MODE &&
                             tval_i == match_tval_i;
     // priv_lvl
-    assign priv_lvl_in_range =  priv_lvl_range_mode_i &&
+    assign priv_lvl_in_range =  priv_lvl_mode_i == RANGE_MODE &&
                                 priv_lvl_i < upper_priv_lvl_i &&
                                 priv_lvl_i > lower_priv_lvl_i;
-    assign priv_lvl_equals =    priv_lvl_equal_mode_i &&
+    assign priv_lvl_equals =    priv_lvl_mode_i == EQUAL_MODE &&
                                 priv_lvl_i == match_priv_lvl_i;
     // iaddr
-    assign iaddr_in_range = iaddr_range_mode_i &&
+    assign iaddr_in_range = iaddr_mode_i == RANGE_MODE &&
                             iaddr_i < upper_iaddr_i &&
                             iaddr_i > lower_iaddr_i;
-    assign iaddr_equals =   iaddr_equal_mode_i &&
+    assign iaddr_equals =   iaddr_mode_i == EQUAL_MODE &&
                             iaddr_i == match_iaddr_i;
 
     // assigning output
