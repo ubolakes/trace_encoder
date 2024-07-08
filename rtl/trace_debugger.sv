@@ -316,11 +316,47 @@ module trace_debugger import trdb_pkg::*;
     );
 
     /* FILTER */
-    trdb_filter i_trdb_filter(
+    // old one
+    /*trdb_filter i_trdb_filter(
         .trace_enable_i        (trace_enable),
         .trigger_trace_off_i   (trigger_trace_off),
         .trace_req_deactivate_o(trace_req_deactivate),
         .nc_trace_qualified_o  (qualified0_d)
+    );*/
+    // new one
+    trdb_filter i_trdb_filter(
+        .trace_enable_i(trace_enable_i),
+        .cause_filter_i('0),
+        .upper_cause_i('0),
+        .lower_cause_i('0),
+        .match_cause_i('0),
+        .cause_mode_i('0),
+        .cause_i('0),
+        .tvec_filter_i('0),
+        .upper_tvec_i('0),
+        .lower_tvec_i('0),
+        .match_tvec_i('0),
+        .tvec_mode_i('0),
+        .tvec_i('0),
+        .tval_filter_i('0),
+        .upper_tval_i('0),
+        .lower_tval_i('0),
+        .match_tval_i('0),
+        .tval_mode_i('0),
+        .tval_i('0),
+        .priv_lvl_filter_i('0),
+        .upper_priv_lvl_i('0),
+        .lower_priv_lvl_i('0),
+        .match_priv_lvl_i('0),
+        .priv_lvl_mode_i('0),
+        .priv_lvl_i('0),
+        .iaddr_filter_i('0),
+        .upper_iaddr_i('0),
+        .lower_iaddr_i('0),
+        .match_iaddr_i('0),
+        .iaddr_mode_i('0),
+        .iaddr_i('0),
+        .nc_qualified_o(qualified0_d)
     );
 
     /* PRIORITY */
