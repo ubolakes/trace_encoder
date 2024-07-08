@@ -66,7 +66,7 @@ module trdb_filter
     input logic                 iaddr_equal_mode_i,
     input logic [XLEN-1:2]      iaddr_i,
 
-    output logic nc_qualified_o
+    output logic                nc_qualified_o
 );
 
     // output signals for comparators

@@ -174,8 +174,4 @@ module tb_trdb_packet_emitter();
         clk <= 0; #5;
     end
 
-
-
-
-
 endmodule
