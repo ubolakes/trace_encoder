@@ -300,19 +300,19 @@ module trace_debugger import trdb_pkg::*;
     /* MODULES INSTANTIATION */
     /* MAPPED REGISTERS */
     trdb_reg i_trdb_reg(
-        .clk_i            (clk_i),
-        .rst_ni           (rst_ni),
-        .trace_req_off_i  ('0), // from filter
-        .trace_req_on_i   (turn_on_tracer_q), // trigger_trace_on      // from trigger unit
+        .clk_i               (clk_i),
+        .rst_ni              (rst_ni),
+        .trace_req_off_i     ('0), // from filter
+        .trace_req_on_i      (turn_on_tracer_q), // trigger_trace_on      // from trigger unit
         .encapsulator_ready_i(encapsulator_ready_i),
-        .trace_enable_o   (trace_enable),
-        .trace_activated_o(trace_activated),
-        .nocontext_o      (nocontext),
-        .notime_o         (notime),
-        .encoder_mode_o   (encoder_mode),
-        .delta_address_o  (delta_address),
-        .configuration_o  (enc_config_d),
-        .clk_gated_o      (clk_gated)
+        .trace_enable_o      (trace_enable),
+        .trace_activated_o   (trace_activated),
+        .nocontext_o         (nocontext),
+        .notime_o            (notime),
+        .encoder_mode_o      (encoder_mode),
+        .delta_address_o     (delta_address),
+        .configuration_o     (enc_config_d),
+        .clk_gated_o         (clk_gated)
     );
 
     /* FILTER */
