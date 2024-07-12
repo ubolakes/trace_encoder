@@ -355,7 +355,7 @@ module trace_debugger import trdb_pkg::*;
     trdb_priority i_trdb_priority(
         .clk_i                    (clk_gated),
         .rst_ni                   (rst_ni),
-        .valid_i                  (inst_valid1_q && ~packet_emitted),
+        .valid_i                  (inst_valid1_q && qualified0_q),
         .lc_exception_i           (exception2_q),
         .lc_updiscon_i            (updiscon1_q),
         .tc_qualified_i           (qualified0_q),
