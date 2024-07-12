@@ -210,13 +210,11 @@ module trdb_packet_emitter
         packet_type_o = F0SF0;
         
         if(valid_i) begin
-            // flush the branch map
-        /*  the signal is output in this cycle, but the branch map does
+        /*  branch_map_flush_o
+            the signal is output in this cycle, but the branch map does
             the flush in the next cycle to leave time to the packet
             emitter to read values and put them in the payload 
         */
-            branch_map_flush_o = '1;
-
             // setting the packet to emit as valid
             packet_valid_o = '1;
 
@@ -546,6 +544,8 @@ module trdb_packet_emitter
                     Type 2 payload is used when the address is not needed,
                     for examples if the branch map is full.
                 */
+                // flushing the branch_map
+                branch_map_flush_o = '1;
                 // updating packet type
                 packet_type_o = F1;
                 // updating latest address sent in a packet
