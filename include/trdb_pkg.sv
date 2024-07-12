@@ -88,6 +88,115 @@ typedef enum logic[3:0] {
     F3SF3   = 4'hF
 } it_packet_type_e; // it stands for "instruction trace"
 
+// defining packet structs for union
+// format 3 subformat 0
+typedef struct packed {
+    trdb_f_sync_subformat_e subformat;
+    logic                   branch;
+    logic [PRIV_LEN-1:0]    priv_lvl;
+    //logic [:0] time; // optional
+    //logic [:0] context; // optional
+    logic [XLEN-1:0]        address;
+} f3_sf0_s;
+
+// format 3 subformat 1
+typedef struct packed {
+    trdb_f_sync_subformat_e subformat;
+    logic                   branch;
+    logic [PRIV_LEN-1:0]    priv_lvl;
+    //logic [:0] time; // optional
+    //logic [:0] context; // optional
+    logic [CAUSE_LEN-1:0]   ecause;
+    logic                   interrupt;
+    logic                   thaddr;
+    logic [XLEN-1:0]        address;
+    logic [XLEN-1:0]        tval;
+} f3_sf1_s;
+
+// format 3 subformat 2
+typedef struct packed {
+    trdb_f_sync_subformat_e subformat;
+    logic [PRIV_LEN-1:0]    priv_lvl;
+    //logic [:0] time; // optional
+    //logic [:0] context; // optional
+} f3_sf2_s;
+
+// format 3 subformat 3
+typedef struct packed {
+    trdb_f_sync_subformat_e subformat;
+    logic                   ienable;
+    logic                   encoder_mode;
+    qual_status_e           qual_status;
+    ioptions_e              ioptions;
+    //logic denable; // data trace support required
+    //logic dloss; // data trace support required
+    //logic [:0] doptions; // data trace support required
+} f3_sf3_s;
+
+// format 2
+typedef struct packed {
+    logic [XLEN-1:0]                address;
+    logic                           notify;
+    logic                           updiscon;
+    logic                           irreport;
+    logic [2**CALL_COUNTER_SIZE:0]  irdepth;
+} f2_s;
+
+// format 1 - branch_map w/address
+typedef struct packed {
+    logic [BRANCH_COUNT_LEN-1:0]    branches;
+    logic [BRANCH_MAP_LEN-1:0]      branch_map;
+    logic [XLEN-1:0]                address;
+    logic                           notify;
+    logic                           updiscon;
+    logic                           irreport;
+    logic [2**CALL_COUNTER_SIZE:0]  irdepth;
+} f1_addr_s;
+
+// format 1 - branch_map w/out address
+typedef struct packed {
+    logic [BRANCH_COUNT_LEN-1:0]    branches;
+    logic [BRANCH_MAP_LEN-1:0]      branch_map;
+} f1_no_addr_s;
+
+// format 0 subformat 0 - branch_cnt w/out address
+typedef struct packed {
+    // TODO    
+} f0_sf0_no_addr_s;
+
+// format 0 subformat 0 - branch_cnt w/address
+typedef struct packed {
+    // TODO
+} f0_sf0_addr_s;
+
+// format 0 subformat 1 - jti w/branch_map
+typedef struct packed {
+    // TODO
+} f0_sf1_map_s;
+
+// format 0 subformat 1 - jti w/out branch_map
+typedef struct packed {
+    // TODO
+} f0_sf1_no_map_s;
+
+// payload union
+typedef union packed {
+    f3_sf0_s        f3_sf0;
+    f3_sf1_s        f3_sf1;
+    f3_sf2_s        f3_sf2;
+    f3_sf3_s        f3_sf3;
+    f2_s            f2;
+    f1_addr_s       f1_addr;
+    f1_no_addr_s    f1_no_addr;
+    // TODO: add f0 packets
+} packet_u;
+
+// payload struct
+typedef struct packed {
+    trdb_format_e   format;
+    packet_u        packet;
+} packet_payload_s;
+
 /*TODO:
     doptions struct for data tracing
     refer to page 36 of the spec */

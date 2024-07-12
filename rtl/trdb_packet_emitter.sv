@@ -105,7 +105,8 @@ module trdb_packet_emitter
     // outputs
     output logic                        packet_valid_o, // asserted when a packet is generated
     output it_packet_type_e             packet_type_o,
-    output logic [PAYLOAD_LEN-1:0]      packet_payload_o,
+    //output logic [PAYLOAD_LEN-1:0]      packet_payload_o,
+    output packet_payload_s             packet_payload_o,
     output logic [P_LEN-1:0]            payload_length_o, // in bytes
     output logic                        branch_map_flush_o, // flushing done after each request
     // to send back to priority module in order to compress them
@@ -169,7 +170,7 @@ module trdb_packet_emitter
     end
 
     // combinatorial network to compute the offset to compress the branch_map
-    always_comb begin : branch_map_offset
+    /*always_comb begin : branch_map_offset
         if(branches_i == 0) begin
             branch_map_off = 0;
         end else if(branches_i <= 1) begin
@@ -183,7 +184,9 @@ module trdb_packet_emitter
         end else begin
             branch_map_off = 31;
         end
-    end
+    end*/
+    // for testing and using union we don't compress the branch_map
+    assign branch_map_off = 31;
 
     /*  
     the address compression works in byte chunks: based on the value of
@@ -196,8 +199,10 @@ module trdb_packet_emitter
     */
 
     // find the number of least significant bytes to keep in the compressed address
-    assign address_off = (keep_bits_i + 7)/8;
-    
+    //assign address_off = (keep_bits_i + 7)/8;
+    // for testing and using union we don't compress address
+    assign address_off = (XLEN)/8;
+
     // combinatorial network to output packets
     always_comb begin
         // init values
@@ -226,21 +231,24 @@ module trdb_packet_emitter
         */
             
             // setting the packet format - common for all payloads
-            packet_payload_o[1:0] = packet_format_i;
-            
+            //packet_payload_o[1:0] = packet_format_i;
+            packet_payload_o.format = packet_format_i;
             // format bits
             used_bits = used_bits + 2;
 
             case(packet_format_i)
             F_SYNC: begin // format 3
                 // setting packet subformat - common for all type 3 payloads
-                packet_payload_o[3:2] = packet_f_sync_subformat_i;
+                //packet_payload_o[3:2] = packet_f_sync_subformat_i;
                 
                 used_bits = used_bits + 2; // subformat bits
 
                 // setting the rest of payload for each type
                 case(packet_f_sync_subformat_i)
                 SF_START: begin // subformat 0
+                    // setting packet subformat
+                    packet_payload_o.packet.f3_sf0.subformat = packet_f_sync_subformat_i;
+
                     // updating packet type
                     packet_type_o = F3SF0;
                     // updating latest address sent in a packet
@@ -250,6 +258,12 @@ module trdb_packet_emitter
                     2'b11: begin
                         used_bits = used_bits + 3 + address_off * 8;
 
+                        // populating payload
+                        packet_payload_o.packet.f3_sf0.branch = branch;
+                        packet_payload_o.packet.f3_sf0.priv_lvl = tc_priv_i;
+                        packet_payload_o.packet.f3_sf0.address = tc_iaddr_i;
+
+                        /*
                         packet_payload_o[4+:1+PRIV_LEN] = {
                             tc_priv_i,
                             branch
@@ -297,6 +311,7 @@ module trdb_packet_emitter
                             };
                         end
                         endcase
+                        */
 
                         payload_length_o = (used_bits + 7)/8;
                     end
@@ -304,6 +319,9 @@ module trdb_packet_emitter
                     endcase
                 end
                 SF_TRAP: begin // subformat 1
+                    // setting packet subformat
+                    packet_payload_o.packet.f3_sf1.subformat = packet_f_sync_subformat_i;
+
                     // updating packet type
                     packet_type_o = F3SF1;
                     // updating latest address sent in a packet
@@ -312,7 +330,16 @@ module trdb_packet_emitter
                     case(time_and_context)
                     2'b11: begin
                         used_bits = used_bits + 9 + address_off * 8 + XLEN;
-
+                        // populating payload
+                        packet_payload_o.packet.f3_sf1.branch = branch;
+                        packet_payload_o.packet.f3_sf1.priv_lvl = tc_priv_i;
+                        packet_payload_o.packet.f3_sf1.ecause = ecause;
+                        packet_payload_o.packet.f3_sf1.interrupt = interrupt;
+                        packet_payload_o.packet.f3_sf1.thaddr = thaddr_i;
+                        packet_payload_o.packet.f3_sf1.address = address;
+                        packet_payload_o.packet.f3_sf1.tval = tval;
+                        
+                        /*
                         packet_payload_o[4+:1+PRIV_LEN+CAUSE_LEN+2] = {
                             thaddr_i,
                             interrupt,
@@ -373,21 +400,27 @@ module trdb_packet_emitter
                         endcase
 
                         payload_length_o = (used_bits + 7)/8;
-                    end
+                    end*/
                     /*TODO: other cases*/
                     endcase
                 end
                 SF_CONTEXT: begin // subformat 2
+                    // setting packet subformat
+                    packet_payload_o.packet.f3_sf2.subformat = packet_f_sync_subformat_i;
+
                     // updating packet type
                     packet_type_o = F3SF2;
 
                     case(time_and_context)
                     2'b11: begin
-                        used_bits = used_bits + 2;
+                        used_bits = used_bits + PRIV_LEN;
+                        // populating payload
+                        packet_payload_o.packet.f3_sf2.priv_lvl = tc_priv_i;
 
+                        /*
                         packet_payload_o[4+:PRIV_LEN] = {
                             tc_priv_i
-                        };
+                        };*/
 
                         payload_length_o = (used_bits + 7)/8; 
                     end
@@ -395,21 +428,31 @@ module trdb_packet_emitter
                     endcase
                 end
                 SF_SUPPORT: begin // subformat 3
+                    // setting packet subformat
+                    packet_payload_o.packet.f3_sf3.subformat = packet_f_sync_subformat_i;
+
                     // updating packet type
                     packet_type_o = F3SF3;
 
                     used_bits = used_bits + 7;
 
+                    // populating payload
+                    packet_payload_o.packet.f3_sf3.ienable = tc_ienable_i;
+                    packet_payload_o.packet.f3_sf3.encoder_mode = encoder_mode_i;
+                    packet_payload_o.packet.f3_sf3.qual_status = qual_status_i;
+                    packet_payload_o.packet.f3_sf3.ioptions = ioptions_i;
+                    
+                    /*
                     packet_payload_o[4+:1+1+2+3] = {
-                        /* info required for data tracing - in the future
+                        info required for data tracing - in the future
                         doptions_i,
                         dloss_i,
-                        denable_i, */
+                        denable_i,
                         ioptions_i,
                         qual_status_i,
                         encoder_mode_i,
                         tc_ienable_i
-                    };
+                    };*/
 
                     payload_length_o = (used_bits + 7)/8;
                 end
@@ -454,8 +497,15 @@ module trdb_packet_emitter
                 // F2 payload bits
                 used_bits = used_bits + 3 + 2**CALL_COUNTER_SIZE + address_off*8;
 
+                // populating payload
+                packet_payload_o.packet.f2.address = diff_addr;
+                packet_payload_o.packet.f2.notify = notify;
+                packet_payload_o.packet.f2.updiscon = updiscon;
+                packet_payload_o.packet.f2.irreport = irreport;
+                packet_payload_o.packet.f2.irdepth = irdepth;
+
                 // address compression
-                case (address_off)
+                /*case (address_off)
                 1: begin
                     packet_payload_o[2+:8+3+2**CALL_COUNTER_SIZE] = {
                         irdepth,
@@ -528,7 +578,7 @@ module trdb_packet_emitter
                         diff_addr
                     };
                 end
-                endcase
+                endcase*/
 
                 payload_length_o = (used_bits + 7)/8;
                 //end
@@ -584,7 +634,7 @@ module trdb_packet_emitter
                 used_bits = used_bits + BRANCH_COUNT_LEN + branch_map_off;
 
                 // adding branch count and branch map
-                if (branch_map_off == 0) begin
+                /*if (branch_map_off == 0) begin
                     packet_payload_o[2+:BRANCH_COUNT_LEN] = branches_i;
                 end else if (branch_map_off == 1) begin
                     packet_payload_o[2+:BRANCH_COUNT_LEN+1] = {
@@ -611,6 +661,13 @@ module trdb_packet_emitter
                         branch_map_i[30:0],
                         branches_i
                     };
+                end*/
+                
+                // branch map full
+                if (branches_i == 31) begin
+                    // populating payload
+                    packet_payload_o.packet.f1_no_addr.branches = branches_i;
+                    packet_payload_o.packet.f1_no_addr.branch_map = branch_map_i;
                 end
 
                 // attaching the rest of the payload
@@ -618,8 +675,17 @@ module trdb_packet_emitter
                     // rest of the payload bits
                     used_bits = used_bits + 3 + 2**CALL_COUNTER_SIZE + address_off*8;
                     
+                    // populating payload
+                    packet_payload_o.packet.f1_addr.branches = branches_i;
+                    packet_payload_o.packet.f1_addr.branch_map = branch_map_i;
+                    packet_payload_o.packet.f1_addr.address = diff_addr;
+                    packet_payload_o.packet.f1_addr.notify = notify;
+                    packet_payload_o.packet.f1_addr.updiscon = updsicon;
+                    packet_payload_o.packet.f1_addr.irreport = irreport;
+                    packet_payload_o.packet.f1_addr.irdepth = irdepth;
+
                     // address compression
-                    case (address_off)
+                    /*case (address_off)
                     1: begin
                         packet_payload_o[2+BRANCH_COUNT_LEN+branch_map_off+:8+3+2**CALL_COUNTER_SIZE] = {
                             irdepth,
@@ -692,7 +758,7 @@ module trdb_packet_emitter
                             diff_addr
                         };
                     end
-                    endcase
+                    endcase*/
                 end
                 
                 payload_length_o = (used_bits + 7)/8;

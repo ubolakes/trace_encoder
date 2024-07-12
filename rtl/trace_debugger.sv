@@ -48,7 +48,7 @@ module trace_debugger import trdb_pkg::*;
     output logic                    packet_valid_o,
     output it_packet_type_e         packet_type_o,
     output logic [P_LEN-1:0]        packet_length_o, // in bytes
-    output logic [PAYLOAD_LEN-1:0]  packet_payload_o,
+    output packet_payload_s         packet_payload_o,
     // sideband signals
     output logic                    stall_o
 );
