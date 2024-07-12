@@ -316,14 +316,6 @@ module trace_debugger import trdb_pkg::*;
     );
 
     /* FILTER */
-    // old one
-    /*trdb_filter i_trdb_filter(
-        .trace_enable_i        (trace_enable),
-        .trigger_trace_off_i   (trigger_trace_off),
-        .trace_req_deactivate_o(trace_req_deactivate),
-        .nc_trace_qualified_o  (qualified0_d)
-    );*/
-    // new one
     trdb_filter i_trdb_filter(
         .trace_enable_i   (trace_enable),
         .cause_filter_i   ('0),
@@ -360,7 +352,6 @@ module trace_debugger import trdb_pkg::*;
     );
 
     /* PRIORITY */
-    // TODO: recheck for correctness
     trdb_priority i_trdb_priority(
         .clk_i                    (clk_gated),
         .rst_ni                   (rst_ni),
@@ -413,7 +404,6 @@ module trace_debugger import trdb_pkg::*;
     );
 
     /* BRANCH MAP */
-    // TODO: recheck for correctness
     trdb_branch_map i_trdb_branch_map(
         .clk_i         (clk_gated),
         .rst_ni        (rst_ni),
@@ -430,7 +420,6 @@ module trace_debugger import trdb_pkg::*;
     );
 
     /* PACKET EMITTER */
-    // TODO: recheck for correctness
     trdb_packet_emitter i_trdb_packet_emitter(
         .clk_i                    (clk_gated),
         .rst_ni                   (rst_ni),
