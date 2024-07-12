@@ -479,7 +479,7 @@ module trace_debugger import trdb_pkg::*;
 
     /* INST TYPE DETECTOR */
     trdb_itype_detector i_trdb_itype_detector(
-        .ready_i          (iretired1_q && iretired0_q),
+        .ready_i          (iretired1_q || iretired0_q),
         .nc_inst_data_i   (inst_data0_q),
         .tc_compressed_i  (compressed), // not supported on snitch
         .tc_iaddr_i       (iaddr1_q),
