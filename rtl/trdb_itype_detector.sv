@@ -11,6 +11,7 @@ import trdb_pkg::*;
 
 module trdb_itype_detector
 (
+    input logic             ready_i,
     input logic [XLEN-1:0]  nc_inst_data_i,
     input logic             tc_compressed_i,
     input logic [XLEN-1:0]  tc_iaddr_i,
@@ -27,7 +28,7 @@ module trdb_itype_detector
     logic is_c_jr;*/ 
     logic nc_is_jump;
 
-    assign nc_branch_o =    ((nc_inst_data_i & MASK_BEQ)      == MATCH_BEQ) ||
+    assign nc_branch_o =    (((nc_inst_data_i & MASK_BEQ)      == MATCH_BEQ) ||
                             ((nc_inst_data_i & MASK_BNE)      == MATCH_BNE) ||
                             ((nc_inst_data_i & MASK_BLT)      == MATCH_BLT) ||
                             ((nc_inst_data_i & MASK_BGE)      == MATCH_BGE) ||
@@ -36,9 +37,10 @@ module trdb_itype_detector
                             ((nc_inst_data_i & MASK_P_BNEIMM) == MATCH_P_BNEIMM) ||
                             ((nc_inst_data_i & MASK_P_BEQIMM) == MATCH_P_BEQIMM) ||
                             ((nc_inst_data_i & MASK_C_BEQZ)   == MATCH_C_BEQZ) ||
-                            ((nc_inst_data_i & MASK_C_BNEZ)   == MATCH_C_BNEZ);
-    assign tc_branch_taken_o = tc_compressed_i ?    !(tc_iaddr_i + 2 == nc_iaddr_i):
-                                                    !(tc_iaddr_i + 4 == nc_iaddr_i);
+                            ((nc_inst_data_i & MASK_C_BNEZ)   == MATCH_C_BNEZ) && 
+                            ready_i);
+    assign tc_branch_taken_o = tc_compressed_i ?    !(tc_iaddr_i + 2 == nc_iaddr_i) && ready_i :
+                                                    !(tc_iaddr_i + 4 == nc_iaddr_i) && ready_i;
 
     // compressed inst - not supported by snitch
     /* c.jalr and c.jr are both decompressed in order to use an uncompressed jalr */
@@ -47,8 +49,9 @@ module trdb_itype_detector
     assign is_c_jr = ((nc_inst_data_i & MASK_C_JR) == MATCH_C_JR)
                       && ((nc_inst_data_i & MASK_RD) != 0);*/
     // non compressed inst
-    assign nc_is_jump = ((nc_inst_data_i & MASK_JALR) == MATCH_JALR)/* || is_c_jalr || is_c_jr*/;
-    assign nc_updiscon_o = nc_is_jump || nc_exception_i; // || nc_interrupt - not necessary in snitch since it's coupled w/exception
+    assign nc_is_jump = ((nc_inst_data_i & MASK_JALR) == MATCH_JALR) &&
+                        ready_i;/* || is_c_jalr || is_c_jr*/;
+    assign nc_updiscon_o = (nc_is_jump || nc_exception_i) && ready_i; // || nc_interrupt - not necessary in snitch since it's coupled w/exception
     
 
 endmodule
