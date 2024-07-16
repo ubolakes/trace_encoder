@@ -86,7 +86,7 @@ typedef enum logic[3:0] {
     F3SF1   = 4'hD,
     F3SF2   = 4'hE,
     F3SF3   = 4'hF
-} it_packet_type_e; // it stands for "instruction trace"
+} it_packet_type_e; // "it" stands for "instruction trace"
 
 /*TODO:
     doptions struct for data tracing
@@ -131,8 +131,5 @@ parameter MASK_IMM = 32'hfff00000;
 parameter X_RA = 32'h1;
 parameter OP_SH_RS1 = 32'd15;
 parameter OP_SH_RD = 32'd7;
-
-
-
 
 endpackage
