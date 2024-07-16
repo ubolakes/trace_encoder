@@ -41,7 +41,6 @@ module trace_debugger import trdb_pkg::*;
     //input logic [TRIGGER_LEN-1:0]   trigger_i, // must be supported CPU side
     //input logic [CTYPE_LEN-1:0]     ctype_i, // spec says it's 1 or 2 bit wide
     input logic                     encapsulator_ready_i, // non mandatory
-    input logic                     lossless_trace_i,
 
     // outputs
     // info needed for the encapsulator
@@ -90,6 +89,8 @@ module trace_debugger import trdb_pkg::*;
     logic                           turn_on_tracer_d, turn_on_tracer_q;
     logic [CAUSE_LEN-1:0]           cause;
     logic [XLEN-1:0]                tval;
+    logic                           lossless_trace;
+    logic                           shallow_trace;
 
     // we have three phases, called last cycle (lc), this cycle (tc) and next
     // cycle (nc), based on which we make decision whether we need to emit a
@@ -291,7 +292,7 @@ module trace_debugger import trdb_pkg::*;
     // output
     assign packet_valid_o = packet_emitted;
     // sideband
-    assign stall_o = ~encapsulator_ready_i && lossless_trace_i;
+    assign stall_o = ~encapsulator_ready_i && lossless_trace;
 
     // other
     assign turn_on_tracer_d = iretired_i;
@@ -312,7 +313,9 @@ module trace_debugger import trdb_pkg::*;
         .encoder_mode_o      (encoder_mode),
         .delta_address_o     (delta_address),
         .configuration_o     (enc_config_d),
-        .clk_gated_o         (clk_gated)
+        .clk_gated_o         (clk_gated),
+        .lossless_trace_o    (lossless_trace),
+        .shallow_trace_o     (shallow_trace)
     );
 
     /* FILTER */
@@ -458,6 +461,7 @@ module trace_debugger import trdb_pkg::*;
         .branches_i               (branch_count),
         .branch_map_i             (branch_map),
         .keep_bits_i              (keep_bits),
+        .shallow_trace_i          (shallow_trace),
         .packet_valid_o           (packet_emitted),
         .packet_type_o            (packet_type_o),
         .packet_payload_o         (packet_payload_o),

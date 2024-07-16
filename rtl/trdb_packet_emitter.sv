@@ -101,6 +101,7 @@ module trdb_packet_emitter
         Non mandatory, required support by the encoder.
     */
     input logic [$clog2(XLEN):0]        keep_bits_i, // required for address compression
+    input logic                         shallow_trace_i, // used to flush branch map at each packet
 
     // outputs
     output logic                        packet_valid_o, // asserted when a packet is generated
@@ -215,6 +216,9 @@ module trdb_packet_emitter
             the flush in the next cycle to leave time to the packet
             emitter to read values and put them in the payload 
         */
+            // flushes at each packet emitted to get a less precise tracing
+            branch_map_flush_o = shallow_trace_i;
+
             // setting the packet to emit as valid
             packet_valid_o = '1;
 

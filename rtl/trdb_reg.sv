@@ -34,7 +34,9 @@ module trdb_reg
     output logic branch_prediction_o,
     output logic jump_target_cache_o,*/
     output ioptions_e configuration_o,
-    output logic clk_gated_o
+    output logic clk_gated_o,
+    output logic lossless_trace_o,
+    output logic shallow_trace_o
 );
     // hardwired to 0 signals - not yet implemented
     logic full_address;
@@ -60,6 +62,8 @@ module trdb_reg
     assign branch_prediction = '0;
     assign jump_target_cache = '0;
     assign configuration_o = DELTA_ADDRESS; // so far only this supported
+    assign lossless_trace_o = '0; // if == 1 stalls the core when the encapsulator buffer is full
+    assign shallow_trace_o = '0; // if == 1 flushes the branch map at each packet emitted
     
     // tracing is switched on only when it's not enabled anc a request of turning on is received
     assign turn_on = (trace_enable_q == 0) && (trace_req_on /*|| encapsulator_ready_i*/); // encapsulator signal is temporarely disabled
