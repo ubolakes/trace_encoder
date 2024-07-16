@@ -57,7 +57,7 @@ module trdb_itype_detector
     // non compressed inst
     assign nc_is_jump = ((nc_inst_data_i & MASK_JALR) == MATCH_JALR) &&
                         nc_ready_i;/* || is_c_jalr || is_c_jr*/;
-    assign nc_updiscon_o = (nc_is_jump || nc_exception_i) && nc_ready_i; // || nc_interrupt - not necessary in snitch since it's coupled w/exception
+    assign nc_updiscon_o = (nc_is_jump || nc_exception_i) && nc_ready_i && !same_instr; // || nc_interrupt - not necessary in snitch since it's coupled w/exception
     
 
 endmodule
