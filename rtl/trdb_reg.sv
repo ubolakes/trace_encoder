@@ -62,7 +62,7 @@ module trdb_reg
     assign configuration_o = DELTA_ADDRESS; // so far only this supported
     
     // tracing is switched on only when it's not enabled anc a request of turning on is received
-    assign turn_on = (trace_enable_q == 0) && (trace_req_on || encapsulator_ready_i);
+    assign turn_on = (trace_enable_q == 0) && (trace_req_on /*|| encapsulator_ready_i*/); // encapsulator signal is temporarely disabled
     // tracing is switched off only when it's not enabled anc a request of turning off is received
     assign turn_off = (trace_enable_q == 1) && (trace_req_off || ~encapsulator_ready_i);
     // the toggle of trace_enable value happens only when turn off or turn off is asserted
