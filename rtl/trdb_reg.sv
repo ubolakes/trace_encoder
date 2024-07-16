@@ -47,9 +47,7 @@ module trdb_reg
     logic trace_enable_d, trace_enable_q;
     // trace enabling
     logic trace_req_off, trace_req_on;
-    logic enc_ready, enc_full;
     logic turn_on, turn_off;
-    logic toggle;
     logic clk_gated;
     logic test_enabled;
 
@@ -63,10 +61,12 @@ module trdb_reg
     assign jump_target_cache = '0;
     assign configuration_o = DELTA_ADDRESS; // so far only this supported
     
-    assign turn_on = (trace_enable_q == 0) && (trace_req_on || enc_ready);
-    assign turn_off = (trace_enable_q == 1) && (trace_req_off || enc_full);
-    assign toggle = turn_on || turn_off;
-    assign trace_enable_d = toggle ? ~trace_enable_q : trace_enable_q;
+    // tracing is switched on only when it's not enabled anc a request of turning on is received
+    assign turn_on = (trace_enable_q == 0) && (trace_req_on || encapsulator_ready_i);
+    // tracing is switched off only when it's not enabled anc a request of turning off is received
+    assign turn_off = (trace_enable_q == 1) && (trace_req_off || ~encapsulator_ready_i);
+    // the toggle of trace_enable value happens only when turn off or turn off is asserted
+    assign trace_enable_d = (turn_off || turn_on) ? ~trace_enable_q : trace_enable_q;
     assign trace_enable_o = trace_enable_d;
 
     assign nocontext_o = '1;
@@ -83,24 +83,6 @@ module trdb_reg
         .en_i     (trace_activated_o),
         .test_en_i(test_enabled),
         .clk_o    (clk_gated)
-    );
-
-    always_ff @(posedge clk_i, negedge rst_ni) begin
-        if(~rst_ni) begin
-            trace_enable_q <= '0;
-        end else begin
-            trace_enable_q <= trace_enable_d;
-        end
-    end
-
-    // edge detector for encapsulator_ready_i
-    // turns on and off the tracing
-    edge_detect i_edge_detect_enc(
-        .clk_i(clk_gated),
-        .rst_ni(rst_ni),
-        .d_i(encapsulator_ready_i),
-        .re_o(enc_ready),
-        .fe_o(enc_full)
     );
 
     // edge detector for trace_req_on_i
@@ -123,4 +105,12 @@ module trdb_reg
         .fe_o()
     );
 
+    always_ff @(posedge clk_i, negedge rst_ni) begin
+        if(~rst_ni) begin
+            trace_enable_q <= '0;
+        end else begin
+            trace_enable_q <= trace_enable_d;
+        end
+    end
+    
 endmodule
