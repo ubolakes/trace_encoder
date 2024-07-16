@@ -32,6 +32,12 @@ module trdb_branch_map
     output logic                        is_full_o,
     output logic                        is_empty_o
 );
+    /* from the spec:
+        A vector where each bit represents the outcome of a branch.
+        A 0 indicates the branch was taken, a 1 indicates that it was not.
+
+        This means at the beginning I set all the branch map values as 1s.
+    */
 
     logic [BRANCH_MAP_LEN-1:0]      map_d, map_q;
     logic [BRANCH_COUNT_LEN-1:0]    branch_cnt_d, branch_cnt_q;
@@ -45,7 +51,7 @@ module trdb_branch_map
 
     always_ff @(posedge clk_i, negedge rst_ni) begin
         if(~rst_ni) begin
-            map_q <= '0;
+            map_q <= '1;
             branch_cnt_q <= '0;
             flush_q <= '0;
         end else begin
@@ -60,16 +66,16 @@ module trdb_branch_map
         branch_cnt_d = branch_cnt_q;
         // flush w/out branch in the same cycle
         if(flush_q) begin
-            map_d = '0;
+            map_d = '1;
             branch_cnt_d = '0;
         end
         // flush w/branch in the same cycle
         if(valid_i) begin
             if(flush_q) begin
-                map_d[0] = branch_taken_i; // adds branch to map
+                map_d[0] = ~branch_taken_i; // adds branch to map
                 branch_cnt_d = 5'b1;
             end else begin
-                map_d[branch_cnt_q] = branch_taken_i;
+                map_d[branch_cnt_q] = ~branch_taken_i;
                 branch_cnt_d        = branch_cnt_q + 1;
             end
         end
