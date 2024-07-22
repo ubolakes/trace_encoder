@@ -177,7 +177,7 @@ module trace_debugger import trdb_pkg::*;
     //logic                           packets_lost_d, packets_lost_q; // non mandatory
     ioptions_e                      enc_config_d, enc_config_q;
     logic                           enc_config_change_d, enc_config_change_q;
-    logic                           branch_d, branch_q;
+    logic                           tc_branch;
     logic                           branch_taken_d, branch_taken_q;
 
     /*  the following commented section has non mandatory signals
@@ -287,7 +287,7 @@ module trace_debugger import trdb_pkg::*;
     assign trace_valid = inst_valid1_q && trace_activated;
 
     /* next cycle */
-    assign nc_branch_map_empty = nc_branch_map_flush || (tc_branch_map_empty && ~branch_d);
+    assign nc_branch_map_empty = nc_branch_map_flush || (tc_branch_map_empty /*&& ~tc_branch*/);
 
     // output
     assign packet_valid_o = packet_emitted;
@@ -410,7 +410,7 @@ module trace_debugger import trdb_pkg::*;
     trdb_branch_map i_trdb_branch_map(
         .clk_i         (clk_gated),
         .rst_ni        (rst_ni),
-        .valid_i       (branch_q && qualified0_d), //  && iretired1_q && trace_valid
+        .valid_i       (tc_branch && qualified0_d), //  && iretired1_q && trace_valid
         .branch_taken_i(branch_taken_d),
         .flush_i       (nc_branch_map_flush),
         //.branch_taken_prediction_i(), // non mandatory
@@ -438,7 +438,7 @@ module trace_debugger import trdb_pkg::*;
         .tc_interrupt_i           (interrupt1_q),
         .nocontext_i              (nocontext),
         .notime_i                 (notime),
-        .tc_branch_i              (branch_q),
+        .tc_branch_i              (tc_branch),
         .tc_branch_taken_i        (branch_taken_q),
         .tc_priv_i                (priv_lvl1_q),
         //.time_i(), // non mandatory
@@ -483,14 +483,16 @@ module trace_debugger import trdb_pkg::*;
 
     /* INST TYPE DETECTOR */
     trdb_itype_detector i_trdb_itype_detector(
+        .clk_i            (clk_gated),
+        .rst_ni           (rst_ni),
         .tc_ready_i       (qualified0_q),
-        .nc_ready_i       (iretired0_d), // qualified0_d
+        .nc_ready_i       (qualified0_d),
         .nc_inst_data_i   (inst_data0_q),
         .tc_compressed_i  (compressed), // not supported on snitch
         .tc_iaddr_i       (iaddr1_q),
         .nc_iaddr_i       (iaddr0_q),
         .nc_exception_i   (exception0_q),
-        .nc_branch_o      (branch_d),
+        .tc_branch_o      (tc_branch),
         .tc_branch_taken_o(branch_taken_d),
         .nc_updiscon_o    (updiscon0_d)
     );
@@ -548,7 +550,6 @@ module trace_debugger import trdb_pkg::*;
             //packets_lost_q <= '0; // non mandatory
             enc_config_q <= DELTA_ADDRESS; // 3'b0
             enc_config_change_q <= '0;
-            branch_q <= '0;
             branch_taken_q <= '0;
             turn_on_tracer_q <= '0;
         end else begin
@@ -600,7 +601,6 @@ module trace_debugger import trdb_pkg::*;
             //packets_lost_q <= packets_lost_d; // non mandatory
             enc_config_q <= enc_config_d;
             enc_config_change_q <= enc_config_change_d;
-            branch_q <= branch_d;
             branch_taken_q <= branch_taken_d;
             if (!turn_on_tracer_q) begin
                 turn_on_tracer_q <= turn_on_tracer_d;
