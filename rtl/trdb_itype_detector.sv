@@ -43,7 +43,7 @@ module trdb_itype_detector
                             ((nc_inst_data_i & MASK_P_BEQIMM) == MATCH_P_BEQIMM) ||
                             ((nc_inst_data_i & MASK_C_BEQZ)   == MATCH_C_BEQZ) ||
                             ((nc_inst_data_i & MASK_C_BNEZ)   == MATCH_C_BNEZ)) && 
-                            nc_ready_i /*&& !same_instr*/;
+                            nc_ready_i && same_instr;
     assign tc_branch_taken_o = tc_compressed_i ?
                                 !(tc_iaddr_i + 2 == nc_iaddr_i) && both_ready && !same_instr :
                                 !(tc_iaddr_i + 4 == nc_iaddr_i) && both_ready && !same_instr;
