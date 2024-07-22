@@ -11,6 +11,8 @@ import trdb_pkg::*;
 
 module trdb_itype_detector
 (
+    input logic             clk_i,
+    input logic             rst_ni,
     input logic             tc_ready_i,
     input logic             nc_ready_i,
     input logic [XLEN-1:0]  nc_inst_data_i,
@@ -20,7 +22,7 @@ module trdb_itype_detector
     //input logic             implicit_return_i, // non mandatory
     input logic             nc_exception_i,
     // outputs
-    output logic            nc_branch_o,
+    output logic            tc_branch_o,
     output logic            tc_branch_taken_o,
     output logic            nc_updiscon_o
 );
@@ -30,10 +32,11 @@ module trdb_itype_detector
     logic nc_is_jump;
     logic same_instr;
     logic both_ready;
+    logic tc_branch_d, tc_branch_q;
 
     assign both_ready = tc_ready_i && nc_ready_i;
     assign same_instr = tc_iaddr_i == nc_iaddr_i;
-    assign nc_branch_o =    (((nc_inst_data_i & MASK_BEQ)      == MATCH_BEQ) ||
+    assign tc_branch_d =    (((nc_inst_data_i & MASK_BEQ)      == MATCH_BEQ) ||
                             ((nc_inst_data_i & MASK_BNE)      == MATCH_BNE) ||
                             ((nc_inst_data_i & MASK_BLT)      == MATCH_BLT) ||
                             ((nc_inst_data_i & MASK_BGE)      == MATCH_BGE) ||
@@ -44,6 +47,7 @@ module trdb_itype_detector
                             ((nc_inst_data_i & MASK_C_BEQZ)   == MATCH_C_BEQZ) ||
                             ((nc_inst_data_i & MASK_C_BNEZ)   == MATCH_C_BNEZ)) && 
                             nc_ready_i;// && same_instr;
+    assign tc_branch_o = tc_branch_q;
     assign tc_branch_taken_o = tc_compressed_i ?
                                 !(tc_iaddr_i + 2 == nc_iaddr_i) && both_ready && !same_instr :
                                 !(tc_iaddr_i + 4 == nc_iaddr_i) && both_ready && !same_instr;
@@ -62,5 +66,12 @@ module trdb_itype_detector
                             nc_ready_i &&
                             !same_instr; // || nc_interrupt - not necessary in snitch since it's coupled w/exception
     
+    always_ff @( posedge clk_i, negedge rst_ni ) begin
+        if(~rst_ni) begin
+            tc_branch_q <= '0;
+        end else if (~same_instr) begin
+            tc_branch_q <= tc_branch_d;
+        end
+    end
 
 endmodule
