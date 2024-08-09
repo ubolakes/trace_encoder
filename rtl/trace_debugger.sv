@@ -20,7 +20,7 @@ module trace_debugger import trdb_pkg::*;
     - instr address
     */
     // mandatory inputs
-    input logic                     inst_valid_i, // inst_valid_o
+    input logic                     inst_valid_i, // inst_valid_o, determines priv_change
     input logic                     iretired_i, // core_events_o.retired_i 
     input logic                     exception_i, // exception
     input logic                     interrupt_i, // cause_irq_q - used to discriminate interrupt
@@ -277,14 +277,14 @@ module trace_debugger import trdb_pkg::*;
     assign epc0_d = epc_i;
 
     assign final_qualified_d = qualified0_q && ~qualified0_d; // == tc_final_qualified
-    assign privchange_d = (priv_lvl0_q != priv_lvl1_q) && inst_valid1_q;
+    assign privchange_d = (priv_lvl0_q != priv_lvl1_q) && inst_valid1_q; // TODO: test w/iretired and see what happens, if anything breaks
     assign trace_enable_d = trace_enable;
     assign enc_enabled_d = trace_enable_d && ~trace_enable_q; // == nc_enc_enabled
     assign enc_disabled_d = ~trace_enable_d && trace_enable_q; // == nc_enc_disabled
     assign enc_config_change_d = enc_config_d != enc_config_q; // == nc_enc_config_change
 
     assign first_qualified = !qualified1_q && qualified0_q; // idea: put it directly in the module port
-    assign trace_valid = inst_valid1_q && trace_activated;
+    assign trace_valid = inst_valid1_q && trace_activated; // TODO: test w/iretired and see what happens, if anything breaks
 
     /* next cycle */
     assign nc_branch_map_empty = nc_branch_map_flush || (tc_branch_map_empty /*&& ~tc_branch*/);
