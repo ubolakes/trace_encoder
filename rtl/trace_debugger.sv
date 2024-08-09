@@ -149,6 +149,7 @@ module trace_debugger import trdb_pkg::*;
     logic [INST_LEN-1:0]            inst_data1_d, inst_data1_q;
     logic [XLEN-1:0]                iaddr0_d, iaddr0_q;
     logic [XLEN-1:0]                iaddr1_d, iaddr1_q;
+    logic [XLEN-1:0]                iaddr2_d, iaddr2_q;
     logic [XLEN-1:0]                epc0_d, epc0_q;
     logic [XLEN-1:0]                epc1_d, epc1_q;
     logic [XLEN-1:0]                epc2_d, epc2_q;
@@ -261,7 +262,6 @@ module trace_debugger import trdb_pkg::*;
     assign epc2_d = epc1_q;
 
     assign qualified1_d = qualified0_q;
-    assign updiscon1_d = updiscon0_q;
 
     /* FFs inputs */
     assign inst_valid0_d = inst_valid_i;
@@ -485,16 +485,18 @@ module trace_debugger import trdb_pkg::*;
     trdb_itype_detector i_trdb_itype_detector(
         .clk_i            (clk_gated),
         .rst_ni           (rst_ni),
-        .tc_ready_i       (qualified0_q),
-        .nc_ready_i       (qualified0_d),
-        .nc_inst_data_i   (inst_data0_q),
-        .tc_compressed_i  (compressed), // not supported on snitch
+        .lc_valid_i       (qualified1_q),
+        .tc_valid_i       (qualified0_q),
+        .nc_valid_i       (qualified0_d),
+        .lc_iaddr_i       (iaddr2_q),
         .tc_iaddr_i       (iaddr1_q),
         .nc_iaddr_i       (iaddr0_q),
-        .nc_exception_i   (exception0_q),
+        .tc_inst_data_i   (inst_data1_q),
+        .tc_compressed_i  (compressed), // not supported on snitch
+        .tc_exception_i   (exception1_q),
         .tc_branch_o      (tc_branch),
         .tc_branch_taken_o(branch_taken_d),
-        .nc_updiscon_o    (updiscon0_d)
+        .tc_updiscon_o    (updiscon1_d)
     );
 
 
@@ -530,6 +532,7 @@ module trace_debugger import trdb_pkg::*;
             tvec1_q <= '0;
             iaddr0_q <= '0;
             iaddr1_q <= '0;
+            iaddr2_q <= '0;
             epc0_q <= '0;
             epc1_q <= '0;
             epc2_q <= '0;
@@ -581,6 +584,7 @@ module trace_debugger import trdb_pkg::*;
             tvec1_q <= tvec1_d;
             iaddr0_q <= iaddr0_d;
             iaddr1_q <= iaddr1_d;
+            iaddr2_q <= iaddr2_d;
             epc0_q <= epc0_d;
             epc1_q <= epc1_d;
             epc2_q <= epc2_d;
